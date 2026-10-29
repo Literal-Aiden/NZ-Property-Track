@@ -60,7 +60,7 @@ function loanCard(p){
   var io=p.loan*p.rate/1200,pi=pmt(p.loan,p.rate,p.term||30),isIO=p.ltype==='io';
   var now=isIO?io:pi,alt=isIO?pi:io;
   var rf=refixOf(p),fl=p.fixTerm==='float';
-  var d=rf?Math.round((new Date(rf+'T00:00:00')-Date.now())/864e5):null;
+  var d=rf?dd(iso(new Date()),rf):null;
   var when=fl?'Floating rate':d===null?'No re-fix date':(d<0?'Re-fix date passed':'Re-fix in '+d+' days');
   var dt=fl?'Can change anytime':rf?new Date(rf+'T00:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'}):'–';
   return '<div class="card"><div class="row" style="cursor:default"><b>Mortgage</b><button class="edit" id="editloan">Edit mortgage</button></div><p class="sub">'+$$(p.loan)+' at '+p.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
@@ -397,7 +397,7 @@ function convert(i){
 var BKEY='nzpt.backup',bkPend=null,bkMsg='';
 function lastBackup(){try{return localStorage.getItem(BKEY)}catch(e){return null}}
 function backupCard(){
-  var l=lastBackup(),h='<div class="card"><b>Backup</b><p class="sub" style="margin-top:4px">Your properties and receipts are saved only in this browser. Download a backup now and then and keep it somewhere safe, like cloud storage or an email to yourself. Imported sales data isn’t included.</p>'+
+  var l=lastBackup(),h='<div class="card" id="bk"><b>Backup</b><p class="sub" style="margin-top:4px">Your properties and receipts are saved only in this browser. Download a backup now and then and keep it somewhere safe, like cloud storage or an email to yourself. Imported sales data isn’t included.</p>'+
     '<p class="sub" style="margin-top:6px"><b>'+(l?'Last backup '+fmtD(l):'Not backed up yet')+'</b></p>'+(bkMsg?'<p class="sub neg" style="margin-top:6px">'+esc(bkMsg)+'</p>':'');
   if(bkPend){var n=bkPend.props.length,r=bkPend.receipts.length;return h+'<p style="margin:12px 0 0;font-size:14px">Backup from '+(bkPend.exported?fmtD(bkPend.exported):'an unknown date')+': '+n+' propert'+(n===1?'y':'ies')+', '+r+' receipt'+(r===1?'':'s')+'. Restoring replaces everything on this device.</p><div class="btns"><button class="go" data-x="bkok">Replace with backup</button><button class="go ghost" data-x="bkno">Cancel</button></div></div>'}
   return h+'<div class="btns"><button class="go" data-x="bkdl">Download backup</button><label class="go ghost filebtn">Restore<input type="file" accept=".json,application/json" class="bkin" hidden></label></div></div>';
@@ -427,7 +427,7 @@ function restore(){
     props=d.props;cur=0;bkPend=null;resetCur();isSample=false;save();render();go(1,true);
   });
 }
-function resetCur(){closeItem();catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false}
+function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=m[k]}}
 function fillCur(p){
   if(itemEdit!==null&&itemEdit!=='new'){var x=p.items[itemEdit];setv({i_desc:x.desc,i_who:x.who,i_date:x.date,i_quote:x.quote,i_amt:x.amt})}
@@ -449,28 +449,69 @@ function current(){
   if(p.type==='potential'){$('p1').innerHTML=potView(p)+'<p class="hint">← all properties · add new →</p>';fillCur(p);if(nearOpen)drawNear();return}
   var h='<div class="card"><div class="row" style="cursor:default"><span class="badge">'+(p.type==='project'?'Renovation project':'Rental')+'</span><button class="edit" id="edit">Edit details</button></div><h1>'+esc(p.addr)+'</h1><p class="sub">'+esc(p.sub)+'</p>';
   if(p.type==='project'){
+    // Projects are split into sections so the page stays short on a phone. A dot marks a section with something to deal with.
+    var flag={};alerts(p).forEach(function(a){flag[a.sec]=1});
+    var nav='<div class="secnav">'+SECS.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
+    if(sec!=='ov'){$('p1').innerHTML=h+'</div>'+nav+(sec==='costs'?costCard(p):sec==='tl'?timeCard(p):loanCard(p))+'<p class="hint">← all properties · add new →</p>';fillCur(p);return}
+    h+='</div>'+nav+'<div class="card">';
     var pct=p.budget?Math.round(p.spent/p.budget*100):0,gain=p.value-basis(p),left=p.budget-p.spent;
-    h+='<div style="margin-top:16px"><b>Reno budget</b><div class="bar"><i class="'+(pct>100?'over':'')+'" style="width:'+Math.min(pct,100)+'%"></i></div><span class="sub">'+$$(p.spent)+' of '+$$(p.budget)+' spent ('+pct+'%)'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed incl. quotes':'')+'</span></div>';
+    h+='<div><b>Reno budget</b><div class="bar"><i class="'+(pct>100?'over':'')+'" style="width:'+Math.min(pct,100)+'%"></i></div><span class="sub">'+$$(p.spent)+' of '+$$(p.budget)+' spent ('+pct+'%)'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed incl. quotes':'')+'</span></div>';
     h+='<div class="grid">'+stat('Purchase price',$$(p.price))+stat('Est. value now',$$(p.value))+stat('Budget remaining',$$(left),left<0?'neg':'')+stat('Equity gain after reno',$$(gain),gain<0?'neg':'pos')+stat('Total cost in',$$(basis(p)))+stat('Days owned',dOwn(p))+'</div>';
   }else{
     var ann=p.rent*52,net=ann-p.exp;
     h+='<div class="grid">'+stat('Weekly rent',$$(p.rent))+stat('Annual expenses',$$(p.exp))+stat('Net annual income',$$(net),net<0?'neg':'pos')+stat('Gross / net yield',(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%')+stat('Purchase price',$$(p.price))+stat('Est. value now',$$(p.value))+stat('Total cost in',$$(basis(p)))+stat('Days owned',dOwn(p))+'</div>';
   }
-  $('p1').innerHTML=h+'</div>'+(p.plan?planCard(p):'')+(p.type==='project'?costCard(p)+timeCard(p):'')+loanCard(p)+'<p class="hint">← all properties · add new →</p>';
+  $('p1').innerHTML=h+'</div>'+(p.plan?planCard(p):'')+(p.type==='project'?'':loanCard(p))+'<p class="hint">← all properties · add new →</p>';
   fillCur(p);
+}
+var SECS=[['ov','Overview'],['costs','Costs'],['tl','Timeline'],['loan','Mortgage']],sec='ov';
+
+// Things that need attention, each pointing at the project section that deals with it.
+function alerts(p){
+  var a=[],today=iso(new Date());
+  if(p.type==='potential')return a;
+  if(p.loan&&p.fixTerm!=='float'){var rf=refixOf(p);if(rf){var d=dd(today,rf);if(d<=90)a.push({t:d<0?'Re-fix date passed':'Re-fix in '+d+' day'+(d===1?'':'s'),sec:'loan'})}}
+  if(p.type==='project'){
+    var it=p.items||[],cm=it.length?sum(it,cmt):(p.spent||0),un=sum(it,function(x){return x.paid?0:x.amt});
+    if(p.budget&&cm>p.budget)a.push({t:'Over budget by '+$$(cm-p.budget),sec:'costs'});
+    if(un)a.push({t:$$(un)+' unpaid',sec:'costs'});
+    if(!p.done){
+      var od=(p.tasks||[]).filter(function(x){return !x.ok&&x.d&&x.d<today}).length;
+      if(od)a.push({t:od+' overdue milestone'+(od>1?'s':''),sec:'tl'});
+      if(p.target&&p.target<today)a.push({t:'Past target finish',sec:'tl'});
+    }
+  }
+  return a;
+}
+function attnCard(){
+  var h='',l=lastBackup(),bd=l?days(l):null;
+  props.forEach(function(p,i){alerts(p).forEach(function(a){h+='<button class="att" data-x="att" data-i="'+i+'" data-sec="'+a.sec+'"><span>'+esc(p.addr)+'</span><b>'+esc(a.t)+'</b></button>'})});
+  if(!isSample&&props.length&&(bd===null||bd>30))h+='<button class="att" data-x="tobk"><span>Backup</span><b>'+(l?'Last backup '+bd+' days ago':'Not backed up yet')+'</b></button>';
+  return h?'<div class="card attn"><b>Needs attention</b>'+h+'</div>':'';
 }
 
 function list(){
   var own='',pot='';
   props.forEach(function(p,i){
-    var pt=p.type==='potential',d=pt&&deal(p);
+    var pt=p.type==='potential',d=pt&&deal(p),fl=alerts(p);
     var line=pt?(p.intent==='rental'?'Yield on cost '+(d.cost?(d.ann/d.cost*100).toFixed(1):'0')+'% gross':'Est. profit '+$$(d.prof)):p.type==='project'?'Reno '+$$(p.spent)+' of '+$$(p.budget):$$(p.rent)+'/wk rent';
     var kind=pt?(p.intent==='rental'?'Buy to rent':'Reno to sell'):p.type==='project'?'Project':'Rental';
-    var c='<div class="card row" data-i="'+i+'"><div><b>'+esc(p.addr)+'</b><p class="sub">'+esc(p.sub)+' · '+kind+'</p><p class="sub">'+line+'</p></div><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><span class="badge">'+(i===cur?'Viewing':'Open')+'</span><button class="edit del" data-d="'+i+'">'+(delIdx===i?'Tap to confirm':'Delete')+'</button></div></div>';
+    var c='<div class="card row" data-i="'+i+'"><div><b>'+esc(p.addr)+'</b><p class="sub">'+esc(p.sub)+' · '+kind+'</p><p class="sub">'+line+'</p>'+(fl.length?'<div class="flags">'+fl.map(function(a){return '<span class="flag">'+esc(a.t)+'</span>'}).join('')+'</div>':'')+'</div><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><span class="badge">'+(i===cur?'Viewing':'Open')+'</span><button class="edit del" data-d="'+i+'">'+(delIdx===i?'Tap to confirm':'Delete')+'</button></div></div>';
     if(pt)pot+=c;else own+=c;
   });
-  $('p0').innerHTML=((own&&pot?'<p class="grp">Owned</p>':'')+own+(pot?'<p class="grp">Potential buys</p>'+pot:'')||'<div class="card"><p class="sub">Nothing added yet.</p></div>')+backupCard();
+  $('p0').innerHTML=attnCard()+((own&&pot?'<p class="grp">Owned</p>':'')+own+(pot?'<p class="grp">Potential buys</p>'+pot:'')||'<div class="card"><p class="sub">Nothing added yet.</p></div>')+iosHint()+backupCard();
 }
+
+// Installing as an app: Android/desktop Chrome offer an install prompt; iPhone needs Share → Add to Home Screen.
+var installEvt=null,IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var standalone=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+function iosHint(){
+  try{if(!IOS||standalone||localStorage.getItem('nzpt.ioshint'))return ''}catch(e){return ''}
+  return '<div class="card"><b>Add to your home screen</b><p class="sub" style="margin-top:4px">In Safari, tap the Share button, then “Add to Home Screen”. It then opens full screen like an app.</p><button class="edit" data-x="ioshint" style="margin-top:10px">Got it</button></div>';
+}
+// Ask the browser not to clear this app's data (receipts especially) when the device runs low on space.
+var persistAsked=false;
+function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.storage.persist)return;persistAsked=true;navigator.storage.persisted().then(function(y){if(!y)return navigator.storage.persist()}).catch(function(){})}
 
 // Address suggestions from Photon (OpenStreetMap data), limited to NZ. Typing still works if it's offline.
 // Any input with class "acin" gets suggestions; data-sub names the suburb field to fill, data-next the field to focus after.
@@ -537,7 +578,8 @@ function form(){
   clearTimeout(acT);acList=[];acSel=-1;
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
   var N=' type="number" inputmode="numeric">';
-  $('p2').innerHTML='<div class="card"><b>'+(editIdx===null?'Add a property':(editSec==='loan'?'Edit mortgage':'Edit property details'))+'</b>'+
+  var ed=editIdx!==null;
+  var h='<div class="card"><b>'+(editIdx===null?'Add a property':(editSec==='loan'?'Edit mortgage':'Edit property details'))+'</b>'+
    (editIdx===null?'<label>Type</label><div class="seg"><button data-t="project" class="'+(pr?'on':'')+'">Reno project</button><button data-t="rental" class="'+(newType==='rental'?'on':'')+'">Rental</button><button data-t="potential" class="'+(pt?'on':'')+'">Potential buy</button></div>':'')+
    (pt?'<label>Plan</label><div class="seg"><button data-n="flip" class="'+(flip?'on':'')+'">Reno to sell</button><button data-n="rental" class="'+(flip?'':'on')+'">Buy to rent</button></div>':'')+
    (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off"><div class="sugg" role="listbox" hidden></div></div>'+
@@ -568,7 +610,10 @@ function form(){
    '<p class="sub" id="fixout" style="margin-top:8px;color:var(--acc);font-weight:600"></p>'+
    '<label>Loan type</label><div class="seg" id="lt"><button data-l="pi" class="'+(newLoan==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(newLoan==='io'?'on':'')+'">Interest-only</button></div>'+
    '<label>Remaining term (years, default 30)</label><input id="f_term" type="number" inputmode="numeric">'+'':'')+
-   '<button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go" id="cancel" style="background:none;color:var(--mute);border:1px solid var(--line)">Cancel</button>')+'</div><p class="hint">← back to current</p>';
+   '<button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go ghost" id="cancel">Cancel</button>')+'</div>';
+  // Adding happens in the Add new pane; editing slides up over the current property so you stay where you are.
+  $('sheet').hidden=!ed;
+  if(ed){$('p2').innerHTML='';$('sheetbody').innerHTML=h;$('sheetbody').scrollTop=0}else{$('sheetbody').innerHTML='';$('p2').innerHTML=h+'<p class="hint">← back to current</p>'}
   if(editIdx!==null)fill(props[editIdx]);
   if($('f_fix')){$('f_fix').value='12';if(editIdx!==null){var q=props[editIdx];$('f_fix').value=q.fixTerm||(q.refix?'custom':'12')}if(!$('f_fixstart').value)$('f_fixstart').value=iso(new Date());fixPreview()}
 }
@@ -591,8 +636,8 @@ function addProp(){
   isSample=false;newLoan='pi';if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);
 }
 
-function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · '+(l?'last backup '+fmtD(l):'not backed up yet')}
-function render(){if(!isSample)save();list();current();form();banner()}
+function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · '+(l?'last backup '+fmtD(l):'not backed up yet'))+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
+function render(){if(!isSample){save();persist()}list();current();form();banner()}
 function go(i,smooth){track.scrollTo({left:i*track.clientWidth,behavior:smooth?'smooth':'auto'})}
 function sync(){var i=Math.round(track.scrollLeft/track.clientWidth);document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',+t.dataset.i===i)})}
 
@@ -605,6 +650,9 @@ $('p0').addEventListener('click',function(e){var d=e.target.closest('[data-d]');
   if(b.dataset.x==='bkdl')exportBackup();
   if(b.dataset.x==='bkok')restore();
   if(b.dataset.x==='bkno'){bkPend=null;list()}
+  if(b.dataset.x==='att'){var i=+b.dataset.i;if(cur!==i)resetCur();cur=i;sec=b.dataset.sec;editIdx=null;render();$('p1').scrollTop=0;go(1,true)}
+  if(b.dataset.x==='tobk')$('bk').scrollIntoView({behavior:'smooth',block:'start'});
+  if(b.dataset.x==='ioshint'){try{localStorage.setItem('nzpt.ioshint','1')}catch(err){}list()}
 });
 $('p0').addEventListener('change',function(e){if(e.target.classList.contains('bkin')&&e.target.files[0])readBackup(e.target.files[0])});
 // Reno costs, receipts, timeline and converting a potential buy.
@@ -612,7 +660,8 @@ $('p1').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   var p=props[cur],x=b.dataset.x,k=+b.dataset.k;
   function edit(){current();var c=$('costs');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})}
-  if(x==='cat'){var n=cats(p)[k].n;costOpen=costOpen===n?null:n;current()}
+  if(x==='sec'){sec=b.dataset.sec;current();$('p1').scrollTop=0}
+  else if(x==='cat'){var n=cats(p)[k].n;costOpen=costOpen===n?null:n;current()}
   else if(x==='add'){itemEdit='new';delItem=false;rcMsg='';edit()}
   else if(x==='item'){itemEdit=k;delItem=false;rcMsg='';edit()}
   else if(x==='isave')saveItem(p);
@@ -647,7 +696,7 @@ $('p1').addEventListener('input',function(e){if(/^cb_\d/.test(e.target.id))cbTot
 $('p1').addEventListener('click',function(e){
   var id=e.target.id;
   var p=props[cur];
-  if(id==='edit'||id==='editloan'){editIdx=cur;editSec=id==='edit'?'details':'loan';newType=p.type;newIntent=p.intent||'flip';newLoan=p.ltype||'pi';form();go(2,true);return}
+  if(id==='edit'||id==='editloan'){editIdx=cur;editSec=id==='edit'?'details':'loan';newType=p.type;newIntent=p.intent||'flip';newLoan=p.ltype||'pi';form();return}
   if(id==='addcomp'){
     var a=$('c_addr').value.trim(),pr=num('c_price');
     if(!a){$('c_addr').focus();return}if(!pr){$('c_price').focus();return}
@@ -669,8 +718,12 @@ $('p1').addEventListener('change',function(e){
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
 });
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
-function keepForm(){var v={};document.querySelectorAll('#p2 input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}}
-$('p2').addEventListener('change',function(e){if(/^f_(fix|fixstart|refix)$/.test(e.target.id))fixPreview()});
+function keepForm(){var v={};(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}}
+function closeSheet(){editIdx=null;form()}
+$('sheetbg').addEventListener('click',closeSheet);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
+['p2','sheetbody'].forEach(function(id){
+$(id).addEventListener('change',function(e){if(/^f_(fix|fixstart|refix)$/.test(e.target.id))fixPreview()});
 document.addEventListener('input',function(e){if(e.target.classList.contains('acin'))acFind(e.target)});
 document.addEventListener('keydown',function(e){
   if(e.target!==acIn||!acList.length)return;
@@ -678,16 +731,21 @@ document.addEventListener('keydown',function(e){
   else if(e.key==='Enter'&&acSel>=0){e.preventDefault();acPick(acSel)}
   else if(e.key==='Escape')acHide();
 });
-$('p2').addEventListener('click',function(e){
+$(id).addEventListener('click',function(e){
   var l=e.target.closest('[data-l]');
   if(l){newLoan=l.dataset.l;document.querySelectorAll('#lt button').forEach(function(x){x.classList.toggle('on',x===l)});return}
   var b=e.target.closest('[data-t]');
   if(b){newType=b.dataset.t;keepForm();return}
   var n=e.target.closest('[data-n]');
   if(n){newIntent=n.dataset.n;keepForm();return}
-  if(e.target.id==='cancel'){editIdx=null;form();go(1,true);return}
+  if(e.target.id==='cancel'){closeSheet();return}
   if(e.target.id==='add')addProp();
 });
-document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2,true)}});
+});
+document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2,true)}
+  if(e.target.id==='install'&&installEvt){e.preventDefault();installEvt.prompt();installEvt=null;banner()}});
 window.addEventListener('resize',function(){go(1)});
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;banner()});
+window.addEventListener('appinstalled',function(){installEvt=null;banner()});
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){});
 render();go(1);sync();

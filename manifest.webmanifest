@@ -1,0 +1,15 @@
+{
+  "name": "NZ Property Tracker",
+  "short_name": "Properties",
+  "description": "Track rentals, renovation projects and potential buys.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#141816",
+  "theme_color": "#1f6f5c",
+  "lang": "en-NZ",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

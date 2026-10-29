@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NZ Property Tracker</title>
+<meta name="theme-color" content="#1f6f5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Properties">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,6 +26,10 @@
   <section class="pane" id="p0"></section>
   <section class="pane" id="p1"></section>
   <section class="pane" id="p2"></section>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheetbg" id="sheetbg"></div>
+  <div class="sheetbox" id="sheetbody" role="dialog" aria-modal="true"></div>
 </div>
 <script src="app.js"></script>
 </body>

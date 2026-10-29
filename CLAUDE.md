@@ -9,6 +9,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
 - `index.html` – page shell and tab bar
 - `styles.css` – all styling, with light and dark themes via CSS variables
 - `app.js` – all logic and rendering
+- `sw.js`, `manifest.webmanifest`, `icons/` – install-as-app and offline support
 - Data is saved in the browser's localStorage under the key `nzpt.v1`, so it stays on one device only. First load shows sample properties, and "Start fresh" clears them.
 
 Open `index.html` in a browser to run it.
@@ -65,6 +66,15 @@ Three panes the user swipes between, with matching tabs at the top:
 
 **Potential buy → project**
 - "Bought it? Track it as a reno project" converts a potential buy, keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
+
+**Phone app feel**
+- Installable: `manifest.webmanifest`, icons in `icons/`, and `sw.js` (network first for the app's own files, cached copy offline; never caches other sites or `.csv`). Only works when served over http(s), not from `file://`. Chrome shows "Install app" in the banner; iPhone gets a one-off "Add to Home Screen" hint card
+- Asks the browser for persistent storage once there's real data, so receipts aren't cleared when space runs low
+- Project page is split into section tabs: Overview · Costs · Timeline · Mortgage. A dot marks a section with something needing attention
+- "Edit details" and "Edit mortgage" open in a slide-up panel over the current page (closes on Cancel, tapping outside, or Escape). Adding a property still uses the Add new pane
+
+**Needs attention**
+- Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, and no backup in 30 days. Tapping one opens that property at the right section
 
 **Backup**
 - Properties pane: download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner
