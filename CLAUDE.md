@@ -8,7 +8,12 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
 
 - `index.html` – page shell and tab bar
 - `styles.css` – all styling, with light and dark themes via CSS variables
-- `app.js` – all logic and rendering
+- `js/` – all logic and rendering, as plain scripts sharing one global scope (no modules, no build). `index.html` loads them in order and `main.js` must stay last:
+  - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
+  - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
+  - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
+  - `views.js` current property view, portfolio, alerts, property list · `forms.js` add/edit forms and validation · `main.js` rendering, navigation, event wiring, delete/undo
+- When adding a file, add it to the `<script>` list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `sw.js`, `manifest.webmanifest`, `icons/` – install-as-app and offline support
 - Data is saved in the browser's localStorage under the key `nzpt.v1`, so it stays on one device only. First load shows sample properties, and "Start fresh" clears them.
 
@@ -20,7 +25,7 @@ A header bar with the app icon, "NZ Property Tracker" and a settings (gear) butt
 
 Three panes the user swipes between, with matching tabs at the top:
 
-- **Left – Properties:** every property added, each with a Delete button that needs a second tap to confirm.
+- **Left – Properties:** a Portfolio summary, the Needs attention card, then every property (the one being viewed has an accent border). Deleting is in a property's Edit details panel and happens straight away with an Undo message for 7 seconds; its receipt files are only removed once the message goes.
 - **Centre – Current (opens here):** the selected property.
 - **Right – Add new:** starts with three choices (Current renovation project, Current rental property, Potential purchase: rental investment or renovation flip). Picking one shows that type's form, with "‹ Change type" to go back. Tapping the Add new tab while already on it also goes back to the choices. It returns to the choices after adding.
 
@@ -41,8 +46,15 @@ Three panes the user swipes between, with matching tabs at the top:
 - Renovation budget vs spent so far, shown as a progress bar that turns orange when over budget
 - Budget remaining, and equity gain after reno (value minus total cost in)
 
-**Rentals**
+**Rentals** (section tabs: Overview · Money · Tenancy · Mortgage)
 - Weekly rent, annual expenses, net annual income, and gross/net yield
+- Money: income and expense entries (`p.money`: kind, category, date, amount, note, receipts), with income, expenses and net for the NZ tax year (from 1 April), rent received vs expected (weekly rent since the later of 1 April or purchase), and CSV export
+- Tenancy (`p.ten`): tenant, lease start, fixed term end (blank = periodic), last rent increase, bond and whether it's lodged. Next rent increase is shown as 12 months after the last one, with a note to check current rules at tenancy.govt.nz
+- Healthy Homes checklist (`p.hh`, date each standard was ticked): heating, insulation, ventilation, moisture ingress and drainage, draught stopping, with a note to check current requirements and deadlines at tenancy.govt.nz
+- A finished reno project (after "Mark reno finished") can be turned into a rental. Its reno spend stays in `p.spent` (so in total cost in), its costs/timeline data are kept, and `p.fromProject` records the date
+
+**Portfolio** (top of the Properties pane, owned properties only)
+- Total value, total lending, equity, LVR, and monthly cash flow: rentals are rent less expenses and mortgage repayments; projects are their holding cost (or repayments if no holding cost is set)
 
 **Mortgage (optional, per property)**
 - Loan amount and an interest rate the user types in, since some investors use second-tier lenders
@@ -60,6 +72,7 @@ Three panes the user swipes between, with matching tabs at the top:
 - Reno to sell: est. sale price and selling costs → total cost, est. profit, return on costs. Profit is labelled before tax with an IRD check note
 - Buy to rent: est. value after reno, weekly rent, annual expenses → total cost in, equity after reno, gross/net yield on total cost
 - Optional bedrooms and land area, used to filter nearby sales
+- Maximum offer: enter a target profit before tax (reno to sell) or a target gross/net yield on total cost (buy to rent), and it works back to the most you could pay, compared with the asking price. Other estimates are held as entered. Saved as `p.tgt` / `p.tgtT`
 - Comparable sales nearby: entered by hand (address with search, price, date sold, notes) or added from imported sales data → median, range, estimate vs median, warning if the estimate is above every comp
 
 **Reno costs (projects)**
@@ -69,23 +82,23 @@ Three panes the user swipes between, with matching tabs at the top:
 - Shows spent, committed (larger of quote or invoiced), unpaid invoices, over quotes, contingency used, and unallocated budget. Export CSV for an accountant
 
 **Receipts**
-- Photos or PDFs attached to a cost, stored in IndexedDB (`nzpt` database, `rc` store), not localStorage. Items hold only `{id,name,type}`. Photos are scaled to 1600px JPEG
+- Photos or PDFs attached to a reno cost or a rental money entry, stored in IndexedDB (`nzpt` database, `rc` store), not localStorage. Items hold only `{id,name,type}`. Photos are scaled to 1600px JPEG
 
 **Reno timeline (projects)**
 - Start, target finish, holding cost per month. The first target set is kept as the baseline (`target0`), so delays show as days behind and extra holding cost
 - Milestones (trade booked, consent, inspection, delivery, other) with tick-off and overdue highlighting; "Mark reno finished"
 
 **Potential buy → project**
-- "Bought it? Track it as a reno project" converts a potential buy, keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
+- "Bought it? Track it as a reno project" converts a potential buy (purchase price, date and reno budget required), keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
 
 **Phone app feel**
 - Installable: `manifest.webmanifest`, icons in `icons/`, and `sw.js` (network first for the app's own files, cached copy offline; never caches other sites or `.csv`). Only works when served over http(s), not from `file://`. Chrome shows "Install app" in the banner; iPhone gets a one-off "Add to Home Screen" hint card
 - Asks the browser for persistent storage once there's real data, so receipts aren't cleared when space runs low
-- Project page is split into section tabs: Overview · Costs · Timeline · Mortgage. A dot marks a section with something needing attention
+- Owned properties are split into section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). A dot marks a section with something needing attention
 - "Edit details" and "Edit mortgage" open in a slide-up panel over the current page (closes on Cancel, tapping outside, or Escape). Adding a property still uses the Add new pane
 
 **Needs attention**
-- Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, and no backup in 30 days. Tapping one opens that property at the right section
+- Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, and no backup in 30 days. Tapping one opens that property at the right section
 
 **Backup**
 - In Settings (gear in the header; also opened from the banner's backup status or the "Needs attention" backup item): download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner
@@ -114,6 +127,5 @@ Three panes the user swipes between, with matching tabs at the top:
 ## Ideas not yet built
 
 - Sync data across devices and add user accounts (needs a backend)
-- Re-fix reminders
-- Converting a finished reno project into a rental
+- Re-fix reminders that reach the user outside the app (e.g. add to calendar as an .ics file)
 - Current bank rates shown as a reference

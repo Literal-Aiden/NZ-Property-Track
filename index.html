@@ -35,10 +35,24 @@
   <div class="sheetbg" id="sheetbg"></div>
   <div class="sheetbox" id="sheetbody" role="dialog" aria-modal="true"></div>
 </div>
+<div class="toast" id="toast" role="status" hidden><span id="toastmsg"></span><button id="undo">Undo</button></div>
 <div class="sheet" id="settings" hidden>
   <div class="sheetbg" id="setbg"></div>
   <div class="sheetbox" id="setbody" role="dialog" aria-modal="true" aria-labelledby="settitle"></div>
 </div>
-<script src="app.js"></script>
+<!-- Plain scripts sharing one global scope, no build step. main.js must load last. -->
+<script src="js/data.js"></script>
+<script src="js/util.js"></script>
+<script src="js/receipts.js"></script>
+<script src="js/sales.js"></script>
+<script src="js/costs.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/rental.js"></script>
+<script src="js/potential.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/address.js"></script>
+<script src="js/views.js"></script>
+<script src="js/forms.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
