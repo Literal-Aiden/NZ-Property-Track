@@ -50,6 +50,12 @@ function basis(p){return p.price+(p.legal||0)+(p.extra||0)+(p.spent||0)}
 function pmt(l,r,y){var m=r/1200,n=y*12;return m?l*m/(1-Math.pow(1+m,-n)):l/n}
 function iso(x){return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 function addMonths(d,m){var x=new Date(d+'T00:00:00'),day=x.getDate();x.setMonth(x.getMonth()+m);if(x.getDate()<day)x.setDate(0);return iso(x)}
+function addDays(d,n){var x=new Date(d+'T00:00:00');x.setDate(x.getDate()+n);return iso(x)}
+// A loan can be split into parts, each with its own amount, rate, fixed term and loan type (p.parts). Older properties
+// and potential buys keep one loan on the property itself, with the same field names, so it serves as its only part.
+// p.loan is always the total owed and p.rate the average rate, weighted by amount.
+function parts(p){return p.parts&&p.parts.length?p.parts:p.loan?[p]:[]}
+function partPay(x){return x.loan?(x.ltype==='io'?x.loan*(x.rate||0)/1200:pmt(x.loan,x.rate||0,x.term||30)):0}
 function refixOf(p){if(p.fixTerm==='float')return null;if(!p.fixTerm||p.fixTerm==='custom')return p.refix||null;return addMonths(p.fixStart||iso(new Date()),+p.fixTerm)}
 function fmtD(d){return new Date(d+'T00:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'})}
 var FIXOPTS=[['6','6 months'],['12','1 year'],['18','18 months'],['24','2 years'],['36','3 years'],['48','4 years'],['60','5 years'],['float','Floating'],['custom','Custom date']].map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join('');

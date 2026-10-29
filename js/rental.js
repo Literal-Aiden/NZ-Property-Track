@@ -5,20 +5,25 @@ var moneyEdit=null,moneyKind='in',moneyAll=false,tenEdit=false,rentOpen=false;
 // The NZ tax year runs 1 April to 31 March.
 function taxYearStart(){var d=new Date(),y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1;return y+'-04-01'}
 
+// Income can be one payment, or the same amount weekly for a number of weeks (x.wk a week, x.n weeks from x.date,
+// x.amt the total). Weekly entries only count the weeks dated within a period, so totals to date and tax years stay right.
+function weekDates(x){var a=[];for(var k=0;k<(x.n||1);k++)a.push(k?addDays(x.date,7*k):x.date);return a}
+function mIn(x,a,b){if(!x.n)return x.date>=a&&(!b||x.date<=b)?x.amt:0;return weekDates(x).filter(function(d){return d>=a&&(!b||d<=b)}).length*x.wk}
 function moneyCard(p){
-  var M=p.money||[],ty=taxYearStart(),busy=moneyEdit!==null;
+  var M=p.money||[],ty=taxYearStart(),today=iso(new Date()),busy=moneyEdit!==null;
   var h='<div class="card" id="money"><div class="row" style="cursor:default">'+hd('dollar','Money in and out')+''+(M.length&&!busy?'<button class="edit" data-x="mcsv">Export CSV</button>':'')+'</div>';
   if(busy)return h+moneyForm(p)+'</div>';
-  var yr=M.filter(function(x){return x.date>=ty}),inc=sum(yr,function(x){return x.kind==='in'?x.amt:0}),out=sum(yr,function(x){return x.kind==='out'?x.amt:0});
-  var rentIn=sum(yr,function(x){return x.kind==='in'&&x.cat==='Rent'?x.amt:0}),from=p.date&&p.date>ty?p.date:ty,exp=p.rent*Math.max(0,dd(from,iso(new Date())))/7;
+  var inc=sum(M,function(x){return x.kind==='in'?mIn(x,ty,today):0}),out=sum(M,function(x){return x.kind==='out'?mIn(x,ty,today):0});
+  var rentIn=sum(M,function(x){return x.kind==='in'&&x.cat==='Rent'?mIn(x,ty,today):0}),from=p.date&&p.date>ty?p.date:ty,exp=p.rent*Math.max(0,dd(from,today))/7;
   h+='<div class="grid">'+stat('Income this tax year',$$(inc))+stat('Expenses this tax year',$$(out))+stat('Net this tax year',$$(inc-out),inc-out<0?'neg':'pos')+
     stat('Rent received, of '+$$(exp)+' expected',$$(rentIn),rentIn<exp-p.rent?'neg':'')+'</div>'+
-    '<p class="sub" style="margin-top:8px">Tax year from '+fmtD(ty)+'. Expected rent is '+$$(p.rent)+' a week since '+fmtD(from)+'. Mortgage repayments are under Mortgage.</p>';
+    '<p class="sub" style="margin-top:8px">Tax year from '+fmtD(ty)+', up to today. Expected rent is '+$$(p.rent)+' a week since '+fmtD(from)+'. Mortgage repayments are under Mortgage.</p>';
   if(M.length){
     var order=M.map(function(x,j){return j}).sort(function(a,b){return (M[b].date||'').localeCompare(M[a].date||'')}),shown=moneyAll?order:order.slice(0,10);
     h+='<div class="items" style="margin-top:12px;border:0;padding:0">'+shown.map(function(j){
-      var x=M[j],n=(x.rc||[]).length,inn=x.kind==='in';
-      return '<div class="item" data-x="mitem" data-k="'+j+'"><div><b>'+esc(x.cat)+'</b><p class="sub">'+[x.date?fmtD(x.date):'',esc(x.note||''),n?n+' receipt'+(n>1?'s':''):''].filter(Boolean).join(' · ')+'</p></div>'+
+      var x=M[j],n=(x.rc||[]).length,inn=x.kind==='in',sofar=x.n?mIn(x,'',today):0;
+      var when=x.n?x.n+' weeks × '+$$(x.wk)+', '+fmtD(x.date)+' – '+fmtD(weekDates(x).pop())+(sofar<x.amt?' · '+$$(sofar)+' to date':''):x.date?fmtD(x.date):'';
+      return '<div class="item" data-x="mitem" data-k="'+j+'"><div><b>'+esc(x.cat)+'</b><p class="sub">'+[when,esc(x.note||''),n?n+' receipt'+(n>1?'s':''):''].filter(Boolean).join(' · ')+'</p></div>'+
         '<div class="cr"><b class="'+(inn?'pos':'')+'">'+(inn?'+':'−')+$$(x.amt)+'</b></div></div>';
     }).join('')+'</div>';
     if(order.length>10)h+='<button class="edit" data-x="mall" style="margin-top:10px">'+(moneyAll?'Show recent only':'Show all '+order.length)+'</button>';
@@ -30,7 +35,10 @@ function moneyForm(p){
   return '<p class="grp" style="margin:14px 0 0">'+(moneyEdit==='new'?'Add':'Edit')+' '+(moneyKind==='in'?'income':'expense')+'</p>'+
    '<div class="seg" style="margin-top:8px"><button data-x="mkind" data-kind="in" class="'+(moneyKind==='in'?'on':'')+'">Income</button><button data-x="mkind" data-kind="out" class="'+(moneyKind==='out'?'on':'')+'">Expense</button></div>'+
    '<label>Category</label><select id="m_cat">'+MCATS[moneyKind].map(function(c){return '<option'+(c===x.cat?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select>'+
-   '<div class="grid" style="margin-top:0"><div><label>Date</label><input id="m_date" type="date" required></div><div><label>Amount</label><input id="m_amt" required'+MONEY+'</div></div>'+
+   (moneyKind==='in'?'<label>Paid</label><select id="m_rep"><option value="once">One payment</option><option value="wks">Weekly, for a number of weeks</option><option value="until">Weekly, until a date</option></select>':'')+
+   '<div class="grid" style="margin-top:0"><div><label id="m_datel">Date</label><input id="m_date" type="date" required></div><div><label id="m_amtl">Amount</label><input id="m_amt" required'+MONEY+'</div>'+
+   (moneyKind==='in'?'<div id="m_wksw" hidden><label>Number of weeks</label><input id="m_wks"'+NUM+'</div><div id="m_untw" hidden><label>Until</label><input id="m_until" type="date"></div>':'')+'</div>'+
+   (moneyKind==='in'?'<p class="sub" id="m_repout" style="margin-top:6px;color:var(--ink);font-weight:600"></p>':'')+
    '<label>Note (optional)</label><input id="m_note" placeholder="'+(moneyKind==='in'?'e.g. 4 weeks to 30 Oct':'e.g. Q2 rates instalment')+'">'+
    '<label>Receipts and invoices (optional)</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
    '<div class="rcs">'+rc.map(rcThumb).join('')+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
@@ -38,17 +46,37 @@ function moneyForm(p){
    '<div class="btns"><button class="go" data-x="msave">'+(moneyEdit==='new'?'Add':'Save')+'</button><button class="go ghost" data-x="mcancel">Cancel</button></div>'+
    (moneyEdit==='new'?'':'<button class="edit del" data-x="mdel" style="margin-top:12px">'+(delItem?'Tap to confirm delete':'Delete this entry')+'</button>');
 }
+// Weekly income: how many weekly payments the form describes (0 for one payment). "Until" counts each week starting on or before that date.
+function mWeeks(){
+  var r=$('m_rep'),v=r?r.value:'once';if(v==='wks')return Math.floor(num('m_wks'));
+  if(v==='until'){var a=$('m_date').value,b=$('m_until').value;return a&&b&&b>=a?Math.floor(dd(a,b)/7)+1:0}
+  return 0;
+}
+// Show the fields for the chosen way of paying, mark them required, and preview the payments.
+function mRep(){
+  var r=$('m_rep');if(!r)return;var v=r.value,wk=v!=='once',n=mWeeks(),a=$('m_date').value,amt=num('m_amt');
+  $('m_wksw').hidden=v!=='wks';$('m_untw').hidden=v!=='until';
+  if(v==='wks')$('m_wks').setAttribute('required','');else $('m_wks').removeAttribute('required');
+  if(v==='until')$('m_until').setAttribute('required','');else $('m_until').removeAttribute('required');
+  $('m_amtl').textContent=wk?'Amount per week':'Amount';$('m_datel').textContent=wk?'First week':'Date';
+  $('m_repout').textContent=wk&&n>0&&amt&&a?n+' weekly payment'+(n>1?'s':'')+' of '+$$(amt)+' = '+$$(amt*n)+', '+fmtD(a)+' to '+fmtD(addDays(a,7*(n-1)))+'.':'';
+}
 function saveMoney(p){
   if(missing($('money')))return;
+  var wk=$('m_rep')&&$('m_rep').value!=='once',n=mWeeks();
+  if(wk&&n<1){var bad=$('m_rep').value==='wks'?$('m_wks'):$('m_until');bad.classList.add('bad');bad.focus();$('money').querySelector('.formerr').textContent=$('m_rep').value==='wks'?'Enter at least 1 week.':'The “until” date needs to be on or after the first week.';return}
   var x=moneyEdit==='new'?{id:uid()}:p.money[moneyEdit];
   x.kind=moneyKind;x.cat=$('m_cat').value;x.date=$('m_date').value;x.amt=num('m_amt');x.note=$('m_note').value.trim();
+  delete x.wk;delete x.n;if(wk&&x.kind==='in'){x.wk=x.amt;x.n=n;x.amt=x.wk*n}
   x.rc=(x.rc||[]).filter(function(r){return dropRc.indexOf(r.id)<0}).concat(pendRc);
   rcDel(dropRc);
   if(moneyEdit==='new')(p.money=p.money||[]).push(x);
   pendRc=[];dropRc=[];closeItem();isSample=false;render();
 }
 function exportMoney(p){
-  var rows=[['Date','Type','Category','Amount','Note','Receipt files']].concat((p.money||[]).slice().sort(function(a,b){return (a.date||'').localeCompare(b.date||'')}).map(function(x){
+  // Weekly income is one row per week, so an accountant can split it by tax year.
+  var all=[];(p.money||[]).forEach(function(x){if(!x.n)all.push(x);else weekDates(x).forEach(function(d,k){all.push({date:d,kind:x.kind,cat:x.cat,amt:x.wk,note:'Week '+(k+1)+' of '+x.n+(x.note?' · '+x.note:''),rc:k?[]:x.rc})})});
+  var rows=[['Date','Type','Category','Amount','Note','Receipt files']].concat(all.sort(function(a,b){return (a.date||'').localeCompare(b.date||'')}).map(function(x){
     return [x.date||'',x.kind==='in'?'Income':'Expense',x.cat,x.amt,x.note||'',(x.rc||[]).map(function(r){return r.name}).join('; ')]}));
   download(slug(p.addr)+'-money.csv','﻿'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n'),'text/csv');
 }
@@ -112,3 +140,4 @@ function toRental(p){
   p.type='rental';p.rent=num('r_rent');p.exp=num('r_exp');p.value=num('r_value')||p.value;p.fromProject=iso(new Date());
   rentOpen=false;sec='ov';isSample=false;render();$('p1').scrollTop=0;
 }
+['input','change'].forEach(function(t){$('p1').addEventListener(t,function(e){if(/^m_(rep|wks|until|date|amt)$/.test(e.target.id))mRep()})});

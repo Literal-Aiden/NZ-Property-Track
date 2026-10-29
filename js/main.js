@@ -53,6 +53,7 @@ $('p0').addEventListener('click',function(e){
   var f=e.target.closest('[data-f]');if(f){propFilter=f.dataset.f;list()}
   if(e.target.closest('[data-x="hadd"]')){newType=null;form();go(2)}
 });
+$('p0').addEventListener('input',function(e){if(e.target.id==='pq'){propQ=e.target.value;plist()}});
 // Opens a property's page, optionally at a section.
 function openProp(i,s){if(cur!==i)resetCur();cur=i;if(s)sec=s;editIdx=null;render();go(1)}
 // Reno costs, rental money and tenancy, receipts, timeline, and converting between property types.
@@ -125,7 +126,7 @@ $('p1').addEventListener('input',function(e){
 $('p1').addEventListener('click',function(e){
   var id=e.target.id;
   var p=props[cur];
-  if(id==='edit'||id==='editloan'){editIdx=cur;editSec=id==='edit'?'details':'loan';newType=p.type;newIntent=p.intent||'flip';newLoan=p.ltype||'pi';form();ovOpen('sheet');return}
+  if(id==='edit'||id==='editloan'){editIdx=cur;editSec=id==='edit'?'details':'loan';newType=p.type;newIntent=p.intent||'flip';newLoan=p.ltype||'pi';lpReset(p);form();ovOpen('sheet');return}
   if(id==='addcomp'){
     var a=$('c_addr').value.trim(),pr=num('c_price');
     if(!a){$('c_addr').focus();return}if(!pr){$('c_price').focus();return}

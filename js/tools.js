@@ -37,7 +37,7 @@ var TOOLS=[
       :tres(d.cost?(d.ann/d.cost*100).toFixed(1)+'%':'–','gross yield on total cost',[['Net yield on total cost',d.cost?(d.net/d.cost*100).toFixed(1)+'%':'–'],['Total cost in',$$(d.cost)],['Equity after reno',$$(p.value-d.cost),p.value<d.cost?'neg':'pos']],'Estimates only. Yield is on total cost in, not the asking price.')+save;
   }},
  {id:'mort',icon:'percent',name:'Mortgage repayments',desc:'Repayments for any loan, rate and how often you pay',
-  from:function(p){return p.loan&&{loan:p.loan,rate:p.rate,term:p.term||30,type:p.ltype||'pi'}},
+  from:function(p){var L=parts(p);return L.length&&{loan:p.loan,rate:p.rate,term:L[0].term||30,type:L[0].ltype||'pi'}},
   f:[{i:'loan',l:'Loan amount',k:'m'},{i:'rate',l:'Interest rate %',k:'n'},
      {i:'term',l:'Term in years',k:'n',d:'30'},{i:'freq',l:'Pay',k:'s',d:'12',o:[['12','Monthly'],['26','Fortnightly'],['52','Weekly']]},
      {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT,wide:1}],
@@ -72,7 +72,7 @@ var TOOLS=[
       'Counts the full loan repayment, so it’s close to what actually goes out each month. Estimates only.');
   }},
  {id:'even',icon:'chart',name:'Break-even rent',desc:'The weekly rent that covers the mortgage and costs',
-  from:function(p){return p.type==='rental'&&{loan:p.loan,rate:p.rate,type:p.ltype||'pi',term:p.term||30,oth:p.exp,cur:p.rent}},
+  from:function(p){var L=parts(p),x=L[0]||{};return p.type==='rental'&&{loan:p.loan,rate:p.rate,type:x.ltype||'pi',term:x.term||30,oth:p.exp,cur:p.rent}},
   f:[{i:'loan',l:'Loan amount',k:'m'},{i:'rate',l:'Interest rate %',k:'n'},
      {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT},{i:'term',l:'Term in years',k:'n',d:'30'},
      {i:'rates',l:'Rates per year',k:'m',opt:1},{i:'ins',l:'Insurance per year',k:'m',opt:1},

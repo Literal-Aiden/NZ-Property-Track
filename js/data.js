@@ -20,7 +20,8 @@ var SAMPLE=[
   {t:'Kitchen install',k:'Trade booked',d:'2026-10-20',who:'Sample Kitchens'},
   {t:'Flooring',k:'Trade booked',d:'2026-11-20',who:'Demo Flooring'},
   {t:'Final inspection and CCC',k:'Inspection',d:'2026-12-10'}]},
- {type:'rental',addr:'8 Demo Avenue',sub:'Hamilton',price:620000,legal:2500,extra:4200,date:'2025-08-02',value:655000,rent:640,exp:9800,loan:430000,rate:6.9,fixTerm:'18',fixStart:'2025-06-05',ltype:'io',term:30,
+ {type:'rental',addr:'8 Demo Avenue',sub:'Hamilton',price:620000,legal:2500,extra:4200,date:'2025-08-02',value:655000,rent:640,exp:9800,loan:430000,rate:6.15,
+  parts:[{loan:230000,rate:6.9,fixTerm:'18',fixStart:'2025-06-05',ltype:'io',term:30},{loan:200000,rate:5.29,fixTerm:'12',fixStart:'2026-03-20',ltype:'io',term:30}],
   money:[
   {id:'m9',kind:'in',cat:'Rent',date:'2026-04-10',amt:2560,note:'4 weeks',rc:[]},
   {id:'m10',kind:'in',cat:'Rent',date:'2026-05-08',amt:2560,note:'4 weeks',rc:[]},

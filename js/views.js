@@ -1,21 +1,33 @@
 // Current property view, alerts and the property list.
 function loanCard(p){
-  if(!p.loan)return '<div class="card row" style="cursor:default"><span class="sub">No mortgage added</span><button class="edit" id="editloan">Add mortgage</button></div>';
-  var io=p.loan*p.rate/1200,pi=pmt(p.loan,p.rate,p.term||30),isIO=p.ltype==='io';
+  var L=parts(p);
+  if(!L.length)return '<div class="card row" style="cursor:default"><span class="sub">No mortgage added</span><button class="edit" id="editloan">Add mortgage</button></div>';
+  var top='<div class="card"><div class="row" style="cursor:default">'+hd('percent','Mortgage')+'<button class="edit" id="editloan">Edit mortgage</button></div>';
+  if(L.length>1){
+    // Split loan: the total, the next re-fix, then each part with its own repayment and re-fix date.
+    var next=L.map(function(x){return x.fixTerm==='float'?null:refixOf(x)}).filter(Boolean).sort()[0],nd=next?dd(iso(new Date()),next):null;
+    return top+'<p class="sub">'+$$(p.loan)+' owing in '+L.length+' parts · average '+p.rate+'%</p>'+
+     '<div class="grid">'+stat('Repayment / month now',$$(loanPay(p)))+stat(nd===null?'No re-fix date':nd<0?'Re-fix date passed':'Next re-fix in '+nd+' days',next?fmtD(next):'–',nd!==null&&nd<=90?'neg':'')+'</div>'+
+     '<div class="lparts">'+L.map(function(x,i){var r=refixOf(x),fl=x.fixTerm==='float',d=r?dd(iso(new Date()),r):null;
+       return '<div><span><b>Part '+(i+1)+': '+$$(x.loan)+' at '+x.rate+'%</b><span class="sub">'+(x.ltype==='io'?'Interest-only':'P&amp;I')+' · '+$$(partPay(x))+' a month</span></span>'+
+         '<span class="cr'+(d!==null&&d<=90?' neg':'')+'">'+(fl?'Floating':r?(d<0?'Re-fix passed':'Re-fix')+'<br>'+fmtD(r):'No re-fix date')+'</span></div>'}).join('')+'</div>'+
+     '<p class="sub" style="margin-top:10px">Repayments are estimates, based on each part’s loan type and remaining term.</p></div>';
+  }
+  var x=L[0],io=x.loan*x.rate/1200,pi=pmt(x.loan,x.rate,x.term||30),isIO=x.ltype==='io';
   var now=isIO?io:pi,alt=isIO?pi:io;
-  var rf=refixOf(p),fl=p.fixTerm==='float';
+  var rf=refixOf(x),fl=x.fixTerm==='float';
   var d=rf?dd(iso(new Date()),rf):null;
   var when=fl?'Floating rate':d===null?'No re-fix date':(d<0?'Re-fix date passed':'Re-fix in '+d+' days');
-  var dt=fl?'Can change anytime':rf?new Date(rf+'T00:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'}):'–';
-  return '<div class="card"><div class="row" style="cursor:default">'+hd('percent','Mortgage')+'<button class="edit" id="editloan">Edit mortgage</button></div><p class="sub">'+$$(p.loan)+' owing at '+p.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
+  var dt=fl?'Can change anytime':rf?fmtD(rf):'–';
+  return top+'<p class="sub">'+$$(x.loan)+' owing at '+x.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
    '<div class="grid">'+stat('Repayment / month now',$$(now))+stat(isIO?'If P&amp;I instead':'If interest-only',$$(alt))+stat(when,dt,d!==null&&d>=0&&d<=90?'neg':'')+stat(isIO?'Extra cash needed for P&amp;I':'Cash freed by interest-only',$$(Math.abs(pi-io)))+'</div>'+
-   '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(p.term||30)+'-year term.</p></div>';
+   '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(x.term||30)+'-year term. Split the loan in Edit mortgage if parts are fixed for different terms.</p></div>';
 }
 function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
   if(itemEdit!==null&&itemEdit!=='new'){var x=p.items[itemEdit];setv({i_desc:x.desc,i_who:x.who,i_date:x.date,i_quote:x.quote,i_amt:x.amt})}
-  if(moneyEdit!==null){var y=moneyEdit==='new'?{date:iso(new Date())}:p.money[moneyEdit];setv({m_date:y.date,m_amt:y.amt,m_note:y.note})}
+  if(moneyEdit!==null){var y=moneyEdit==='new'?{date:iso(new Date())}:p.money[moneyEdit];setv({m_date:y.date,m_amt:y.n?y.wk:y.amt,m_note:y.note,m_wks:y.n});if(y.n&&$('m_rep'))$('m_rep').value='wks';mRep()}
   if(tenEdit){var t=p.ten||{};setv({t_who:t.who,t_ls:t.ls||(p.ten?'':p.date),t_le:t.le,t_ri:t.ri,t_bond:t.bond})}
   if(tlEdit)setv({t_start:p.start||p.date,t_target:p.target,t_hold:p.hold});
   if(convOpen)setv({v_price:p.price,v_date:iso(new Date()),v_legal:(p.legal||0)+(p.extra||0),v_budget:p.reno});
@@ -24,7 +36,7 @@ function fillCur(p){
   fillThumbs();
 }
 // Re-render the current pane without losing what's been typed in one card.
-function keepIn(id){var v={};document.querySelectorAll('#'+id+' input[id],#'+id+' select[id]').forEach(function(e){v[e.id]=e.type==='checkbox'?e.checked:e.value});current();for(var k in v){var e=$(k);if(e){if(e.type==='checkbox')e.checked=v[k];else e.value=v[k]}}}
+function keepIn(id){var v={};document.querySelectorAll('#'+id+' input[id],#'+id+' select[id]').forEach(function(e){v[e.id]=e.type==='checkbox'?e.checked:e.value});current();for(var k in v){var e=$(k);if(e){if(e.type==='checkbox')e.checked=v[k];else e.value=v[k]}}mRep()}
 // Property types: label, icon, and the class for their colour (cover, thumbnail and tag).
 var TYPE={project:['Renovation project','tool','c-proj'],rental:['Rental','key','c-rent'],potential:['Potential buy','search','c-pot']};
 function thumb(p){var t=TYPE[p.type];return '<span class="ph '+t[2]+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">':ic(t[1]))+'</span>'}
@@ -70,7 +82,7 @@ function current(){
   }else{
     var ann=p.rent*52,net=ann-p.exp;
     h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%'],
-      ['Est. value now',$$(p.value)]].concat(debtRows(p),[['Purchase price',$$(p.price)],['Total cost in',$$(basis(p))],['Owned for',dOwn(p)]]));
+      ['Est. value now',$$(p.value)]].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
   $('p1').innerHTML=h+(p.plan?planCard(p):'');
@@ -84,14 +96,15 @@ function addPhoto(p,f){
 }
 
 // Portfolio totals for owned properties. Cash flow: rentals are rent less expenses and repayments; projects are their holding cost.
-function loanPay(p){return p.loan?(p.ltype==='io'?p.loan*p.rate/1200:pmt(p.loan,p.rate,p.term||30)):0}
+function loanPay(p){return sum(parts(p),partPay)}
 function cashFlow(p){return p.type==='rental'?((p.rent||0)*52-(p.exp||0))/12-loanPay(p):-(p.hold||loanPay(p))}
 
 // Things that need attention, each pointing at the project section that deals with it.
 function alerts(p){
   var a=[],today=iso(new Date());
   if(p.type==='potential')return a;
-  if(p.loan&&p.fixTerm!=='float'){var rf=refixOf(p);if(rf){var d=dd(today,rf);if(d<=90)a.push({t:d<0?'Re-fix date passed':'Re-fix in '+d+' day'+(d===1?'':'s'),sec:'loan'})}}
+  var L=parts(p);L.forEach(function(x){if(x.fixTerm==='float')return;var rf=refixOf(x);if(!rf)return;var d=dd(today,rf);
+    if(d<=90)a.push({t:(d<0?'Re-fix date passed':'Re-fix in '+d+' day'+(d===1?'':'s'))+(L.length>1?' ('+short(x.loan)+' part)':''),sec:'loan'})});
   if(p.type==='project'){
     var it=p.items||[],cm=it.length?sum(it,cmt):(p.spent||0),un=sum(it,function(x){return x.paid?0:x.amt});
     if(p.budget&&cm>p.budget)a.push({t:'Over budget by '+$$(cm-p.budget),sec:'costs'});
@@ -112,16 +125,24 @@ function alerts(p){
 }
 // Properties tab: filter chips, then a card per property with its photo, type and headline number.
 // An amber dot on the photo means something needs attention. Deleting lives in a property's Edit details panel.
-var propFilter='all',FILTERS=[['all','All'],['project','Reno projects'],['rental','Rentals'],['potential','Potential buys']];
+// The search box matches the address and suburb; typing redraws only the cards so the box keeps focus.
+var propFilter='all',propQ='',FILTERS=[['all','All'],['project','Reno projects'],['rental','Rentals'],['potential','Potential buys']];
 function list(){
-  var own=props.filter(function(p){return p.type!=='potential'}).length,shown=props.map(function(p,i){return i}).filter(function(i){return propFilter==='all'||props[i].type===propFilter});
-  var h='<h1 class="ptitle">Properties</h1><p class="sub">'+own+' owned · '+(props.length-own)+' potential buy'+(props.length-own===1?'':'s')+'</p>'+
-    '<div class="chips">'+FILTERS.map(function(f){return '<button data-f="'+f[0]+'" class="'+(propFilter===f[0]?'on':'')+'">'+f[1]+'</button>'}).join('')+'</div>';
-  h+=shown.map(function(i){
+  var own=props.filter(function(p){return p.type!=='potential'}).length;
+  $('p0').innerHTML='<h1 class="ptitle">Properties</h1><p class="sub">'+own+' owned · '+(props.length-own)+' potential buy'+(props.length-own===1?'':'s')+'</p>'+
+    (props.length?'<label class="psearch">'+ic('search')+'<input type="search" id="pq" placeholder="Search address or suburb" aria-label="Search properties" autocomplete="off" value="'+esc(propQ)+'"></label>':'')+
+    '<div class="chips">'+FILTERS.map(function(f){return '<button data-f="'+f[0]+'" class="'+(propFilter===f[0]?'on':'')+'">'+f[1]+'</button>'}).join('')+'</div><div id="plist"></div>';
+  plist();
+}
+function plist(){
+  var q=propQ.trim().toLowerCase(),shown=props.map(function(p,i){return i}).filter(function(i){var p=props[i];
+    return (propFilter==='all'||p.type===propFilter)&&(!q||(p.addr+' '+p.sub).toLowerCase().indexOf(q)>=0)});
+  var h=shown.map(function(i){
     var p=props[i],hl=headline(p),T=TYPE[p.type];
     return '<button class="card prop" data-i="'+i+'">'+thumb(p)+(alerts(p).length?'<span class="adot" title="Needs attention"></span>':'')+
       '<span class="info"><b>'+esc(p.addr)+'</b><span class="sub">'+esc(p.sub)+'</span><span class="tag t-'+p.type+'">'+hl.tag+'</span></span>'+
       '<span class="num"><b>'+(hl.num||hl.big)+'</b><span>'+hl.short+'</span></span></button>';
-  }).join('')||'<div class="card"><p class="sub">'+(props.length?'Nothing here yet.':'No properties yet.')+'</p><button class="go" data-x="hadd">Add a property</button></div>';
-  $('p0').innerHTML=h;fillThumbs();
+  }).join('')||(q?'<div class="card"><p class="sub">No properties match “'+esc(propQ.trim())+'”.</p></div>'
+    :'<div class="card"><p class="sub">'+(props.length?'Nothing here yet.':'No properties yet.')+'</p><button class="go" data-x="hadd">Add a property</button></div>');
+  $('plist').innerHTML=h;fillThumbs();
 }

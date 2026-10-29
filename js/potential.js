@@ -6,7 +6,7 @@ function deal(p){
 }
 // Monthly holding cost for a potential buy: the bills plus the actual loan repayment (interest-only, or principal & interest),
 // so it's as close as possible to what goes out each month.
-function repay(x){return x.loan?(x.ltype==='io'?x.loan*(x.rate||0)/1200:pmt(x.loan,x.rate||0,x.term||30)):0}
+function repay(x){return partPay(x)}
 function holdOf(x){return (x.rates||0)/12+(x.ins||0)/12+(x.power||0)+(x.oth||0)+repay(x)}
 function holdCalc(){
   var o=$('holdout');if(!o)return;
@@ -15,6 +15,9 @@ function holdCalc(){
   $('loanout').textContent=!r?'':x.ltype==='io'?'Includes interest-only repayments of '+$$(r)+' a month. Estimate only.'
     :'Includes principal & interest repayments of '+$$(r)+' a month over '+(x.term||30)+' years. About '+$$(r-io)+' of that pays down the loan rather than being a cost. Estimate only.';
 }
+// Comparable sales (by hand, imported CSV and the nearby sales map) are hidden for now. Set to true to bring them back;
+// any comps already saved stay in the data.
+var SHOW_COMPS=false;
 function potView(p){
   var flip=p.intent!=='rental',d=deal(p);
   // The address, plan and headline number are in the page's cover and headline card, above this.
@@ -27,6 +30,7 @@ function potView(p){
   h+='<div class="lines">'+lines.map(function(l){return '<div><span>'+l[0]+'</span><b>'+$$(l[1])+'</b></div>'}).join('')+'<div class="tot"><span>Total cost</span><b>'+$$(flip?d.all:d.cost)+'</b></div></div>';
   h+='<p class="sub" style="margin-top:10px">'+(flip?'Estimates only. Profit is before tax: check current IRD guidance on tax for property bought to sell.':'Estimates only. Yield is on total cost in, not the asking price.')+'</p>'+convBlock()+'</div>';
   h+=offerCard(p);
+  if(!SHOW_COMPS)return h;
   var c=p.comps||[];
   h+='<div class="card">'+hd('pin','Comparable sales nearby')+'';
   if(c.length){

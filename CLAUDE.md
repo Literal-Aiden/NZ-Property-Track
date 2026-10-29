@@ -27,8 +27,8 @@ Open `index.html` in a browser to run it.
 A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Settings**. The owner chose this from a clickable mock-up (`mockup/index.html`). One screen shows at a time; the tab bar hides while typing so it doesn't sit above the keyboard.
 
 - **Home (opens here):** greeting, a red portfolio card (equity, value, lending, LVR, monthly cash flow), quick actions (Log rent, Reno cost, Milestone, Deal check), Needs attention, and Recent activity (latest dated rent, expenses and reno costs). Sample-data note with "Start fresh" when showing sample properties; a welcome card when there are no owned properties
-- **Properties:** filter chips (All, Reno projects, Rentals, Potential buys) and a card per property with its photo (or a coloured placeholder by type), a type tag and one headline number (equity gain, monthly cash flow, est. profit or yield on cost). An amber dot means it needs attention. Tapping opens the property page
-- **Property page (opens full screen on top, with a back button):** a cover (photo with "Add photo"/"Change photo", or a coloured placeholder), the address, a headline card with the key number and "Edit details", then section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). Overview figures are a simple list. Potential buys show their deal estimates, maximum offer and comparable sales below the headline
+- **Properties:** a search box (matches address and suburb; typing redraws only the cards in `#plist`, via `plist()`), filter chips (All, Reno projects, Rentals, Potential buys) and a card per property with its photo (or a coloured placeholder by type), a type tag and one headline number (equity gain, monthly cash flow, est. profit or yield on cost). An amber dot means it needs attention. Tapping opens the property page
+- **Property page (opens full screen on top, with a back button):** a cover (photo with "Add photo"/"Change photo", or a coloured placeholder), the address, a headline card with the key number and "Edit details", then section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). Overview figures are a simple list. Potential buys show their deal estimates and maximum offer below the headline (comparable sales are hidden for now)
 - **+ menu (slide-up):** Rent or expense, Reno cost, Milestone, Property, and Quick deal check. Rent/cost/milestone ask which property (skipped when there's only one) and open its page with the form ready. Property opens the add page (choose type, then the form)
 - **Tools:** the calculators; a calculator opens with a back button to the list
 - **Settings:** Backup/restore and Install the app. A dot on the Settings tab means a backup is due
@@ -38,12 +38,13 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 **Both property types**
 - Purchase price, purchase date, legal fees, estimated value now (left blank, it uses the purchase price)
+- Rentals: purchase price and date are optional (a rental may have been owned for decades); without a price, the estimated value is required instead, and Overview shows the price as "Not entered" and total cost in as "–"
 - Rentals: legal fees plus a separate "Healthy Homes / quick reno costs" field. Projects: one "Legal fees and other purchase costs" field (stored in `legal`, with `extra` 0; older projects show legal + extra combined when edited)
 - When adding, "Current loan balance (optional)" is in the main form (what's owed now, not the original loan; blank means mortgage-free), because for a long-held property it matters more than the purchase details. The rate, fixed term and other loan details sit in a collapsed "Mortgage details (if there's a loan)" section. Edit mortgage labels the loan "Current loan balance" too
 - Overview shows Current loan (or "Mortgage-free"), Equity (value − loan) and LVR, and "Owned for" in days, months or years
-- Required fields: inputs with the `required` attribute, checked by `missing()` on save (also: an interest rate whenever a loan amount is entered). Missing fields are outlined, the first is focused, and a collapsed mortgage section opens if needed. Optional fields say "(optional)" in their label
+- Required fields: inputs with the `required` attribute, checked by `missing()` on save (also: an interest rate whenever a loan or loan part amount is entered, and a rental's value when it has no purchase price). Missing fields are outlined, the first is focused, and a collapsed mortgage section opens if needed. Optional fields say "(optional)" in their label
   - Reno project: address, suburb, purchase price, purchase date, reno budget
-  - Rental: address, suburb, purchase price, purchase date, weekly rent, annual expenses
+  - Rental: address, suburb, weekly rent, annual expenses, and the estimated value if there's no purchase price
   - Potential buy: address, suburb, asking price, reno estimate, rates, insurance, months, sale price/value after reno, plus selling costs (reno to sell) or rent and expenses (buy to rent)
 - Number fields are text inputs (no spinner arrows or scroll-wheel changes). Money fields (class `money`) show $ and commas as you type; read them with `num()`/`pnum()`
 - Days owned, and total cost in (price + legal + extra + reno spend)
@@ -54,7 +55,8 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 **Rentals** (section tabs: Overview · Money · Tenancy · Mortgage)
 - Weekly rent, annual expenses, net annual income, and gross/net yield
-- Money: income and expense entries (`p.money`: kind, category, date, amount, note, receipts), with income, expenses and net for the NZ tax year (from 1 April), rent received vs expected (weekly rent since the later of 1 April or purchase), and CSV export
+- Money: income and expense entries (`p.money`: kind, category, date, amount, note, receipts), with income, expenses and net for the NZ tax year (from 1 April, up to today), rent received vs expected (weekly rent since the later of 1 April or purchase), and CSV export
+- Income can be one payment, or the same amount weekly "for a number of weeks" or "until a date" (each week starting on or before it). Stored as one entry with `wk` (per week), `n` (weeks) and `amt` (the total); `mIn()` counts only the weeks dated within a period, so tax-year totals and rent received only include weeks up to today. The list shows weeks × amount, the date range and the amount to date; the CSV export has one row per week
 - Tenancy (`p.ten`): tenant, lease start, fixed term end (blank = periodic), last rent increase, bond and whether it's lodged. Next rent increase is shown as 12 months after the last one, with a note to check current rules at tenancy.govt.nz
 - Healthy Homes checklist (`p.hh`, date each standard was ticked): heating, insulation, ventilation, moisture ingress and drainage, draught stopping, with a note to check current requirements and deadlines at tenancy.govt.nz. "Mark all as done" ticks the rest at once. A compliance report (PDFs or photos) can be uploaded below the checklist; files are saved straight away in IndexedDB (`p.hhDocs`), and removing one needs a second tap
 - A finished reno project (after "Mark reno finished") can be turned into a rental. Its reno spend stays in `p.spent` (so in total cost in), its costs/timeline data are kept, and `p.fromProject` records the date
@@ -63,6 +65,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Total value, total lending, equity, LVR, and monthly cash flow: rentals are rent less expenses and mortgage repayments; projects are their holding cost (or repayments if no holding cost is set)
 
 **Mortgage (optional, per property)**
+- Split loans: a mortgage can have several parts (`p.parts`), each with its own amount, rate, fixed term, loan type and term. `p.loan` is always the total and `p.rate` the average weighted by amount, so equity, LVR, the portfolio card and the calculators work unchanged. `parts(p)` gives the parts (an older property, or a potential buy, with the loan fields on the property itself counts as one part) and `partPay()` a part's repayment. Edit mortgage has "+ Split the loan into parts" / "+ Add another loan part" and Remove; when adding a property with one part, its amount is the main form's "Current loan balance". The Mortgage section lists each part with its repayment and re-fix date, and each part's re-fix gets its own Needs attention item
 - Loan amount and an interest rate the user types in, since some investors use second-tier lenders
 - Fixed term chosen from the standard NZ bank options: 6 months, 1 year, 18 months, 2, 3, 4 or 5 years, Floating, or a custom date. The re-fix date is calculated from the term and a "rate fixed from" date.
 - The re-fix date is highlighted when it's within 90 days
@@ -80,7 +83,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Buy to rent: est. value after reno, weekly rent, annual expenses → total cost in, equity after reno, gross/net yield on total cost
 - Optional bedrooms and land area, used to filter nearby sales
 - Maximum offer: enter a target profit before tax (reno to sell) or a target gross/net yield on total cost (buy to rent), and it works back to the most you could pay, compared with the asking price. Other estimates are held as entered. Saved as `p.tgt` / `p.tgtT`
-- Comparable sales nearby: entered by hand (address with search, price, date sold, notes) or added from imported sales data → median, range, estimate vs median, warning if the estimate is above every comp
+- Comparable sales nearby (HIDDEN FOR NOW: `SHOW_COMPS = false` in `potential.js`; the code, the sales import and the map below are kept, and saved comps stay in the data): entered by hand (address with search, price, date sold, notes) or added from imported sales data → median, range, estimate vs median, warning if the estimate is above every comp
 
 **Reno costs (projects)**
 - Categories (Demolition, Kitchen, Bathroom … Contingency, Other, plus custom) each with an optional budget; tap a category to see its costs

@@ -32,7 +32,7 @@ function activity(){
   var a=[];
   props.forEach(function(p,i){
     var short=p.addr.replace(/\b(Road|Street|Avenue|Lane|Crescent|Place|Drive|Terrace)\b/,function(w){return {Road:'Rd',Street:'St',Avenue:'Ave',Lane:'Ln',Crescent:'Cres',Place:'Pl',Drive:'Dr',Terrace:'Tce'}[w]});
-    (p.money||[]).forEach(function(x){if(x.date)a.push({d:x.date,t:x.cat,addr:short,amt:x.kind==='in'?x.amt:-x.amt,i:i,sec:'money'})});
+    (p.money||[]).forEach(function(x){var m=x.n?mIn(x,'',iso(new Date())):x.amt;if(x.date&&m)a.push({d:x.date,t:x.cat+(x.n?' (weekly)':''),addr:short,amt:x.kind==='in'?m:-m,i:i,sec:'money'})});
     (p.items||[]).forEach(function(x){if(x.date&&x.amt)a.push({d:x.date,t:x.desc,addr:short,amt:-x.amt,i:i,sec:'costs'})});
   });
   return a.sort(function(x,y){return y.d.localeCompare(x.d)}).slice(0,5);
