@@ -21,7 +21,7 @@ var SAMPLE=[
   {t:'Final inspection and CCC',k:'Inspection',d:'2026-12-10'}]},
  {type:'rental',addr:'8 Demo Avenue',sub:'Hamilton',price:620000,legal:2500,extra:4200,date:'2025-08-02',value:655000,rent:640,exp:9800,loan:430000,rate:6.9,fixTerm:'18',fixStart:'2025-06-05',ltype:'io',term:30},
  {type:'project',addr:'3 Example Street',sub:'Tauranga',price:710000,legal:2600,extra:1500,date:'2026-06-20',value:745000,budget:60000,spent:66000},
- {type:'potential',intent:'flip',addr:'51 Prospect Lane',sub:'Hamilton East, Hamilton',price:640000,legal:2500,extra:1800,reno:75000,hold:2900,months:6,sell:24000,value:830000,comps:[
+ {type:'potential',intent:'flip',addr:'51 Prospect Lane',sub:'Hamilton East, Hamilton',price:640000,legal:2500,extra:1800,reno:75000,rates:3200,ins:2400,power:150,loan:512000,rate:5.9,ltype:'io',term:30,hold:3134,months:6,sell:24000,value:830000,comps:[
   {addr:'14 Sample Crescent',sub:'Hamilton East, Hamilton',price:815000,date:'2026-08-12',note:'3 bed, renovated'},
   {addr:'7 Demo Place',sub:'Hamilton East, Hamilton',price:790000,date:'2026-07-03',note:'3 bed, partly updated'},
   {addr:'22 Example Road',sub:'Claudelands, Hamilton',price:860000,date:'2026-09-21',note:'4 bed, renovated'}]}
@@ -399,6 +399,7 @@ function convert(i){
   var n={type:'project',addr:p.addr,sub:p.sub,price:num('v_price'),date:d,legal:num('v_legal'),extra:0,value:num('v_value')||num('v_price'),budget:num('v_budget'),spent:0,hold:p.hold||0,start:d,
     plan:{intent:p.intent||'flip',price:p.price,legal:p.legal,extra:p.extra,reno:p.reno,hold:p.hold,months:p.months,sell:p.sell,value:p.value,rent:p.rent,exp:p.exp,converted:iso(new Date())}};
   ['beds','land','comps'].forEach(function(k){if(p[k])n[k]=p[k]});
+  if(p.loan){n.loan=p.loan;n.rate=p.rate;n.ltype=p.ltype||'pi';n.term=p.term||30}   // the estimated loan becomes the project's mortgage, to edit once it's fixed
   props[i]=n;convOpen=false;nearOpen=false;isSample=false;render();
 }
 
@@ -449,7 +450,7 @@ function fillCur(p){
 function keepIn(id){var v={};document.querySelectorAll('#'+id+' input[id],#'+id+' select[id]').forEach(function(e){v[e.id]=e.type==='checkbox'?e.checked:e.value});current();for(var k in v){var e=$(k);if(e){if(e.type==='checkbox')e.checked=v[k];else e.value=v[k]}}}
 
 function fill(p){
-  var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.type==='project'?(p.legal||0)+(p.extra||0):p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_reno:p.reno,f_hold:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
+  var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.type!=='rental'?(p.legal||0)+(p.extra||0):p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_reno:p.reno,f_rates:p.rates,f_ins:p.ins,f_power:p.power,f_oth:p.oth!==undefined?p.oth:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
   for(var k in m){var e=$(k);if(e&&m[k]!==undefined&&m[k]!==null&&m[k]!==0)e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}
 }
 function current(){
@@ -587,29 +588,39 @@ function form(){
   clearTimeout(acT);acList=[];acSel=-1;
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
   var N=MONEY,ed=editIdx!==null;
-  var h='<div class="card"><b>'+(editIdx===null?'Add a property':(editSec==='loan'?'Edit mortgage':'Edit property details'))+'</b>'+
+  var RQ=' required';
+  var h='<div class="card"><b>'+(editIdx===null?'Add a property':(editSec==='loan'?'Edit mortgage':'Edit property details'))+'</b><p class="sub" style="margin-top:4px">Fields marked optional can be left blank.</p>'+
    (editIdx===null?'<label>Type</label><div class="seg"><button data-t="project" class="'+(pr?'on':'')+'">Reno project</button><button data-t="rental" class="'+(newType==='rental'?'on':'')+'">Rental</button><button data-t="potential" class="'+(pt?'on':'')+'">Potential buy</button></div>':'')+
    (pt?'<label>Plan</label><div class="seg"><button data-n="flip" class="'+(flip?'on':'')+'">Reno to sell</button><button data-n="rental" class="'+(flip?'':'on')+'">Buy to rent</button></div>':'')+
-   (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off"><div class="sugg" role="listbox" hidden></div></div>'+
-   '<label>Suburb / city</label><input id="f_sub">':'')+
-   (sd&&pt?'<div class="grid" style="margin-top:0"><div><label>Bedrooms</label><input id="f_beds"'+NUM+'</div><div><label>Land area (m²)</label><input id="f_land"'+NUM+'</div></div>'+
-   '<label>Asking or offer price (NZD)</label><input id="f_price"'+N+
-   '<label>Legal fees, est. (NZD)</label><input id="f_legal"'+N+
-   '<label>Other purchase costs, est. (builder’s report, LIM, valuation)</label><input id="f_extra"'+N+
-   '<label>Renovation cost estimate (NZD)</label><input id="f_reno"'+N+
-   '<label>Holding costs per month (interest, rates, insurance, power)</label><input id="f_hold"'+N+
-   '<label>'+(flip?'Months until sold':'Months until tenanted')+'</label><input id="f_months"'+NUM+
-   (flip?'<label>Estimated sale price after reno (NZD)</label><input id="f_value"'+N+'<label>Selling costs, est. (agent fees, marketing, legal)</label><input id="f_sell"'+N
-     :'<label>Estimated value after reno (NZD)</label><input id="f_value"'+N+'<label>Expected weekly rent (NZD)</label><input id="f_rent"'+N+'<label>Annual expenses, est. (NZD)</label><input id="f_exp"'+N)+
+   (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off" required><div class="sugg" role="listbox" hidden></div></div>'+
+   '<label>Suburb / city</label><input id="f_sub" required>':'')+
+   // Legal fees and other purchase costs are one figure (stored in legal) for projects and potential buys; rentals keep Healthy Homes costs separate.
+   (sd&&pt?'<div class="grid" style="margin-top:0"><div><label>Bedrooms (optional)</label><input id="f_beds"'+NUM+'</div><div><label>Land m² (optional)</label><input id="f_land"'+NUM+'</div></div>'+
+   '<label>Asking or offer price (NZD)</label><input id="f_price"'+RQ+N+
+   '<label>Legal fees and other purchase costs, est. (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'+
+   '<label>Renovation cost estimate (NZD)</label><input id="f_reno"'+RQ+N+
+   // Holding costs are worked out per month from the yearly bills, loan interest and any other monthly costs.
+   '<p class="grp" style="margin:20px 0 0">Holding costs</p>'+
+   '<label>Council rates per year (NZD)</label><input id="f_rates"'+RQ+N+
+   '<label>Insurance per year (NZD)</label><input id="f_ins"'+RQ+N+
+   '<label>Power per month (optional)</label><input id="f_power"'+N+
+   '<label>Loan amount (optional)</label><input id="f_loan"'+N+
+   '<label>Interest rate % (needed with a loan)</label><input id="f_rate"'+NUM+
+   '<label>Loan type</label><div class="seg" id="lt"><button data-l="pi" class="'+(newLoan==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(newLoan==='io'?'on':'')+'">Interest-only</button></div>'+
+   '<label>Loan term (years, optional, default 30)</label><input id="f_term"'+NUM+
+   '<label>Other costs per month (optional, e.g. water'+(flip?'':', lawns')+')</label><input id="f_oth"'+N+
+   '<p class="sub" id="holdout" style="margin-top:8px;color:var(--acc);font-weight:600"></p><p class="sub" id="loanout" style="margin-top:4px"></p>'+
+   '<label>'+(flip?'Months until sold':'Months until tenanted')+'</label><input id="f_months"'+RQ+NUM+
+   (flip?'<label>Estimated sale price after reno (NZD)</label><input id="f_value"'+RQ+N+'<label>Selling costs, est. (agent fees, marketing, legal)</label><input id="f_sell"'+RQ+N
+     :'<label>Estimated value after reno (NZD)</label><input id="f_value"'+RQ+N+'<label>Expected weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses, est. (NZD)</label><input id="f_exp"'+RQ+N)+
    (editIdx===null?'<p class="sub" style="margin-top:10px">You can add comparable sales once it’s saved.</p>':''):'')+
-   (sd&&!pt?'<label>Purchase price (NZD)</label><input id="f_price"'+N+
-   '<label>Purchase date</label><input id="f_date" type="date">'+
-   // Projects take legal and other purchase costs as one figure (stored in legal); rentals keep Healthy Homes costs separate.
-   (pr?'<label>Legal fees and other purchase costs (NZD)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
-      :'<label>Legal fees (NZD)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (NZD)</label><input id="f_extra"'+N)+
-   '<label>Estimated value now (NZD)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
-   (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (NZD)</label><input id="f_spent"'+N)
-      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+N+'<label>Annual expenses (NZD)</label><input id="f_exp"'+N)+'':'')+
+   (sd&&!pt?'<label>Purchase price (NZD)</label><input id="f_price"'+RQ+N+
+   '<label>Purchase date</label><input id="f_date" type="date" required>'+
+   (pr?'<label>Legal fees and other purchase costs (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
+      :'<label>Legal fees (optional)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (optional)</label><input id="f_extra"'+N)+
+   '<label>Estimated value now (optional)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
+   (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+RQ+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (optional)</label><input id="f_spent"'+N)
+      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp"'+RQ+N)+'':'')+
    // When adding, the optional mortgage sits in a collapsed section so the form stays short.
    (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen?' open':'')+'><summary>Mortgage (optional)</summary>':'')+
    '<label>Loan amount (NZD)</label><input id="f_loan"'+N+
@@ -619,16 +630,39 @@ function form(){
    '<div id="customwrap" style="display:none"><label>Re-fix date</label><input id="f_refix" type="date"></div>'+
    '<p class="sub" id="fixout" style="margin-top:8px;color:var(--acc);font-weight:600"></p>'+
    '<label>Loan type</label><div class="seg" id="lt"><button data-l="pi" class="'+(newLoan==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(newLoan==='io'?'on':'')+'">Interest-only</button></div>'+
-   '<label>Remaining term (years, default 30)</label><input id="f_term"'+NUM+(editIdx===null?'</details>':''):'')+
+   '<label>Remaining term (years, optional, default 30)</label><input id="f_term"'+NUM+(editIdx===null?'</details>':''):'')+
+   '<p class="sub neg" id="formerr" style="margin-top:12px" role="alert"></p>'+
    '<button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go ghost" id="cancel">Cancel</button>')+'</div>';
   // Adding happens in the Add new pane; editing slides up over the current property so you stay where you are.
   $('sheet').hidden=!ed;
   if(ed){$('p2').innerHTML='';$('sheetbody').innerHTML=h;$('sheetbody').scrollTop=0}else{$('sheetbody').innerHTML='';$('p2').innerHTML=h+'<p class="hint">← back to current</p>'}
   if(editIdx!==null)fill(props[editIdx]);
+  holdCalc();
   if($('f_fix')){$('f_fix').value='12';if(editIdx!==null){var q=props[editIdx];$('f_fix').value=q.fixTerm||(q.refix?'custom':'12')}if(!$('f_fixstart').value)$('f_fixstart').value=iso(new Date());fixPreview()}
 }
 
 function num(id){var e=$(id);return e?pnum(e.value):0}
+// Monthly holding cost for a potential buy: the bills plus the actual loan repayment (interest-only, or principal & interest),
+// so it's as close as possible to what goes out each month.
+function repay(x){return x.loan?(x.ltype==='io'?x.loan*(x.rate||0)/1200:pmt(x.loan,x.rate||0,x.term||30)):0}
+function holdOf(x){return (x.rates||0)/12+(x.ins||0)/12+(x.power||0)+(x.oth||0)+repay(x)}
+function holdCalc(){
+  var o=$('holdout');if(!o)return;
+  var x={rates:num('f_rates'),ins:num('f_ins'),power:num('f_power'),oth:num('f_oth'),loan:num('f_loan'),rate:num('f_rate'),ltype:newLoan,term:num('f_term')},m=holdOf(x),n=num('f_months'),r=repay(x),io=x.loan*x.rate/1200;
+  o.textContent=m?'Holding costs: '+$$(m)+' a month'+(n?' · '+$$(m*n)+' over '+n+' month'+(n===1?'':'s'):''):'';
+  $('loanout').textContent=!r?'':x.ltype==='io'?'Includes interest-only repayments of '+$$(r)+' a month. Estimate only.'
+    :'Includes principal & interest repayments of '+$$(r)+' a month over '+(x.term||30)+' years. About '+$$(r-io)+' of that pays down the loan rather than being a cost. Estimate only.';
+}
+// Required fields are checked on save. A loan amount also needs an interest rate.
+function missing(){
+  var box=editIdx===null?$('p2'):$('sheetbody'),bad=[].filter.call(box.querySelectorAll('[required]'),function(e){return !e.value.trim()});
+  var r=$('f_rate');if(r&&num('f_loan')&&!r.value.trim())bad.push(r);
+  box.querySelectorAll('.bad').forEach(function(e){e.classList.remove('bad')});
+  bad.forEach(function(e){var d=e.closest('details');if(d)d.open=true;e.classList.add('bad');e.setAttribute('aria-invalid','true')});
+  $('formerr').textContent=bad.length?'Fill in the '+(bad.length>1?bad.length+' highlighted fields':'highlighted field')+' to save.':'';
+  if(bad.length){bad[0].focus();bad[0].scrollIntoView({block:'center',behavior:'smooth'})}
+  return bad.length;
+}
 var loanOpen=false;
 function saveLoan(){
   var p=props[editIdx],n=num('f_loan');
@@ -637,13 +671,13 @@ function saveLoan(){
   isSample=false;cur=editIdx;editIdx=null;newLoan='pi';render();go(1,true);
 }
 function addProp(){
+  if(missing())return;
   if(editIdx!==null&&editSec==='loan')return saveLoan();
   var a=$('f_addr').value.trim();
-  if(!a){$('f_addr').focus();return}
   var p={type:newType,addr:a,sub:$('f_sub').value.trim(),price:num('f_price'),value:num('f_value')||(newType==='potential'?0:num('f_price')),date:($('f_date')||{}).value||'',legal:num('f_legal'),extra:num('f_extra')};
-  if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.hold=num('f_hold');p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
+  if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}else{p.rent=num('f_rent');p.exp=num('f_exp')}
-  if(num('f_loan')){p.loan=num('f_loan');p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
+  if(newType!=='potential'&&num('f_loan')){p.loan=num('f_loan');p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
   isSample=false;newLoan='pi';loanOpen=false;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);
 }
 
@@ -729,12 +763,16 @@ $('p1').addEventListener('change',function(e){
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
 });
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
-function keepForm(){var v={},lm=$('loanmore');loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}}
+function keepForm(){var v={},lm=$('loanmore');loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}holdCalc()}
 function closeSheet(){editIdx=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){
 $(id).addEventListener('change',function(e){if(/^f_(fix|fixstart|refix)$/.test(e.target.id))fixPreview()});
+$(id).addEventListener('input',function(e){
+  if(e.target.classList.contains('bad')){e.target.classList.remove('bad');e.target.removeAttribute('aria-invalid')}
+  if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
+});
 document.addEventListener('input',function(e){if(e.target.classList.contains('acin'))acFind(e.target)});
 // Reformat money fields as you type, keeping the cursor after the same digit.
 document.addEventListener('input',function(e){
@@ -751,7 +789,7 @@ document.addEventListener('keydown',function(e){
 });
 $(id).addEventListener('click',function(e){
   var l=e.target.closest('[data-l]');
-  if(l){newLoan=l.dataset.l;document.querySelectorAll('#lt button').forEach(function(x){x.classList.toggle('on',x===l)});return}
+  if(l){newLoan=l.dataset.l;document.querySelectorAll('#lt button').forEach(function(x){x.classList.toggle('on',x===l)});holdCalc();return}
   var b=e.target.closest('[data-t]');
   if(b){newType=b.dataset.t;keepForm();return}
   var n=e.target.closest('[data-n]');

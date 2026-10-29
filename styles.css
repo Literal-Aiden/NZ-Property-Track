@@ -107,6 +107,7 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 .sheetbox .card{margin:0}
 @keyframes up{from{transform:translateY(40px);opacity:.6}}
 @media (prefers-reduced-motion:reduce){.sheetbox{animation:none}}
+input.bad,select.bad{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
 .more{margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
 .more summary{padding:12px 0;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
 .more summary::-webkit-details-marker{display:none}

@@ -28,6 +28,10 @@ Three panes the user swipes between, with matching tabs at the top:
 - Purchase price, purchase date, legal fees, estimated value now (left blank, it uses the purchase price)
 - Rentals: legal fees plus a separate "Healthy Homes / quick reno costs" field. Projects: one "Legal fees and other purchase costs" field (stored in `legal`, with `extra` 0; older projects show legal + extra combined when edited)
 - When adding, the mortgage fields sit in a collapsed "Mortgage (optional)" section
+- Required fields: inputs with the `required` attribute, checked by `missing()` on save (also: an interest rate whenever a loan amount is entered). Missing fields are outlined, the first is focused, and a collapsed mortgage section opens if needed. Optional fields say "(optional)" in their label
+  - Reno project: address, suburb, purchase price, purchase date, reno budget
+  - Rental: address, suburb, purchase price, purchase date, weekly rent, annual expenses
+  - Potential buy: address, suburb, asking price, reno estimate, rates, insurance, months, sale price/value after reno, plus selling costs (reno to sell) or rent and expenses (buy to rent)
 - Number fields are text inputs (no spinner arrows or scroll-wheel changes). Money fields (class `money`) show $ and commas as you type; read them with `num()`/`pnum()`
 - Days owned, and total cost in (price + legal + extra + reno spend)
 
@@ -47,7 +51,10 @@ Three panes the user swipes between, with matching tabs at the top:
 
 **Potential buys** (third type, listed under "Potential buys" in the Properties pane; no mortgage section)
 - Plan: "Reno to sell" or "Buy to rent"
-- Estimates: asking/offer price, legal, other purchase costs (builder's report, LIM, valuation), reno cost, holding costs per month × months until sold/tenanted
+- Estimates: asking/offer price, legal fees and other purchase costs as one field (builder's report, LIM, valuation; stored in `legal`), reno cost, holding costs per month × months until sold/tenanted
+- Holding costs are worked out from council rates per year, insurance per year, optional power per month, an optional loan (amount, interest rate, P&I or interest-only, term default 30 years), and optional other costs per month ("e.g. water" for reno to sell, "e.g. water, lawns" for buy to rent). Shown live as a monthly figure (stored as `rates`, `ins`, `power`, `loan`, `rate`, `ltype`, `term`, `oth`, with the monthly total in `hold`)
+- The loan's full repayment is counted, so the monthly figure is as close as possible to what actually goes out each month (the owner's choice). On P&I the note says how much of the repayment pays down the loan rather than being a cost. Older potential buys with only `hold` show it under other costs
+- Converting to a reno project carries the estimated loan over as the project's mortgage (same loan type and term, no re-fix date yet)
 - Reno to sell: est. sale price and selling costs → total cost, est. profit, return on costs. Profit is labelled before tax with an IRD check note
 - Buy to rent: est. value after reno, weekly rent, annual expenses → total cost in, equity after reno, gross/net yield on total cost
 - Optional bedrooms and land area, used to filter nearby sales
