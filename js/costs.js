@@ -8,7 +8,7 @@ function syncSpent(p){if(p.items&&p.items.length)p.spent=sum(p.items,function(x)
 function rcIds(p){return (p.items||[]).concat(p.money||[],[{rc:p.hhDocs}]).reduce(function(a,x){return a.concat((x.rc||[]).map(function(r){return r.id}))},[])}
 function costCard(p){
   var it=p.items||[],C=cats(p),busy=itemEdit!==null||catDraft;
-  var h='<div class="card" id="costs"><div class="row" style="cursor:default"><b>Reno costs</b>'+(it.length&&!busy?'<button class="edit" data-x="csv">Export CSV</button>':'')+'</div>';
+  var h='<div class="card" id="costs"><div class="row" style="cursor:default">'+hd('dollar','Reno costs')+''+(it.length&&!busy?'<button class="edit" data-x="csv">Export CSV</button>':'')+'</div>';
   if(itemEdit!==null)return h+itemForm(p)+'</div>';
   if(catDraft)return h+catForm(p)+'</div>';
   if(it.length){

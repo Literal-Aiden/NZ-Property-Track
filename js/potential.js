@@ -27,7 +27,7 @@ function potView(p){
   h+='<p class="sub" style="margin-top:10px">'+(flip?'Estimates only. Profit is before tax: check current IRD guidance on tax for property bought to sell.':'Estimates only. Yield is on total cost in, not the asking price.')+'</p>'+convBlock()+'</div>';
   h+=offerCard(p);
   var c=p.comps||[];
-  h+='<div class="card"><b>Comparable sales nearby</b>';
+  h+='<div class="card">'+hd('pin','Comparable sales nearby')+'';
   if(c.length){
     var pr=c.map(function(x){return x.price}),m=med(pr),hi=Math.max.apply(null,pr),lo=Math.min.apply(null,pr);
     h+='<div class="grid">'+stat('Median of '+c.length+' sale'+(c.length>1?'s':''),$$(m))+stat('Your estimate vs median',p.value?pct((p.value-m)/m*100):'–')+'</div><p class="sub" style="margin-top:8px">Range '+$$(lo)+' – '+$$(hi)+'</p>';
@@ -46,7 +46,7 @@ function planCard(p){
   var q=p.plan,flip=q.intent!=='rental',it=p.items||[],cm=it.length?sum(it,cmt):(p.spent||0),mo=(days(p.date)||0)/30.44;
   var R=[['Purchase price',q.price||0,p.price],['Legal &amp; purchase costs',(q.legal||0)+(q.extra||0),(p.legal||0)+(p.extra||0)],['Reno (committed so far)',q.reno||0,cm],['Holding ('+mo.toFixed(1)+' of '+(q.months||0)+' months)',(q.hold||0)*(q.months||0),(p.hold||0)*mo]];
   var planCost=sum(R,function(r){return r[1]}),nowCost=(p.price||0)+(p.legal||0)+(p.extra||0)+Math.max(cm,p.budget||0)+(p.hold||0)*Math.max(q.months||0,mo),sell=q.sell||0;
-  var h='<div class="card"><b>Plan vs actual</b><p class="sub">Your estimates from when this was a potential buy ('+(flip?'reno to sell':'buy to rent')+').</p>'+
+  var h='<div class="card">'+hd('chart','Plan vs actual')+'<p class="sub">Your estimates from when this was a potential buy ('+(flip?'reno to sell':'buy to rent')+').</p>'+
     '<div class="vs"><div class="hd"><span></span><span>Plan</span><span>Actual</span></div>'+R.map(function(r){return '<div><span>'+r[0]+'</span><span>'+$$(r[1])+'</span><span class="'+(r[2]>r[1]?'neg':'')+'">'+$$(r[2])+'</span></div>'}).join('')+'</div>';
   h+='<div class="grid">'+stat('Total cost (plan)',$$(planCost))+stat('Total cost (projected now)',$$(nowCost),nowCost>planCost?'neg':'')+(flip
     ?stat('Profit at plan',$$(q.value-planCost-sell),q.value-planCost-sell<0?'neg':'pos')+stat('Profit now, same sale price',$$(q.value-nowCost-sell),q.value-nowCost-sell<0?'neg':'pos')
@@ -58,7 +58,7 @@ var convOpen=false;
 function convBlock(){
   if(!convOpen)return '<button class="go ghost" data-x="conv">Bought it? Track it as a reno project</button>';
   var N=MONEY;
-  return '<div class="near" id="conv"><b>Track as a reno project</b><p class="sub" style="margin-top:4px">Enter what it actually cost. Your estimates are kept so you can compare plan vs actual as the reno goes.</p>'+
+  return '<div class="near" id="conv">'+hd('tool','Track as a reno project')+'<p class="sub" style="margin-top:4px">Enter what it actually cost. Your estimates are kept so you can compare plan vs actual as the reno goes.</p>'+
    '<div class="grid" style="margin-top:0"><div><label>Purchase price</label><input id="v_price" required'+N+'</div><div><label>Purchase date</label><input id="v_date" type="date" required></div>'+
    '<div><label>Reno budget</label><input id="v_budget" required'+N+'</div><div><label>Value now (optional)</label><input id="v_value" placeholder="Purchase price"'+N+'</div></div>'+
    '<label>Legal fees and other purchase costs (optional)</label><input id="v_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'+
@@ -69,7 +69,7 @@ function convBlock(){
 // keeping every other estimate as entered. The target is saved on the property as p.tgt (and p.tgtT: gross or net).
 function offerCard(p){
   var flip=p.intent!=='rental',net=p.tgtT==='net';
-  return '<div class="card" id="offer"><b>Maximum offer</b><p class="sub" style="margin-top:4px">'+(flip?'Enter the profit you want, and this works back to the most you could pay.':'Enter the yield you want on total cost, and this works back to the most you could pay.')+'</p>'+
+  return '<div class="card" id="offer">'+hd('target','Maximum offer')+'<p class="sub" style="margin-top:4px">'+(flip?'Enter the profit you want, and this works back to the most you could pay.':'Enter the yield you want on total cost, and this works back to the most you could pay.')+'</p>'+
     (flip?'<label>Target profit, before tax</label><input id="o_tgt"'+MONEY
       :'<div class="seg" style="margin-top:10px"><button data-x="oyt" data-v="gross" class="'+(net?'':'on')+'">Gross yield</button><button data-x="oyt" data-v="net" class="'+(net?'on':'')+'">Net yield</button></div><label>Target '+(net?'net':'gross')+' yield %</label><input id="o_tgt"'+NUM)+
     '<p class="sub" id="o_out" style="margin-top:10px"></p></div>';

@@ -7,7 +7,8 @@ An app for New Zealand property investors and flippers to track their rental pro
 A working prototype: plain HTML, CSS and JavaScript with no build step. The only library is Leaflet for the nearby-sales map, loaded from a CDN when needed.
 
 - `index.html` – page shell and tab bar
-- `styles.css` – all styling, with light and dark themes via CSS variables
+- `styles.css` – all styling, with light and dark themes via CSS variables. Colour scheme is pōhutukawa red on sand: `--acc` red for buttons, links and selected states; `--good` green for equity, profit, progress bars and ticks; `--warn` amber for over budget and overdue. Keep red for actions, not for "bad" numbers
+- Icons: Feather-style line icons in `ICONS` (`util.js`); `ic(name)` gives an inline SVG and `hd(name, title)` a card heading with an icon. The tab bar icons are inline in `index.html`
 - `js/` – all logic and rendering, as plain scripts sharing one global scope (no modules, no build). `index.html` loads them in order and `main.js` must stay last:
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
@@ -65,6 +66,7 @@ Three panes the user swipes between, with matching tabs at the top:
 
 **Potential buys** (third type, listed under "Potential buys" in the Properties pane; no mortgage section)
 - Plan: "Reno to sell" or "Buy to rent"
+- The add/edit form is compact: sections (Purchase, Holding costs, Selling/Renting) with paired fields side by side, the loan in a collapsed "Loan (optional)" section, and optional fields marked with a small "optional" tag
 - Estimates: asking/offer price, legal fees and other purchase costs as one field (builder's report, LIM, valuation; stored in `legal`), reno cost, holding costs per month × months until sold/tenanted
 - Holding costs are worked out from council rates per year, insurance per year, optional power per month, an optional loan (amount, interest rate, P&I or interest-only, term default 30 years), and optional other costs per month ("e.g. water" for reno to sell, "e.g. water, lawns" for buy to rent). Shown live as a monthly figure (stored as `rates`, `ins`, `power`, `loan`, `rate`, `ltype`, `term`, `oth`, with the monthly total in `hold`)
 - The loan's full repayment is counted, so the monthly figure is as close as possible to what actually goes out each month (the owner's choice). On P&I the note says how much of the repayment pays down the loan rather than being a cost. Older potential buys with only `hold` show it under other costs

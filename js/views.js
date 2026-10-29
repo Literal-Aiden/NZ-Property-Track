@@ -7,7 +7,7 @@ function loanCard(p){
   var d=rf?dd(iso(new Date()),rf):null;
   var when=fl?'Floating rate':d===null?'No re-fix date':(d<0?'Re-fix date passed':'Re-fix in '+d+' days');
   var dt=fl?'Can change anytime':rf?new Date(rf+'T00:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'}):'–';
-  return '<div class="card"><div class="row" style="cursor:default"><b>Mortgage</b><button class="edit" id="editloan">Edit mortgage</button></div><p class="sub">'+$$(p.loan)+' at '+p.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
+  return '<div class="card"><div class="row" style="cursor:default">'+hd('percent','Mortgage')+'<button class="edit" id="editloan">Edit mortgage</button></div><p class="sub">'+$$(p.loan)+' at '+p.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
    '<div class="grid">'+stat('Repayment / month now',$$(now))+stat(isIO?'If P&amp;I instead':'If interest-only',$$(alt))+stat(when,dt,d!==null&&d>=0&&d<=90?'neg':'')+stat(isIO?'Extra cash needed for P&amp;I':'Cash freed by interest-only',$$(Math.abs(pi-io)))+'</div>'+
    '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(p.term||30)+'-year term.</p></div>';
 }
@@ -34,13 +34,13 @@ function current(){
   // Owned properties are split into sections so the page stays short on a phone. A dot marks a section with something to deal with.
   var flag={};alerts(p).forEach(function(a){flag[a.sec]=1});
   var h='<div class="card"><div class="row" style="cursor:default"><span class="badge">'+(pr?'Renovation project':'Rental')+'</span><button class="edit" id="edit">Edit details</button></div><h1>'+esc(p.addr)+'</h1><p class="sub">'+esc(p.sub)+'</p></div>'+
-    '<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
+    '<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+ic(s[2])+s[1]+'</button>'}).join('')+'</div>';
   var body={costs:costCard,tl:timeCard,money:moneyCard,ten:tenCard,loan:loanCard}[sec];
   if(body){$('p1').innerHTML=h+body(p)+'<p class="hint">← all properties · add new →</p>';fillCur(p);return}
   h+='<div class="card">';
   if(pr){
     var pct=p.budget?Math.round(p.spent/p.budget*100):0,gain=p.value-basis(p),left=p.budget-p.spent;
-    h+='<div><b>Reno budget</b><div class="bar"><i class="'+(pct>100?'over':'')+'" style="width:'+Math.min(pct,100)+'%"></i></div><span class="sub">'+$$(p.spent)+' of '+$$(p.budget)+' spent ('+pct+'%)'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed incl. quotes':'')+'</span></div>';
+    h+='<div>'+hd('tool','Reno budget')+'<div class="bar"><i class="'+(pct>100?'over':'')+'" style="width:'+Math.min(pct,100)+'%"></i></div><span class="sub">'+$$(p.spent)+' of '+$$(p.budget)+' spent ('+pct+'%)'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed incl. quotes':'')+'</span></div>';
     h+='<div class="grid">'+stat('Purchase price',$$(p.price))+stat('Est. value now',$$(p.value))+stat('Budget remaining',$$(left),left<0?'neg':'')+stat('Equity gain after reno',$$(gain),gain<0?'neg':'pos')+stat('Total cost in',$$(basis(p)))+stat('Days owned',dOwn(p))+'</div>';
     if(p.done)h+=toRentBlock(p);
   }else{
@@ -51,7 +51,7 @@ function current(){
   $('p1').innerHTML=h+'</div>'+(p.plan?planCard(p):'')+'<p class="hint">← all properties · add new →</p>';
   fillCur(p);
 }
-var SECS=[['ov','Overview'],['costs','Costs'],['tl','Timeline'],['loan','Mortgage']],SECS_R=[['ov','Overview'],['money','Money'],['ten','Tenancy'],['loan','Mortgage']],sec='ov';
+var SECS=[['ov','Overview','grid'],['costs','Costs','dollar'],['tl','Timeline','clock'],['loan','Mortgage','percent']],SECS_R=[['ov','Overview','grid'],['money','Money','dollar'],['ten','Tenancy','users'],['loan','Mortgage','percent']],sec='ov';
 
 // Portfolio totals for owned properties. Cash flow: rentals are rent less expenses and repayments; projects are their holding cost.
 function loanPay(p){return p.loan?(p.ltype==='io'?p.loan*p.rate/1200:pmt(p.loan,p.rate,p.term||30)):0}
@@ -59,7 +59,7 @@ function cashFlow(p){return p.type==='rental'?((p.rent||0)*52-(p.exp||0))/12-loa
 function portfolioCard(){
   var own=props.filter(function(p){return p.type!=='potential'});if(!own.length)return '';
   var val=sum(own,function(p){return p.value}),debt=sum(own,function(p){return p.loan}),eq=val-debt,cf=sum(own,cashFlow);
-  return '<div class="card"><div class="row" style="cursor:default"><b>Portfolio</b><span class="sub">'+own.length+' owned</span></div>'+
+  return '<div class="card"><div class="row" style="cursor:default">'+hd('pie','Portfolio')+'<span class="sub">'+own.length+' owned</span></div>'+
     '<div class="grid">'+stat('Total value (est.)',$$(val))+stat('Total lending',$$(debt))+stat('Equity',$$(eq),eq<0?'neg':'pos')+stat('LVR',val?Math.round(debt/val*100)+'%':'–')+
     '<div class="stat wide"><b class="'+(cf<0?'neg':'pos')+'">'+$$(cf)+' a month</b><span>Cash flow: rent less expenses and mortgage repayments for rentals, holding costs for reno projects</span></div></div>'+
     '<p class="sub" style="margin-top:8px">Estimates only, based on the figures you’ve entered.</p></div>';
@@ -92,7 +92,7 @@ function attnCard(){
   var h='',l=lastBackup(),bd=l?days(l):null;
   props.forEach(function(p,i){alerts(p).forEach(function(a){h+='<button class="att" data-x="att" data-i="'+i+'" data-sec="'+a.sec+'"><span>'+esc(p.addr)+'</span><b>'+esc(a.t)+'</b></button>'})});
   if(!isSample&&props.length&&(bd===null||bd>30))h+='<button class="att" data-x="tobk"><span>Backup</span><b>'+(l?'Last backup '+bd+' days ago':'Not backed up yet')+'</b></button>';
-  return h?'<div class="card attn"><b>Needs attention</b>'+h+'</div>':'';
+  return h?'<div class="card attn">'+hd('alert','Needs attention')+''+h+'</div>':'';
 }
 
 function list(){
@@ -102,7 +102,7 @@ function list(){
     var line=pt?(p.intent==='rental'?'Yield on cost '+(d.cost?(d.ann/d.cost*100).toFixed(1):'0')+'% gross':'Est. profit '+$$(d.prof)):p.type==='project'?'Reno '+$$(p.spent)+' of '+$$(p.budget):$$(p.rent)+'/wk rent';
     var kind=pt?(p.intent==='rental'?'Buy to rent':'Reno to sell'):p.type==='project'?'Project':'Rental';
     // The property being viewed gets an accent border; deleting lives in its Edit details panel.
-    var c='<div class="card row prop'+(i===cur?' cur':'')+'" data-i="'+i+'"'+(i===cur?' aria-current="true"':'')+'><div><b>'+esc(p.addr)+'</b><p class="sub">'+esc(p.sub)+' · '+kind+'</p><p class="sub">'+line+'</p>'+(fl.length?'<div class="flags">'+fl.map(function(a){return '<span class="flag">'+esc(a.t)+'</span>'}).join('')+'</div>':'')+'</div><i class="chev" aria-hidden="true">›</i></div>';
+    var c='<div class="card row prop'+(i===cur?' cur':'')+'" data-i="'+i+'"'+(i===cur?' aria-current="true"':'')+'><span class="pico">'+ic(pt?'search':p.type==='project'?'tool':'key')+'</span><div><b>'+esc(p.addr)+'</b><p class="sub">'+esc(p.sub)+' · '+kind+'</p><p class="sub">'+line+'</p>'+(fl.length?'<div class="flags">'+fl.map(function(a){return '<span class="flag">'+esc(a.t)+'</span>'}).join('')+'</div>':'')+'</div><i class="chev" aria-hidden="true">›</i></div>';
     if(pt)pot+=c;else own+=c;
   });
   $('p0').innerHTML=portfolioCard()+attnCard()+((own&&pot?'<p class="grp">Owned</p>':'')+own+(pot?'<p class="grp">Potential buys</p>'+pot:'')||'<div class="card"><p class="sub">Nothing added yet.</p></div>')+iosHint();

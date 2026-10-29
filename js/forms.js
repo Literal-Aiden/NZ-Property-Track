@@ -22,6 +22,8 @@ function chooser(){
     return '<button class="pick" data-t="'+k[0]+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+k[3]+'</svg><span><b>'+k[1]+'</b><span class="sub">'+k[2]+'</span></span><i aria-hidden="true">›</i></button>';
   }).join('')+'</div>';
 }
+var OPT=' <i class="opt">optional</i>';
+function fsec(n,t){return '<p class="fsec">'+ic(n)+t+'</p>'}
 function form(){
   clearTimeout(acT);acList=[];acSel=-1;
   if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=chooser()+'<p class="hint">← back to current</p>';return}
@@ -33,24 +35,23 @@ function form(){
    (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off" required><div class="sugg" role="listbox" hidden></div></div>'+
    '<label>Suburb / city</label><input id="f_sub" required>':'')+
    // Legal fees and other purchase costs are one figure (stored in legal) for projects and potential buys; rentals keep Healthy Homes costs separate.
-   (sd&&pt?'<div class="grid" style="margin-top:0"><div><label>Bedrooms (optional)</label><input id="f_beds"'+NUM+'</div><div><label>Land m² (optional)</label><input id="f_land"'+NUM+'</div></div>'+
-   '<label>Asking or offer price (NZD)</label><input id="f_price"'+RQ+N+
-   '<label>Legal fees and other purchase costs, est. (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'+
-   '<label>Renovation cost estimate (NZD)</label><input id="f_reno"'+RQ+N+
-   // Holding costs are worked out per month from the yearly bills, loan interest and any other monthly costs.
-   '<p class="grp" style="margin:20px 0 0">Holding costs</p>'+
-   '<label>Council rates per year (NZD)</label><input id="f_rates"'+RQ+N+
-   '<label>Insurance per year (NZD)</label><input id="f_ins"'+RQ+N+
-   '<label>Power per month (optional)</label><input id="f_power"'+N+
-   '<label>Loan amount (optional)</label><input id="f_loan"'+N+
-   '<label>Interest rate % (needed with a loan)</label><input id="f_rate"'+NUM+
+   // Potential buys: grouped into short sections with paired fields so the form stays compact on a phone.
+   (sd&&pt?'<div class="fgrid"><div><label>Bedrooms'+OPT+'</label><input id="f_beds"'+NUM+'</div><div><label>Land m²'+OPT+'</label><input id="f_land"'+NUM+'</div></div>'+
+   fsec('dollar','Purchase')+
+   '<div class="fgrid"><div><label>Asking / offer price</label><input id="f_price"'+RQ+N+'</div><div><label>Reno estimate</label><input id="f_reno"'+RQ+N+'</div></div>'+
+   '<label>Legal &amp; other purchase costs'+OPT+'</label><input id="f_legal" placeholder="Lawyer, LIM, builder’s report, valuation"'+N+
+   // Holding costs are worked out per month from the yearly bills, the loan repayment and any other monthly costs.
+   fsec('clock','Holding costs')+
+   '<div class="fgrid"><div><label>Rates per year</label><input id="f_rates"'+RQ+N+'</div><div><label>Insurance per year</label><input id="f_ins"'+RQ+N+'</div>'+
+   '<div><label>Power / month'+OPT+'</label><input id="f_power"'+N+'</div><div><label>Other / month'+OPT+'</label><input id="f_oth" placeholder="e.g. water'+(flip?'':', lawns')+'"'+N+'</div></div>'+
+   '<details class="more" id="loanmore"'+(loanOpen||(ed&&props[editIdx].loan)?' open':'')+'><summary>Loan (optional)</summary>'+
+   '<div class="fgrid"><div><label>Loan amount</label><input id="f_loan"'+N+'</div><div><label>Interest rate %</label><input id="f_rate"'+NUM+'</div></div>'+
    '<label>Loan type</label><div class="seg" id="lt"><button data-l="pi" class="'+(newLoan==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(newLoan==='io'?'on':'')+'">Interest-only</button></div>'+
-   '<label>Loan term (years, optional, default 30)</label><input id="f_term"'+NUM+
-   '<label>Other costs per month (optional, e.g. water'+(flip?'':', lawns')+')</label><input id="f_oth"'+N+
-   '<p class="sub" id="holdout" style="margin-top:8px;color:var(--acc);font-weight:600"></p><p class="sub" id="loanout" style="margin-top:4px"></p>'+
-   '<label>'+(flip?'Months until sold':'Months until tenanted')+'</label><input id="f_months"'+RQ+NUM+
-   (flip?'<label>Estimated sale price after reno (NZD)</label><input id="f_value"'+RQ+N+'<label>Selling costs, est. (agent fees, marketing, legal)</label><input id="f_sell"'+RQ+N
-     :'<label>Estimated value after reno (NZD)</label><input id="f_value"'+RQ+N+'<label>Expected weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses, est. (NZD)</label><input id="f_exp"'+RQ+N)+
+   '<label>Term in years'+OPT+'</label><input id="f_term" placeholder="30"'+NUM+'</details>'+
+   '<p class="sub" id="holdout" style="margin-top:10px;color:var(--ink);font-weight:600"></p><p class="sub" id="loanout" style="margin-top:4px"></p>'+
+   fsec(flip?'trend':'key',flip?'Selling':'Renting')+
+   (flip?'<div class="fgrid"><div><label>Sale price after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Selling costs</label><input id="f_sell" placeholder="Agent fees etc."'+RQ+N+'</div><div><label>Months until sold</label><input id="f_months"'+RQ+NUM+'</div></div>'
+     :'<div class="fgrid"><div><label>Value after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Weekly rent</label><input id="f_rent"'+RQ+N+'</div><div><label>Annual expenses</label><input id="f_exp"'+RQ+N+'</div><div><label>Months until tenanted</label><input id="f_months"'+RQ+NUM+'</div></div>')+
    (editIdx===null?'<p class="sub" style="margin-top:10px">You can add comparable sales once it’s saved.</p>':''):'')+
    (sd&&!pt?'<label>Purchase price (NZD)</label><input id="f_price"'+RQ+N+
    '<label>Purchase date</label><input id="f_date" type="date" required>'+

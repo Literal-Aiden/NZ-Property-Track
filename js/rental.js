@@ -7,7 +7,7 @@ function taxYearStart(){var d=new Date(),y=d.getMonth()>=3?d.getFullYear():d.get
 
 function moneyCard(p){
   var M=p.money||[],ty=taxYearStart(),busy=moneyEdit!==null;
-  var h='<div class="card" id="money"><div class="row" style="cursor:default"><b>Money in and out</b>'+(M.length&&!busy?'<button class="edit" data-x="mcsv">Export CSV</button>':'')+'</div>';
+  var h='<div class="card" id="money"><div class="row" style="cursor:default">'+hd('dollar','Money in and out')+''+(M.length&&!busy?'<button class="edit" data-x="mcsv">Export CSV</button>':'')+'</div>';
   if(busy)return h+moneyForm(p)+'</div>';
   var yr=M.filter(function(x){return x.date>=ty}),inc=sum(yr,function(x){return x.kind==='in'?x.amt:0}),out=sum(yr,function(x){return x.kind==='out'?x.amt:0});
   var rentIn=sum(yr,function(x){return x.kind==='in'&&x.cat==='Rent'?x.amt:0}),from=p.date&&p.date>ty?p.date:ty,exp=p.rent*Math.max(0,dd(from,iso(new Date())))/7;
@@ -58,7 +58,7 @@ var HH=[['heat','Heating'],['ins','Insulation'],['vent','Ventilation'],['moist',
 function hhLeft(p){var h=p.hh||{};return HH.filter(function(s){return !h[s[0]]}).length}
 function tenCard(p){
   var t=p.ten||{},today=iso(new Date());
-  var h='<div class="card" id="ten"><div class="row" style="cursor:default"><b>Tenancy</b>'+(tenEdit?'':'<button class="edit" data-x="tenedit">'+(p.ten?'Edit':'Add details')+'</button>')+'</div>';
+  var h='<div class="card" id="ten"><div class="row" style="cursor:default">'+hd('users','Tenancy')+''+(tenEdit?'':'<button class="edit" data-x="tenedit">'+(p.ten?'Edit':'Add details')+'</button>')+'</div>';
   if(tenEdit)h+='<label>Tenant name(s) (optional)</label><input id="t_who">'+
     '<div class="grid" style="margin-top:0"><div><label>Lease start (optional)</label><input id="t_ls" type="date"></div><div><label>Fixed term ends (optional)</label><input id="t_le" type="date"></div></div>'+
     '<p class="sub" style="margin-top:4px">Leave the end blank for a periodic tenancy.</p>'+
@@ -74,7 +74,7 @@ function tenCard(p){
   }
   h+='</div>';
   var hh=p.hh||{},left2=hhLeft(p),docs=p.hhDocs||[];
-  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default"><b>Healthy Homes standards</b><span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
+  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default">'+hd('thermo','Healthy Homes standards')+'<span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
     '<p class="sub" style="margin-top:4px">Tick each standard once the property meets it. Check the current requirements and deadlines at tenancy.govt.nz.</p>'+
     (left2?'<button class="edit" data-x="hhall" style="margin-top:10px">Mark all '+HH.length+' as done</button>':'')+
     HH.map(function(s){var d=hh[s[0]];return '<div class="task'+(d?' ok':'')+'"><input type="checkbox" data-x="hh" data-k="'+s[0]+'"'+(d?' checked':'')+' aria-label="'+s[1]+'"><div><b>'+s[1]+'</b><p class="sub">'+(d?'Done '+fmtD(d):'Not done yet')+'</p></div></div>'}).join('')+
@@ -100,7 +100,7 @@ function saveTen(p){
 // A finished reno project becomes a rental. The reno spend stays in p.spent, so it's still in the total cost in.
 function toRentBlock(p){
   if(!rentOpen)return '<button class="go ghost" data-x="torent">Renting it out? Turn into a rental</button>';
-  return '<div class="near" id="torent"><b>Turn into a rental</b><p class="sub" style="margin-top:4px">Your '+$$(p.spent||0)+' reno spend stays in the total cost in. Costs, receipts and the timeline are kept in your data and backups.</p>'+
+  return '<div class="near" id="torent">'+hd('key','Turn into a rental')+'<p class="sub" style="margin-top:4px">Your '+$$(p.spent||0)+' reno spend stays in the total cost in. Costs, receipts and the timeline are kept in your data and backups.</p>'+
    '<label>Weekly rent (NZD)</label><input id="r_rent" required'+MONEY+
    '<label>Annual expenses (NZD)</label><input id="r_exp" required'+MONEY+
    '<label>Estimated value now (optional)</label><input id="r_value" placeholder="'+$$(p.value)+'"'+MONEY+

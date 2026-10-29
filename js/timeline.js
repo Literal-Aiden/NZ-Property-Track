@@ -4,7 +4,7 @@
 var KINDS=['Trade booked','Consent','Inspection','Delivery','Other'],tlEdit=false,tlAdd=false;
 function timeCard(p){
   var today=iso(new Date()),wk=(p.hold||0)*12/52,T=p.tasks||[];
-  var h='<div class="card" id="tl"><div class="row" style="cursor:default"><b>Reno timeline</b>'+(tlEdit?'':'<button class="edit" data-x="tledit">'+(p.target?'Edit dates':'Set dates')+'</button>')+'</div>';
+  var h='<div class="card" id="tl"><div class="row" style="cursor:default">'+hd('clock','Reno timeline')+''+(tlEdit?'':'<button class="edit" data-x="tledit">'+(p.target?'Edit dates':'Set dates')+'</button>')+'</div>';
   if(tlEdit)return h+'<label>Reno start</label><input id="t_start" type="date"><label>Target finish</label><input id="t_target" type="date">'+
     (p.target0&&p.target0!==p.target?'<label class="chk"><input type="checkbox" id="t_rebase">Make this the new baseline (original target '+fmtD(p.target0)+')</label>':'')+
     '<label>Holding costs per month (interest, rates, insurance, power)</label><input id="t_hold"'+MONEY+

@@ -3,7 +3,7 @@
 var BKEY='nzpt.backup',bkPend=null,bkMsg='';
 function lastBackup(){try{return localStorage.getItem(BKEY)}catch(e){return null}}
 function backupCard(){
-  var l=lastBackup(),h='<div class="card" id="bk"><b>Backup</b><p class="sub" style="margin-top:4px">Your properties and receipts are saved only in this browser. Download a backup now and then and keep it somewhere safe, like cloud storage or an email to yourself. Imported sales data isn’t included.</p>'+
+  var l=lastBackup(),h='<div class="card" id="bk">'+hd('save','Backup')+'<p class="sub" style="margin-top:4px">Your properties and receipts are saved only in this browser. Download a backup now and then and keep it somewhere safe, like cloud storage or an email to yourself. Imported sales data isn’t included.</p>'+
     '<p class="sub" style="margin-top:6px"><b>'+(l?'Last backup '+fmtD(l):'Not backed up yet')+'</b></p>'+(bkMsg?'<p class="sub neg" style="margin-top:6px">'+esc(bkMsg)+'</p>':'');
   if(bkPend){var n=bkPend.props.length,r=bkPend.receipts.length;return h+'<p style="margin:12px 0 0;font-size:14px">Backup from '+(bkPend.exported?fmtD(bkPend.exported):'an unknown date')+': '+n+' propert'+(n===1?'y':'ies')+', '+r+' receipt'+(r===1?'':'s')+'. Restoring replaces everything on this device.</p><div class="btns"><button class="go" data-x="bkok">Replace with backup</button><button class="go ghost" data-x="bkno">Cancel</button></div></div>'}
   return h+'<div class="btns"><button class="go" data-x="bkdl">Download backup</button><label class="go ghost filebtn">Restore<input type="file" accept=".json,application/json" class="bkin" hidden></label></div></div>';
@@ -13,7 +13,7 @@ function installCard(){
     :installEvt?'Add it to your home screen so it opens full screen and works offline.'
     :IOS?'In Safari, tap the Share button, then “Add to Home Screen”. It then opens full screen and works offline.'
     :'Open this page on your phone and use the browser menu to add it to your home screen.';
-  return '<div class="card"><b>Install the app</b><p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
+  return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
 function drawSettings(){
   $('setbody').innerHTML='<div class="row" style="cursor:default;margin-bottom:12px"><b class="ftitle" id="settitle">Settings</b><button class="edit" id="setclose" data-x="setclose">Done</button></div>'+backupCard()+installCard();
