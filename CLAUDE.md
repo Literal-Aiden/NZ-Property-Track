@@ -13,7 +13,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
   - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
-  - `views.js` current property view, portfolio, alerts, property list · `forms.js` add/edit forms and validation · `main.js` rendering, navigation, event wiring, delete/undo
+  - `views.js` current property view, portfolio, alerts, property list · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` rendering, navigation, event wiring, delete/undo
 - When adding a file, add it to the `<script>` list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `sw.js`, `manifest.webmanifest`, `icons/` – install-as-app and offline support
 - Data is saved in the browser's localStorage under the key `nzpt.v1`, so it stays on one device only. First load shows sample properties, and "Start fresh" clears them.
@@ -22,7 +22,7 @@ Open `index.html` in a browser to run it.
 
 ## Layout (keep this)
 
-A header bar with the app icon, "NZ Property Tracker" and a settings (gear) button. Settings opens as a slide-up panel holding Backup/restore and Install the app.
+A header bar with the app icon, "NZ Property Tracker", a Tools (calculator) button and a settings (gear) button. Each opens as a slide-up panel: Tools holds the calculators; Settings holds Backup/restore and Install the app.
 
 Three panes the user swipes between, with matching tabs at the top:
 
@@ -101,6 +101,16 @@ Three panes the user swipes between, with matching tabs at the top:
 
 **Needs attention**
 - Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, and no backup in 30 days. Tapping one opens that property at the right section
+
+**Tools & calculators** (header button, `tools.js`)
+- Each calculator is declared in `TOOLS` as fields plus a `calc()` returning the result. Last-used inputs are remembered per calculator in localStorage (`nzpt.tools.v1`). Most can be filled in from a property ("Fill in from a property…")
+- Quick deal check: reno to sell (profit, return on costs) or buy to rent (yield on total cost, equity), using the same `deal()` maths as potential buys. "Save as potential buy" opens the Add new form with the figures filled in (loan and other monthly costs go into "Other / month")
+- Mortgage repayments: monthly, fortnightly or weekly, P&I or interest-only, with the other loan type, monthly equivalent and total interest
+- Rental yield: gross and net yield, rent and net income per year
+- Holding costs: rates, insurance, power, other, and an optional loan (full repayment counted, as for potential buys), monthly and over a number of months
+- Break-even rent: weekly rent that covers repayments and costs, allowing for a management fee % and vacant weeks, compared with the current rent
+- Usable equity: equity available at a max LVR the user enters, and the next purchase price that could support at a deposit % they enter. "Use my portfolio" fills in total value and lending. Notes that LVR rules change and that income servicing isn't checked
+- Selling costs: commission as tiered % (e.g. 3.95% on the first $400,000, 2% on the rest), flat %, or a flat $ fee (all defaults are examples, user-editable), plus GST or no GST (GST fixed at 15% in `GST` in `tools.js`, the owner's choice; update it there if the rate changes), one combined "Marketing, legal & other" amount, and what the seller receives
 
 **Backup**
 - In Settings (gear in the header; also opened from the banner's backup status or the "Needs attention" backup item): download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner

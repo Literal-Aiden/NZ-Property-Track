@@ -17,7 +17,10 @@
 <header>
   <div class="appbar">
     <div class="brand"><img src="icons/icon-192.png" alt="" width="28" height="28"><h1>NZ Property Tracker</h1></div>
+    <div class="hbtns">
+    <button class="gear" id="toolbtn" aria-label="Tools and calculators" title="Tools and calculators"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/></svg></button>
     <button class="gear" id="gear" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
   </div>
   <p class="sample" id="banner"></p>
   <div class="tabs" id="tabs">
@@ -36,6 +39,10 @@
   <div class="sheetbox" id="sheetbody" role="dialog" aria-modal="true"></div>
 </div>
 <div class="toast" id="toast" role="status" hidden><span id="toastmsg"></span><button id="undo">Undo</button></div>
+<div class="sheet" id="tools" hidden>
+  <div class="sheetbg" id="toolbg"></div>
+  <div class="sheetbox tall" id="toolbody" role="dialog" aria-modal="true" aria-labelledby="tooltitle"></div>
+</div>
 <div class="sheet" id="settings" hidden>
   <div class="sheetbg" id="setbg"></div>
   <div class="sheetbox" id="setbody" role="dialog" aria-modal="true" aria-labelledby="settitle"></div>
@@ -53,6 +60,7 @@
 <script src="js/address.js"></script>
 <script src="js/views.js"></script>
 <script src="js/forms.js"></script>
+<script src="js/tools.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
