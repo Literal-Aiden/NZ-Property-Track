@@ -36,6 +36,15 @@ var track=$('track');
 var nz=new Intl.NumberFormat('en-NZ',{style:'currency',currency:'NZD',maximumFractionDigits:0});
 var $$=function(n){return nz.format(n)};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+// Number fields are text inputs so there are no spinner arrows and the scroll wheel can't change them.
+// Money fields show "$" and commas as you type; pnum() strips them again.
+var MONEY=' type="text" inputmode="decimal" class="money" autocomplete="off">',NUM=' type="text" inputmode="decimal" autocomplete="off">';
+function pnum(s){return parseFloat(String(s==null?'':s).replace(/[^\d.\-]/g,''))||0}
+function fmtMoney(v){
+  v=String(v==null?'':v).replace(/[^\d.]/g,'');if(!v)return '';
+  var i=v.indexOf('.'),w=(i<0?v:v.slice(0,i)).replace(/^0+(?=\d)/,''),d=i<0?'':'.'+v.slice(i+1).replace(/\./g,'').slice(0,2);
+  return '$'+(w?(+w).toLocaleString('en-NZ'):'0')+d;
+}
 function stat(l,v,c){return '<div class="stat"><b class="'+(c||'')+'">'+v+'</b><span>'+l+'</span></div>'}
 
 function days(d){return d?Math.max(0,Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5)):null}
@@ -255,7 +264,7 @@ function itemRow(x,j){
    '<div class="cr"><b>'+$$(x.amt||0)+'</b>'+(x.quote?'<span class="sub'+(x.amt>x.quote?' neg':'')+'">of '+$$(x.quote)+' quote</span>':'')+'</div></div>';
 }
 function itemForm(p){
-  var x=itemEdit==='new'?{cat:costOpen||'Other',paid:true}:p.items[itemEdit],N=' type="number" inputmode="decimal">';
+  var x=itemEdit==='new'?{cat:costOpen||'Other',paid:true}:p.items[itemEdit],N=MONEY;
   var rc=(x.rc||[]).filter(function(r){return dropRc.indexOf(r.id)<0}).concat(pendRc);
   return '<p class="grp" style="margin:14px 0 0">'+(itemEdit==='new'?'Add a cost':'Edit cost')+'</p>'+
    '<label>Category</label><select id="i_cat">'+cats(p).map(function(c){return '<option'+(c.n===x.cat?' selected':'')+'>'+esc(c.n)+'</option>'}).join('')+'</select>'+
@@ -283,13 +292,13 @@ function closeItem(){rcDel(pendRc.map(function(r){return r.id}));pendRc=[];dropR
 function catForm(p){
   var used={};(p.items||[]).forEach(function(x){used[x.cat]=1});
   return '<p class="grp" style="margin:14px 0 0">Category budgets</p>'+catDraft.map(function(c,i){
-    return '<div class="cb"><span>'+esc(c.n)+'</span><input id="cb_'+i+'" type="number" inputmode="numeric" placeholder="0" value="'+(c.b||'')+'">'+(used[c.n]?'<span></span>':'<button class="edit del" data-x="catrm" data-k="'+i+'" aria-label="Remove '+esc(c.n)+'">×</button>')+'</div>';
+    return '<div class="cb"><span>'+esc(c.n)+'</span><input id="cb_'+i+'" type="text" inputmode="decimal" class="money" autocomplete="off" placeholder="$0" value="'+fmtMoney(c.b||'')+'">'+(used[c.n]?'<span></span>':'<button class="edit del" data-x="catrm" data-k="'+i+'" aria-label="Remove '+esc(c.n)+'">×</button>')+'</div>';
   }).join('')+
   '<div class="cbnew"><input id="cb_new" placeholder="New category, e.g. Deck"><button class="edit" data-x="catadd">Add</button></div>'+
   '<p class="sub" id="cbtot" style="margin-top:10px"></p>'+
   '<div class="btns"><button class="go" data-x="catsave">Save budgets</button><button class="go ghost" data-x="catcancel">Cancel</button></div>';
 }
-function readDraft(){catDraft.forEach(function(c,i){var e=$('cb_'+i);if(e)c.b=parseFloat(e.value)||0})}
+function readDraft(){catDraft.forEach(function(c,i){var e=$('cb_'+i);if(e)c.b=pnum(e.value)})}
 function cbTot(p){var e=$('cbtot');if(!e)return;readDraft();var t=sum(catDraft,function(c){return c.b});e.textContent='Allocated '+$$(t)+(p.budget?' of your '+$$(p.budget)+' reno budget'+(t>p.budget?', which is over':''):'');e.className='sub'+(p.budget&&t>p.budget?' neg':'')}
 function csvCell(v){v=String(v==null?'':v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function download(name,data,type){var a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type:type}));a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},1000)}
@@ -338,7 +347,7 @@ function timeCard(p){
   var h='<div class="card" id="tl"><div class="row" style="cursor:default"><b>Reno timeline</b>'+(tlEdit?'':'<button class="edit" data-x="tledit">'+(p.target?'Edit dates':'Set dates')+'</button>')+'</div>';
   if(tlEdit)return h+'<label>Reno start</label><input id="t_start" type="date"><label>Target finish</label><input id="t_target" type="date">'+
     (p.target0&&p.target0!==p.target?'<label class="chk"><input type="checkbox" id="t_rebase">Make this the new baseline (original target '+fmtD(p.target0)+')</label>':'')+
-    '<label>Holding costs per month (interest, rates, insurance, power)</label><input id="t_hold" type="number" inputmode="numeric">'+
+    '<label>Holding costs per month (interest, rates, insurance, power)</label><input id="t_hold"'+MONEY+
     (p.loan?'<p class="sub" style="margin-top:6px">Mortgage interest alone is about '+$$(p.loan*p.rate/1200)+' a month.</p>':'')+
     '<p class="sub" style="margin-top:8px">The first target finish you set is kept as the baseline, so if it moves out you can see what the delay costs.</p>'+
     '<div class="btns"><button class="go" data-x="tlsave">Save</button><button class="go ghost" data-x="tlcancel">Cancel</button></div></div>';
@@ -378,16 +387,16 @@ function planCard(p){
 var convOpen=false;
 function convBlock(){
   if(!convOpen)return '<button class="go ghost" data-x="conv">Bought it? Track it as a reno project</button>';
-  var N=' type="number" inputmode="numeric">';
+  var N=MONEY;
   return '<div class="near"><b>Track as a reno project</b><p class="sub" style="margin-top:4px">Enter what it actually cost. Your estimates are kept so you can compare plan vs actual as the reno goes.</p>'+
    '<div class="grid" style="margin-top:0"><div><label>Purchase price</label><input id="v_price"'+N+'</div><div><label>Purchase date</label><input id="v_date" type="date"></div>'+
-   '<div><label>Legal fees</label><input id="v_legal"'+N+'</div><div><label>Other purchase costs</label><input id="v_extra"'+N+'</div>'+
-   '<div><label>Reno budget</label><input id="v_budget"'+N+'</div><div><label>Value now (before reno)</label><input id="v_value"'+N+'</div></div>'+
+   '<div><label>Reno budget</label><input id="v_budget"'+N+'</div><div><label>Value now (before reno)</label><input id="v_value" placeholder="Purchase price"'+N+'</div></div>'+
+   '<label>Legal fees and other purchase costs</label><input id="v_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'+
    '<div class="btns"><button class="go" data-x="convok">Convert</button><button class="go ghost" data-x="convno">Cancel</button></div></div>';
 }
 function convert(i){
   var p=props[i],d=$('v_date').value||iso(new Date());
-  var n={type:'project',addr:p.addr,sub:p.sub,price:num('v_price'),date:d,legal:num('v_legal'),extra:num('v_extra'),value:num('v_value')||num('v_price'),budget:num('v_budget'),spent:0,hold:p.hold||0,start:d,
+  var n={type:'project',addr:p.addr,sub:p.sub,price:num('v_price'),date:d,legal:num('v_legal'),extra:0,value:num('v_value')||num('v_price'),budget:num('v_budget'),spent:0,hold:p.hold||0,start:d,
     plan:{intent:p.intent||'flip',price:p.price,legal:p.legal,extra:p.extra,reno:p.reno,hold:p.hold,months:p.months,sell:p.sell,value:p.value,rent:p.rent,exp:p.exp,converted:iso(new Date())}};
   ['beds','land','comps'].forEach(function(k){if(p[k])n[k]=p[k]});
   props[i]=n;convOpen=false;nearOpen=false;isSample=false;render();
@@ -428,11 +437,11 @@ function restore(){
   });
 }
 function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false}
-function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=m[k]}}
+function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
   if(itemEdit!==null&&itemEdit!=='new'){var x=p.items[itemEdit];setv({i_desc:x.desc,i_who:x.who,i_date:x.date,i_quote:x.quote,i_amt:x.amt})}
   if(tlEdit)setv({t_start:p.start||p.date,t_target:p.target,t_hold:p.hold});
-  if(convOpen)setv({v_price:p.price,v_date:iso(new Date()),v_legal:p.legal,v_extra:p.extra,v_budget:p.reno,v_value:p.price});
+  if(convOpen)setv({v_price:p.price,v_date:iso(new Date()),v_legal:(p.legal||0)+(p.extra||0),v_budget:p.reno});
   if(catDraft)cbTot(p);
   fillThumbs();
 }
@@ -440,8 +449,8 @@ function fillCur(p){
 function keepIn(id){var v={};document.querySelectorAll('#'+id+' input[id],#'+id+' select[id]').forEach(function(e){v[e.id]=e.type==='checkbox'?e.checked:e.value});current();for(var k in v){var e=$(k);if(e){if(e.type==='checkbox')e.checked=v[k];else e.value=v[k]}}}
 
 function fill(p){
-  var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_reno:p.reno,f_hold:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
-  for(var k in m){var e=$(k);if(e&&m[k]!==undefined&&m[k]!==null&&m[k]!==0)e.value=m[k]}
+  var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.type==='project'?(p.legal||0)+(p.extra||0):p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_reno:p.reno,f_hold:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
+  for(var k in m){var e=$(k);if(e&&m[k]!==undefined&&m[k]!==null&&m[k]!==0)e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}
 }
 function current(){
   var p=props[cur];
@@ -568,7 +577,7 @@ function potView(p){
   }else h+='<p class="sub" style="margin-top:6px">No sales added yet. Add recent sales of similar homes nearby to check your '+(flip?'sale price':'value')+' estimate.</p>';
   h+=salesBlock(p)+'<p class="grp" style="margin:18px 0 0">Add a sale by hand</p><label>Address of sold property</label><div class="ac"><input id="c_addr" class="acin" data-sub="c_sub" data-next="c_price" placeholder="Start typing an address" autocomplete="off"><div class="sugg" role="listbox" hidden></div></div>'+
    '<label>Suburb / city</label><input id="c_sub">'+
-   '<div class="grid" style="margin-top:0"><div><label>Sale price (NZD)</label><input id="c_price" type="number" inputmode="numeric"></div><div><label>Date sold</label><input id="c_date" type="date"></div></div>'+
+   '<div class="grid" style="margin-top:0"><div><label>Sale price (NZD)</label><input id="c_price"'+MONEY+'</div><div><label>Date sold</label><input id="c_date" type="date"></div></div>'+
    '<label>Notes (beds, land, condition)</label><input id="c_note">'+
    '<button class="go" id="addcomp">Add sale</button></div>';
   return h;
@@ -577,39 +586,40 @@ function potView(p){
 function form(){
   clearTimeout(acT);acList=[];acSel=-1;
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
-  var N=' type="number" inputmode="numeric">';
-  var ed=editIdx!==null;
+  var N=MONEY,ed=editIdx!==null;
   var h='<div class="card"><b>'+(editIdx===null?'Add a property':(editSec==='loan'?'Edit mortgage':'Edit property details'))+'</b>'+
    (editIdx===null?'<label>Type</label><div class="seg"><button data-t="project" class="'+(pr?'on':'')+'">Reno project</button><button data-t="rental" class="'+(newType==='rental'?'on':'')+'">Rental</button><button data-t="potential" class="'+(pt?'on':'')+'">Potential buy</button></div>':'')+
    (pt?'<label>Plan</label><div class="seg"><button data-n="flip" class="'+(flip?'on':'')+'">Reno to sell</button><button data-n="rental" class="'+(flip?'':'on')+'">Buy to rent</button></div>':'')+
    (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off"><div class="sugg" role="listbox" hidden></div></div>'+
    '<label>Suburb / city</label><input id="f_sub">':'')+
-   (sd&&pt?'<div class="grid" style="margin-top:0"><div><label>Bedrooms</label><input id="f_beds"'+N+'</div><div><label>Land area (m²)</label><input id="f_land"'+N+'</div></div>'+
+   (sd&&pt?'<div class="grid" style="margin-top:0"><div><label>Bedrooms</label><input id="f_beds"'+NUM+'</div><div><label>Land area (m²)</label><input id="f_land"'+NUM+'</div></div>'+
    '<label>Asking or offer price (NZD)</label><input id="f_price"'+N+
    '<label>Legal fees, est. (NZD)</label><input id="f_legal"'+N+
    '<label>Other purchase costs, est. (builder’s report, LIM, valuation)</label><input id="f_extra"'+N+
    '<label>Renovation cost estimate (NZD)</label><input id="f_reno"'+N+
    '<label>Holding costs per month (interest, rates, insurance, power)</label><input id="f_hold"'+N+
-   '<label>'+(flip?'Months until sold':'Months until tenanted')+'</label><input id="f_months"'+N+
+   '<label>'+(flip?'Months until sold':'Months until tenanted')+'</label><input id="f_months"'+NUM+
    (flip?'<label>Estimated sale price after reno (NZD)</label><input id="f_value"'+N+'<label>Selling costs, est. (agent fees, marketing, legal)</label><input id="f_sell"'+N
      :'<label>Estimated value after reno (NZD)</label><input id="f_value"'+N+'<label>Expected weekly rent (NZD)</label><input id="f_rent"'+N+'<label>Annual expenses, est. (NZD)</label><input id="f_exp"'+N)+
    (editIdx===null?'<p class="sub" style="margin-top:10px">You can add comparable sales once it’s saved.</p>':''):'')+
-   (sd&&!pt?'<label>Purchase price (NZD)</label><input id="f_price" type="number" inputmode="numeric">'+
+   (sd&&!pt?'<label>Purchase price (NZD)</label><input id="f_price"'+N+
    '<label>Purchase date</label><input id="f_date" type="date">'+
-   '<label>Legal fees (NZD)</label><input id="f_legal" type="number" inputmode="numeric">'+
-   '<label>'+(pr?'Other purchase costs':'Healthy Homes / quick reno costs')+' (NZD)</label><input id="f_extra" type="number" inputmode="numeric">'+
-   '<label>Estimated value now (NZD)</label><input id="f_value" type="number" inputmode="numeric">'+
-   (pr?'<label>Renovation budget (NZD)</label><input id="f_budget" type="number" inputmode="numeric">'+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (NZD)</label><input id="f_spent" type="number" inputmode="numeric">')
-      :'<label>Weekly rent (NZD)</label><input id="f_rent" type="number" inputmode="numeric"><label>Annual expenses (NZD)</label><input id="f_exp" type="number" inputmode="numeric">')+'':'')+
-   (sl?(editIdx===null?'<b style="display:block;margin-top:18px">Mortgage (optional)</b>':'')+
-   '<label>Loan amount (NZD)</label><input id="f_loan" type="number" inputmode="numeric">'+
-   '<label>Interest rate % (enter your own, e.g. second-tier lender)</label><input id="f_rate" type="number" step="0.01" inputmode="decimal">'+
+   // Projects take legal and other purchase costs as one figure (stored in legal); rentals keep Healthy Homes costs separate.
+   (pr?'<label>Legal fees and other purchase costs (NZD)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
+      :'<label>Legal fees (NZD)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (NZD)</label><input id="f_extra"'+N)+
+   '<label>Estimated value now (NZD)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
+   (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (NZD)</label><input id="f_spent"'+N)
+      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+N+'<label>Annual expenses (NZD)</label><input id="f_exp"'+N)+'':'')+
+   // When adding, the optional mortgage sits in a collapsed section so the form stays short.
+   (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen?' open':'')+'><summary>Mortgage (optional)</summary>':'')+
+   '<label>Loan amount (NZD)</label><input id="f_loan"'+N+
+   '<label>Interest rate % (enter your own, e.g. second-tier lender)</label><input id="f_rate"'+NUM+
    '<label>Fixed term</label><select id="f_fix">'+FIXOPTS+'</select>'+
    '<div id="fixwrap"><label>Rate fixed from</label><input id="f_fixstart" type="date"></div>'+
    '<div id="customwrap" style="display:none"><label>Re-fix date</label><input id="f_refix" type="date"></div>'+
    '<p class="sub" id="fixout" style="margin-top:8px;color:var(--acc);font-weight:600"></p>'+
    '<label>Loan type</label><div class="seg" id="lt"><button data-l="pi" class="'+(newLoan==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(newLoan==='io'?'on':'')+'">Interest-only</button></div>'+
-   '<label>Remaining term (years, default 30)</label><input id="f_term" type="number" inputmode="numeric">'+'':'')+
+   '<label>Remaining term (years, default 30)</label><input id="f_term"'+NUM+(editIdx===null?'</details>':''):'')+
    '<button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go ghost" id="cancel">Cancel</button>')+'</div>';
   // Adding happens in the Add new pane; editing slides up over the current property so you stay where you are.
   $('sheet').hidden=!ed;
@@ -618,7 +628,8 @@ function form(){
   if($('f_fix')){$('f_fix').value='12';if(editIdx!==null){var q=props[editIdx];$('f_fix').value=q.fixTerm||(q.refix?'custom':'12')}if(!$('f_fixstart').value)$('f_fixstart').value=iso(new Date());fixPreview()}
 }
 
-function num(id){var e=$(id);return e?(parseFloat(e.value)||0):0}
+function num(id){var e=$(id);return e?pnum(e.value):0}
+var loanOpen=false;
 function saveLoan(){
   var p=props[editIdx],n=num('f_loan');
   if(n){p.loan=n;p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
@@ -629,11 +640,11 @@ function addProp(){
   if(editIdx!==null&&editSec==='loan')return saveLoan();
   var a=$('f_addr').value.trim();
   if(!a){$('f_addr').focus();return}
-  var p={type:newType,addr:a,sub:$('f_sub').value.trim(),price:num('f_price'),value:num('f_value'),date:($('f_date')||{}).value||'',legal:num('f_legal'),extra:num('f_extra')};
+  var p={type:newType,addr:a,sub:$('f_sub').value.trim(),price:num('f_price'),value:num('f_value')||(newType==='potential'?0:num('f_price')),date:($('f_date')||{}).value||'',legal:num('f_legal'),extra:num('f_extra')};
   if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.hold=num('f_hold');p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}else{p.rent=num('f_rent');p.exp=num('f_exp')}
   if(num('f_loan')){p.loan=num('f_loan');p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
-  isSample=false;newLoan='pi';if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);
+  isSample=false;newLoan='pi';loanOpen=false;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);
 }
 
 function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · '+(l?'last backup '+fmtD(l):'not backed up yet'))+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
@@ -718,13 +729,20 @@ $('p1').addEventListener('change',function(e){
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
 });
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
-function keepForm(){var v={};(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}}
+function keepForm(){var v={},lm=$('loanmore');loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}}
 function closeSheet(){editIdx=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){
 $(id).addEventListener('change',function(e){if(/^f_(fix|fixstart|refix)$/.test(e.target.id))fixPreview()});
 document.addEventListener('input',function(e){if(e.target.classList.contains('acin'))acFind(e.target)});
+// Reformat money fields as you type, keeping the cursor after the same digit.
+document.addEventListener('input',function(e){
+  var el=e.target;if(!el.classList.contains('money'))return;
+  var n=el.value.slice(0,el.selectionStart).replace(/[^\d.]/g,'').length,v=fmtMoney(el.value),i=0,c=0;
+  el.value=v;while(i<v.length&&c<n){if(/[\d.]/.test(v[i]))c++;i++}
+  if(n&&document.activeElement===el)el.setSelectionRange(i,i);
+});
 document.addEventListener('keydown',function(e){
   if(e.target!==acIn||!acList.length)return;
   if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();var n=acList.length;acSel=e.key==='ArrowDown'?(acSel+1)%n:(acSel<=0?n-1:acSel-1);acShow()}

@@ -25,8 +25,10 @@ Three panes the user swipes between, with matching tabs at the top:
 ## Features built so far
 
 **Both property types**
-- Purchase price, purchase date, legal fees, estimated value now
-- An extra purchase-cost field: "Healthy Homes / quick reno costs" for rentals, "Other purchase costs" for projects
+- Purchase price, purchase date, legal fees, estimated value now (left blank, it uses the purchase price)
+- Rentals: legal fees plus a separate "Healthy Homes / quick reno costs" field. Projects: one "Legal fees and other purchase costs" field (stored in `legal`, with `extra` 0; older projects show legal + extra combined when edited)
+- When adding, the mortgage fields sit in a collapsed "Mortgage (optional)" section
+- Number fields are text inputs (no spinner arrows or scroll-wheel changes). Money fields (class `money`) show $ and commas as you type; read them with `num()`/`pnum()`
 - Days owned, and total cost in (price + legal + extra + reno spend)
 
 **Renovation projects**

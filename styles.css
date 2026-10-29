@@ -107,3 +107,9 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 .sheetbox .card{margin:0}
 @keyframes up{from{transform:translateY(40px);opacity:.6}}
 @media (prefers-reduced-motion:reduce){.sheetbox{animation:none}}
+.more{margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.more summary{padding:12px 0;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"+";color:var(--acc);font-size:20px;line-height:1}
+.more[open] summary::after{content:"–"}
+.more[open]{padding-bottom:12px}
