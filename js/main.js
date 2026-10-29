@@ -3,7 +3,8 @@ var track=$('track');
 function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · <a href="#" id="opset">'+(l?'last backup '+fmtD(l):'not backed up yet')+'</a>')+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
 function render(){if(!isSample){save();persist()}list();current();form();banner()}
 function go(i,smooth){track.scrollTo({left:i*track.clientWidth,behavior:smooth?'smooth':'auto'})}
-function sync(){var i=Math.round(track.scrollLeft/track.clientWidth);document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',+t.dataset.i===i)})}
+var pane=1,paneW=0;
+function sync(){var i=Math.round(track.scrollLeft/track.clientWidth);if(track.clientWidth===paneW)pane=i;document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',+t.dataset.i===i)})}
 
 $('tabs').addEventListener('click',function(e){var t=e.target.closest('.tab');if(!t)return;var i=+t.dataset.i;
   // Tapping Add new while already on it goes back to the choice of property type.
@@ -126,8 +127,10 @@ $('p1').addEventListener('change',function(e){
 document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2,true)}
   if(e.target.id==='install'&&installEvt){e.preventDefault();installEvt.prompt();installEvt=null;banner()}
   if(e.target.id==='opset'){e.preventDefault();openSettings()}});
-window.addEventListener('resize',function(){go(1)});
+// The phone keyboard opening or closing changes only the height, so stay on the same pane.
+// A width change (e.g. rotating the phone) re-aligns to the pane you were on.
+window.addEventListener('resize',function(){if(track.clientWidth!==paneW){paneW=track.clientWidth;go(pane)}});
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;banner()});
 window.addEventListener('appinstalled',function(){installEvt=null;banner()});
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){});
-render();go(1);sync();
+paneW=track.clientWidth;render();go(1);sync();
