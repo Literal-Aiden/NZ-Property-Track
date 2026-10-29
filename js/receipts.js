@@ -21,9 +21,10 @@ function addReceipts(files){
     return shrink(f).then(function(b){var r={id:uid(),name:f.name,type:b.type||f.type,added:iso(new Date())};return rcPut(Object.assign({blob:b},r)).then(function(){return r})});
   })).then(function(l){pendRc=pendRc.concat(l)}).catch(function(){rcMsg='Couldn’t save that file in this browser. Private browsing can block it.'}).then(function(){if(itemEdit!==null||moneyEdit!==null)keepIn(rcCard())});
 }
-function rcThumb(r){
-  var img=/^image\//.test(r.type);
-  return '<div class="rc"><button class="th" data-x="rcopen" data-id="'+esc(r.id)+'" title="'+esc(r.name)+'">'+(img?'<img data-rc="'+esc(r.id)+'" alt="'+esc(r.name)+'">':/pdf/.test(r.type)?'PDF':'File')+'</button><button class="x" data-x="rcdrop" data-id="'+esc(r.id)+'" aria-label="Remove receipt">×</button></div>';
+// drop: the data-x action for the remove button (default rcdrop); armed: show it as waiting for a second tap.
+function rcThumb(r,drop,armed){
+  var img=/^image\//.test(r.type);drop=typeof drop==='string'?drop:'rcdrop';
+  return '<div class="rc"><button class="th" data-x="rcopen" data-id="'+esc(r.id)+'" title="'+esc(r.name)+'">'+(img?'<img data-rc="'+esc(r.id)+'" alt="'+esc(r.name)+'">':/pdf/.test(r.type)?'PDF':'File')+'</button><button class="x'+(armed===true?' armed':'')+'" data-x="'+drop+'" data-id="'+esc(r.id)+'" aria-label="Remove file">×</button></div>';
 }
 function fillThumbs(){document.querySelectorAll('img[data-rc]').forEach(function(im){im.onerror=function(){im.replaceWith('Photo')};rcUrl(im.dataset.rc).then(function(u){if(u)im.src=u})})}
 function openRc(id){if(RCU[id]){window.open(RCU[id]);return}var w=window.open('');rcUrl(id).then(function(u){if(w&&u)w.location=u})}

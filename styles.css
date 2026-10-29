@@ -85,6 +85,7 @@ label.edit{display:inline-block;margin:0;color:var(--ink)}
 .rc .th{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--mute);font:inherit;font-size:12px;overflow:hidden;padding:0;cursor:pointer}
 .rc img{width:100%;height:100%;object-fit:cover;display:block}
 .rc .x{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--warn);font-size:14px;line-height:1;padding:0;cursor:pointer}
+.rc .x.armed{background:var(--warn);color:var(--card);border-color:var(--warn)}
 label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;justify-content:center;text-align:center;border:1px dashed var(--acc);border-radius:10px;font-size:12px;color:var(--acc);cursor:pointer}
 .task{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .task input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--acc)}

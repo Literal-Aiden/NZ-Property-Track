@@ -50,7 +50,7 @@ Three panes the user swipes between, with matching tabs at the top:
 - Weekly rent, annual expenses, net annual income, and gross/net yield
 - Money: income and expense entries (`p.money`: kind, category, date, amount, note, receipts), with income, expenses and net for the NZ tax year (from 1 April), rent received vs expected (weekly rent since the later of 1 April or purchase), and CSV export
 - Tenancy (`p.ten`): tenant, lease start, fixed term end (blank = periodic), last rent increase, bond and whether it's lodged. Next rent increase is shown as 12 months after the last one, with a note to check current rules at tenancy.govt.nz
-- Healthy Homes checklist (`p.hh`, date each standard was ticked): heating, insulation, ventilation, moisture ingress and drainage, draught stopping, with a note to check current requirements and deadlines at tenancy.govt.nz
+- Healthy Homes checklist (`p.hh`, date each standard was ticked): heating, insulation, ventilation, moisture ingress and drainage, draught stopping, with a note to check current requirements and deadlines at tenancy.govt.nz. "Mark all as done" ticks the rest at once. A compliance report (PDFs or photos) can be uploaded below the checklist; files are saved straight away in IndexedDB (`p.hhDocs`), and removing one needs a second tap
 - A finished reno project (after "Mark reno finished") can be turned into a rental. Its reno spend stays in `p.spent` (so in total cost in), its costs/timeline data are kept, and `p.fromProject` records the date
 
 **Portfolio** (top of the Properties pane, owned properties only)

@@ -81,6 +81,11 @@ $('p1').addEventListener('click',function(e){
   else if(x==='tenedit'){tenEdit=true;current()}
   else if(x==='tensave')saveTen(p);
   else if(x==='tencancel'){tenEdit=false;current()}
+  else if(x==='hhall'){p.hh=p.hh||{};HH.forEach(function(s){if(!p.hh[s[0]])p.hh[s[0]]=iso(new Date())});isSample=false;render()}
+  else if(x==='hhdrop'){
+    var did=b.dataset.id;if(hhArm!==did){hhArm=did;current();return}
+    hhArm=null;p.hhDocs=(p.hhDocs||[]).filter(function(r){return r.id!==did});rcDel([did]);isSample=false;render();
+  }
   else if(x==='hh'){p.hh=p.hh||{};if(p.hh[b.dataset.k])delete p.hh[b.dataset.k];else p.hh[b.dataset.k]=iso(new Date());isSample=false;render()}
   else if(x==='torent'){rentOpen=true;current();$('r_rent').focus()}
   else if(x==='rentok')toRental(p);
@@ -116,6 +121,7 @@ $('p1').addEventListener('change',function(e){
   if(e.target.classList.contains('csvin')&&e.target.files[0])importCSV(e.target.files[0]);
   if(e.target.id==='nearbeds'){nearBeds=e.target.checked;drawNear()}
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
+  if(e.target.classList.contains('hhin')&&e.target.files.length)addHhDocs(props[cur],e.target.files);
 });
 document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2,true)}
   if(e.target.id==='install'&&installEvt){e.preventDefault();installEvt.prompt();installEvt=null;banner()}

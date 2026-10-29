@@ -73,11 +73,24 @@ function tenCard(p){
       (next?'<p class="sub" style="margin-top:8px">Based on rent increases being allowed once every 12 months. Check the current rules at tenancy.govt.nz.</p>':'');
   }
   h+='</div>';
-  var hh=p.hh||{},left2=hhLeft(p);
-  h+='<div class="card"><div class="row" style="cursor:default"><b>Healthy Homes standards</b><span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
+  var hh=p.hh||{},left2=hhLeft(p),docs=p.hhDocs||[];
+  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default"><b>Healthy Homes standards</b><span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
     '<p class="sub" style="margin-top:4px">Tick each standard once the property meets it. Check the current requirements and deadlines at tenancy.govt.nz.</p>'+
-    HH.map(function(s){var d=hh[s[0]];return '<div class="task'+(d?' ok':'')+'"><input type="checkbox" data-x="hh" data-k="'+s[0]+'"'+(d?' checked':'')+' aria-label="'+s[1]+'"><div><b>'+s[1]+'</b><p class="sub">'+(d?'Done '+fmtD(d):'Not done yet')+'</p></div></div>'}).join('')+'</div>';
+    (left2?'<button class="edit" data-x="hhall" style="margin-top:10px">Mark all '+HH.length+' as done</button>':'')+
+    HH.map(function(s){var d=hh[s[0]];return '<div class="task'+(d?' ok':'')+'"><input type="checkbox" data-x="hh" data-k="'+s[0]+'"'+(d?' checked':'')+' aria-label="'+s[1]+'"><div><b>'+s[1]+'</b><p class="sub">'+(d?'Done '+fmtD(d):'Not done yet')+'</p></div></div>'}).join('')+
+    // Compliance reports (e.g. from an assessor) are stored like receipts and saved as soon as they're added.
+    '<p class="grp" style="margin:16px 0 0">Compliance report</p>'+
+    '<p class="sub" style="margin-top:4px">'+(docs.length?'Tap a file to open it.':'Upload the Healthy Homes compliance report or statement, as a PDF or photos.')+'</p>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
+    '<div class="rcs">'+docs.map(function(r){return rcThumb(r,'hhdrop',hhArm===r.id)}).join('')+'<label class="rcadd">+ Report<input type="file" class="hhin" accept="image/*,application/pdf" multiple hidden></label></div>'+
+    (hhArm?'<p class="sub neg" style="margin-top:6px">Tap × again to remove that file.</p>':'')+'</div>';
   return h;
+}
+var hhArm=null;
+function addHhDocs(p,files){
+  rcMsg='';
+  Promise.all([].slice.call(files).map(function(f){
+    return shrink(f).then(function(b){var r={id:uid(),name:f.name,type:b.type||f.type,added:iso(new Date())};return rcPut(Object.assign({blob:b},r)).then(function(){return r})});
+  })).then(function(l){p.hhDocs=(p.hhDocs||[]).concat(l);isSample=false;render()}).catch(function(){rcMsg='Couldn’t save that file in this browser. Private browsing can block it.';current()});
 }
 function saveTen(p){
   p.ten={who:$('t_who').value.trim(),ls:$('t_ls').value,le:$('t_le').value,ri:$('t_ri').value,bond:num('t_bond'),lodged:$('t_lodged').checked};
