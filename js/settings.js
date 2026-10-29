@@ -54,8 +54,9 @@ function iosHint(){
 var persistAsked=false;
 function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.storage.persist)return;persistAsked=true;navigator.storage.persisted().then(function(y){if(!y)return navigator.storage.persist()}).catch(function(){})}
 // Settings panel: backup, restore and installing the app.
-function openSettings(){drawSettings();$('settings').hidden=false;$('setbody').scrollTop=0;$('setclose').focus()}
-function closeSettings(){$('settings').hidden=true;bkPend=null;bkMsg=''}
+function openSettings(){drawSettings();$('settings').hidden=false;$('setbody').scrollTop=0;$('setclose').focus();ovOpen('settings')}
+function closeSettings(){ovClose('settings')}
+function closeSettingsNow(){$('settings').hidden=true;bkPend=null;bkMsg=''}
 $('gear').addEventListener('click',openSettings);
 $('setbg').addEventListener('click',closeSettings);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('settings').hidden)closeSettings()});

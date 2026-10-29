@@ -150,8 +150,9 @@ function tfill(vals){
   for(var k in vals){var e=$('q_'+k),x=vals[k];if(!e||x===undefined||x===null)continue;e.value=e.classList.contains('money')?(x?fmtMoney(Math.round(x*100)/100):''):x}
   tcalc();
 }
-function openTools(){toolCur=null;drawTools();$('tools').hidden=false;$('toolbody').scrollTop=0}
-function closeTools(){$('tools').hidden=true}
+function openTools(){toolCur=null;drawTools();$('tools').hidden=false;$('toolbody').scrollTop=0;ovOpen('tools')}
+function closeTools(){ovClose('tools')}
+function closeToolsNow(){$('tools').hidden=true;toolCur=null}
 // Turns a quick deal check into a potential buy, with its figures already in the Add new form.
 function dealToProp(){
   var v=tread(toolById('deal')),f=v.plan==='flip';closeTools();
@@ -163,10 +164,10 @@ $('toolbtn').addEventListener('click',openTools);
 $('toolbg').addEventListener('click',closeTools);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('tools').hidden)closeTools()});
 $('toolbody').addEventListener('click',function(e){
-  var tile=e.target.closest('[data-tool]');if(tile){toolCur=tile.dataset.tool;drawTools();$('toolbody').scrollTop=0;return}
+  var tile=e.target.closest('[data-tool]');if(tile){toolCur=tile.dataset.tool;drawTools();$('toolbody').scrollTop=0;ovOpen('tool');return}
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='tclose')closeTools();
-  if(b.dataset.x==='thome'){toolCur=null;drawTools()}
+  if(b.dataset.x==='thome')ovClose('tool');
   if(b.dataset.x==='tsave')dealToProp();
   if(b.dataset.x==='tport'){var own=props.filter(function(p){return p.type!=='potential'});tfill({val:sum(own,function(p){return p.value}),debt:sum(own,function(p){return p.loan})})}
 });

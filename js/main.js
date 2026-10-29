@@ -1,5 +1,13 @@
 // Rendering, navigation and event wiring. Loaded last.
 var track=$('track');
+// Phone Back button: each panel that opens (tools, a calculator in it, settings, the edit panel) adds a history entry,
+// so Back closes the top panel instead of leaving the app. Closing a panel with its own buttons also goes back
+// through history, so the entries never pile up. ovs is the stack of open panels.
+var ovs=[];
+function ovOpen(id){ovs.push(id);try{history.pushState({nz:ovs.length},'')}catch(e){}}
+function ovClose(id){var i=ovs.lastIndexOf(id);if(i<0)ovShut(id);else history.go(i-ovs.length)}
+function ovShut(id){if(id==='tools')closeToolsNow();else if(id==='tool'){toolCur=null;drawTools()}else if(id==='settings')closeSettingsNow();else if(id==='sheet')closeSheetNow()}
+window.addEventListener('popstate',function(e){var l=(e.state&&e.state.nz)||0;while(ovs.length>l)ovShut(ovs.pop())});
 function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · <a href="#" id="opset">'+(l?'last backup '+fmtD(l):'not backed up yet')+'</a>')+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
 function render(){if(!isSample){save();persist()}list();current();form();banner()}
 function go(i,smooth){track.scrollTo({left:i*track.clientWidth,behavior:smooth?'smooth':'auto'})}
@@ -102,7 +110,7 @@ $('p1').addEventListener('input',function(e){
 $('p1').addEventListener('click',function(e){
   var id=e.target.id;
   var p=props[cur];
-  if(id==='edit'||id==='editloan'){editIdx=cur;editSec=id==='edit'?'details':'loan';newType=p.type;newIntent=p.intent||'flip';newLoan=p.ltype||'pi';form();return}
+  if(id==='edit'||id==='editloan'){editIdx=cur;editSec=id==='edit'?'details':'loan';newType=p.type;newIntent=p.intent||'flip';newLoan=p.ltype||'pi';form();ovOpen('sheet');return}
   if(id==='addcomp'){
     var a=$('c_addr').value.trim(),pr=num('c_price');
     if(!a){$('c_addr').focus();return}if(!pr){$('c_price').focus();return}

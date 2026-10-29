@@ -98,6 +98,7 @@ Three panes the user swipes between, with matching tabs at the top:
 - Asks the browser for persistent storage once there's real data, so receipts aren't cleared when space runs low
 - Owned properties are split into section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). A dot marks a section with something needing attention
 - "Edit details" and "Edit mortgage" open in a slide-up panel over the current page (closes on Cancel, tapping outside, or Escape). Adding a property still uses the Add new pane
+- Phone Back button: Tools, a calculator inside Tools, Settings and the edit panel each add a history entry when opened (`ovOpen` in `main.js`), so Back closes the top panel (a calculator goes back to the tools list first) instead of leaving the app. Their own close buttons go through `ovClose`, which steps back through history, so entries don't pile up. A new panel needs an `ovOpen` call, an `ovClose` for its close button, and a case in `ovShut`
 
 **Needs attention**
 - Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, and no backup in 30 days. Tapping one opens that property at the right section
