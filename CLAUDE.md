@@ -4,7 +4,7 @@ An app for New Zealand property investors and flippers to track their rental pro
 
 ## Current state
 
-A working prototype: plain HTML, CSS and JavaScript with no build step or dependencies.
+A working prototype: plain HTML, CSS and JavaScript with no build step. The only library is Leaflet for the nearby-sales map, loaded from a CDN when needed.
 
 - `index.html` – page shell and tab bar
 - `styles.css` – all styling, with light and dark themes via CSS variables
@@ -42,6 +42,43 @@ Three panes the user swipes between, with matching tabs at the top:
 - P&I vs interest-only: shows the repayment now and on the other loan type. The difference is framed as cash flow, not money saved, because it is mostly principal.
 - Remaining loan term, default 30 years
 
+**Potential buys** (third type, listed under "Potential buys" in the Properties pane; no mortgage section)
+- Plan: "Reno to sell" or "Buy to rent"
+- Estimates: asking/offer price, legal, other purchase costs (builder's report, LIM, valuation), reno cost, holding costs per month × months until sold/tenanted
+- Reno to sell: est. sale price and selling costs → total cost, est. profit, return on costs. Profit is labelled before tax with an IRD check note
+- Buy to rent: est. value after reno, weekly rent, annual expenses → total cost in, equity after reno, gross/net yield on total cost
+- Optional bedrooms and land area, used to filter nearby sales
+- Comparable sales nearby: entered by hand (address with search, price, date sold, notes) or added from imported sales data → median, range, estimate vs median, warning if the estimate is above every comp
+
+**Reno costs (projects)**
+- Categories (Demolition, Kitchen, Bathroom … Contingency, Other, plus custom) each with an optional budget; tap a category to see its costs
+- Each cost: description, supplier/tradie, date, quote for the job, invoiced so far, paid. Amounts are incl. GST
+- Once anything is itemised, `p.spent` is kept as the total invoiced, and the "Spent so far" field is hidden from Edit details. The first itemised cost turns any existing spent figure into a "Spent before itemising" cost under Other
+- Shows spent, committed (larger of quote or invoiced), unpaid invoices, over quotes, contingency used, and unallocated budget. Export CSV for an accountant
+
+**Receipts**
+- Photos or PDFs attached to a cost, stored in IndexedDB (`nzpt` database, `rc` store), not localStorage. Items hold only `{id,name,type}`. Photos are scaled to 1600px JPEG
+
+**Reno timeline (projects)**
+- Start, target finish, holding cost per month. The first target set is kept as the baseline (`target0`), so delays show as days behind and extra holding cost
+- Milestones (trade booked, consent, inspection, delivery, other) with tick-off and overdue highlighting; "Mark reno finished"
+
+**Potential buy → project**
+- "Bought it? Track it as a reno project" converts a potential buy, keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
+
+**Backup**
+- Properties pane: download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner
+
+**Sales data import and nearby sales map**
+- "Import sales CSV" on a potential buy reads a REINZ Statistics Search export (columns matched by header name: Street Number, Street, Suburb, Sale Price, Sale Date, plus optional List Price, Days To Sell, Sale Category, Valuation, Bedrooms, Floor Area, Land Area m2). Stored in localStorage under `nzpt.sales.v1`, separate from properties. Rows without a usable street number, price or date (Lot/null/malformed) are skipped
+- REINZ data is licensed: keep it out of git (`*.csv` is in `.gitignore`) and never bundle it into the app
+- "Find nearby sales" geocodes the subject and residential sales (Residence, Townhouse, Unit, Apartment, Home and Income, Conversion) with Nominatim at 1 request/second, same suburb first, caching positions in `nzpt.geo.v1`. Photon was tried for this but throttles bulk lookups. For production, use LINZ address data or a paid geocoder
+- Results: distance filter (500 m / 1 / 2 / 5 km), optional similar bedrooms (±1), median, Leaflet map (loaded from cdnjs only when shown, OSM tiles), list with beds/floor/land/CV/days to sell and "Add as comp". "≈" marks street-level matches
+
+**Address search**
+- Typing 3+ characters in the Address field suggests NZ addresses; picking one fills Address and Suburb / city
+- Uses the free Photon API (OpenStreetMap data, no key), so typed text goes to photon.komoot.io. For production, consider an NZ-specific source (LINZ / Addressfinder / NZ Post) and check its usage terms
+
 **Editing**
 - "Edit details" and "Edit mortgage" are separate forms, so editing one never touches the other
 - The property type can't be changed while editing
@@ -57,5 +94,5 @@ Three panes the user swipes between, with matching tabs at the top:
 
 - Sync data across devices and add user accounts (needs a backend)
 - Re-fix reminders
-- Expense and receipt tracking for reno spend
+- Converting a finished reno project into a rental
 - Current bank rates shown as a reference
