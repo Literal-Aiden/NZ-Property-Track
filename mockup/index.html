@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Layout Mock-up</title>
+<style>
+/* Mock-up only: a proposed layout for NZ Property Tracker, using the app's colours and sample data. Nothing here is saved. */
+:root{--bg:#faf6f0;--card:#fff;--ink:#2a2220;--mute:#76665f;--line:#eadfd3;--acc:#c2412d;--acc2:#fbe8e3;--good:#2f855a;--good2:#e3f2ea;--warn:#a0620e;--warn2:#fbf0dc;--onacc:#fff;--shadow:0 1px 2px rgba(60,30,20,.06),0 4px 14px rgba(60,30,20,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1715;--card:#2a2320;--ink:#f3ece8;--mute:#b3a39b;--line:#3d332e;--acc:#f0806b;--acc2:#3d2622;--good:#5fbf8a;--good2:#1f3328;--warn:#e0a84a;--warn2:#3a2e1a;--onacc:#1c1715;--shadow:none;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1715;--card:#2a2320;--ink:#f3ece8;--mute:#b3a39b;--line:#3d332e;--acc:#f0806b;--acc2:#3d2622;--good:#5fbf8a;--good2:#1f3328;--warn:#e0a84a;--warn2:#3a2e1a;--onacc:#1c1715;--shadow:none;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#d9cfc4;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);display:flex;justify-content:center}
+@media (prefers-color-scheme:dark){body{background:#0f0c0b}}
+@media (max-width:480px){body{background:var(--bg)}}
+.phone{position:relative;width:100%;max-width:400px;height:100%;background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
+@media (min-width:481px){.phone{height:calc(100% - 32px);margin:16px 0;border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.25)}}
+.note{position:absolute;top:0;left:0;right:0;z-index:50;background:var(--ink);color:var(--bg);font-size:12px;text-align:center;padding:4px 8px}
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:36px 16px 100px;opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .18s,transform .18s}
+.screen.on{opacity:1;pointer-events:auto;transform:none}
+.screen.push{padding-top:0;transform:translateX(24px)}
+.screen.push.on{transform:none}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+h1{font-size:26px;margin:8px 0 2px;letter-spacing:-.01em}
+h2{font-size:17px;margin:22px 0 10px}
+.muted{color:var(--mute);font-size:14px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.dot{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.hero{background:linear-gradient(135deg,var(--acc),#8f2a1c);color:#fff;border:0}
+@media (prefers-color-scheme:dark){.hero{background:linear-gradient(135deg,#7a2a1e,#3d1a14)}}
+.hero .lab{font-size:13px;opacity:.85}
+.hero .big{font-size:36px;font-weight:750;letter-spacing:-.02em;line-height:1.1;margin:2px 0 12px}
+.hero .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.25)}
+.hero .row3 b{display:block;font-size:15px}
+.hero .row3 span{font-size:12px;opacity:.8}
+.chipline{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;background:rgba(255,255,255,.14);padding:8px 10px;border-radius:10px}
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.qa button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+.qa .ib{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--acc2);color:var(--acc)}
+.att{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.att:first-child{border-top:0;padding-top:0}
+.att .ib{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--warn2);color:var(--warn);flex:none}
+.att div{flex:1;min-width:0}
+.att b{display:block;font-size:15px}
+.att .muted{font-size:13px}
+.chev{color:var(--mute)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:14px -16px 14px;padding:0 16px;scrollbar-width:none}
+.chips button{flex:none;padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.chips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.prop{display:flex;gap:12px;align-items:center;padding:10px;margin-bottom:10px;cursor:pointer}
+.ph{width:72px;height:72px;border-radius:14px;flex:none;display:grid;place-items:center;color:#fff;position:relative;overflow:hidden}
+.ph svg{width:30px;height:30px;opacity:.9}
+.p1{background:linear-gradient(135deg,#d9774f,#9c3a24)}.p2{background:linear-gradient(135deg,#5e8f74,#2f5a45)}.p3{background:linear-gradient(135deg,#c79a4b,#8a5a1e)}.p4{background:linear-gradient(135deg,#7d8aa8,#46506b)}
+.prop .info{flex:1;min-width:0}
+.prop .info b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;margin-top:4px}
+.t-proj{background:var(--acc2);color:var(--acc)}.t-rent{background:var(--good2);color:var(--good)}.t-pot{background:var(--warn2);color:var(--warn)}
+.prop .num{text-align:right;flex:none}
+.prop .num b{display:block;font-size:16px}
+.prop .num span{font-size:12px;color:var(--mute)}
+.pos{color:var(--good)}.neg{color:var(--warn)}
+.cover{height:190px;margin:0 -16px;position:relative;display:flex;align-items:flex-end;padding:16px;color:#fff}
+.cover .back{position:absolute;top:44px;left:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.35);border:0;color:#fff;display:grid;place-items:center;cursor:pointer}
+.cover .addph{position:absolute;top:44px;right:12px;font-size:12px;padding:6px 10px;border-radius:99px;background:rgba(0,0,0,.35);color:#fff;border:0;font:inherit;font-size:12px}
+.cover h1{margin:0;font-size:24px;text-shadow:0 1px 8px rgba(0,0,0,.3)}
+.cover p{margin:0;opacity:.9;font-size:14px}
+.big2{font-size:32px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;margin:16px 0 12px;position:sticky;top:0;z-index:2}
+.seg button{flex:1;border:0;background:none;padding:8px 2px;border-radius:9px;font:inherit;font-size:13px;color:var(--mute);cursor:pointer;position:relative}
+.seg button.on{background:var(--acc);color:var(--onacc);font-weight:600}
+.seg button.flag::after{content:"";position:absolute;top:5px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.list .r{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line);font-size:15px}
+.list .r:first-child{border-top:0;padding-top:0}
+.list .r span{color:var(--mute)}
+.cat{padding:10px 0;border-top:1px solid var(--line)}
+.cat:first-child{border-top:0;padding-top:0}
+.cat .t{display:flex;justify-content:space-between;font-size:15px}
+.cat .bar{height:6px;margin:6px 0 0}
+.pane[hidden]{display:none}
+nav{position:absolute;left:0;right:0;bottom:0;height:78px;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);align-items:start;padding:8px 6px calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
+nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--mute);font:inherit;font-size:11px;cursor:pointer;padding:4px 0}
+nav button.on{color:var(--acc);font-weight:600}
+nav .plus{width:56px;height:56px;margin:-24px auto 0;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 6px 18px rgba(194,65,45,.4)}
+nav .plus svg{width:26px;height:26px}
+.sheet{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:flex-end;visibility:hidden}
+.sheet .bg{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:opacity .2s}
+.sheet .box{position:relative;background:var(--bg);border-radius:22px 22px 0 0;padding:10px 16px 28px;transform:translateY(100%);transition:transform .25s ease-out;max-height:85%;overflow-y:auto}
+.sheet.on{visibility:visible}.sheet.on .bg{opacity:1}.sheet.on .box{transform:none}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opts button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.opts button b{font-size:15px}.opts button span{font-size:12px;color:var(--mute)}
+.opts .ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--acc2);color:var(--acc)}
+.pick{display:flex;align-items:center;gap:12px;width:100%;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.pick .ph{width:44px;height:44px;border-radius:10px}
+.pick .ph svg{width:20px;height:20px}
+label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.go{width:100%;margin-top:18px;padding:14px;border:0;border-radius:14px;background:var(--acc);color:var(--onacc);font:inherit;font-weight:700;cursor:pointer}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tiles div{padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}
+.tiles .ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--acc2);color:var(--acc);margin-bottom:8px}
+.tiles b{display:block;font-size:15px}.tiles span{font-size:12px;color:var(--mute)}
+.setrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.setrow:first-child{border-top:0}
+.setrow div{flex:1}.setrow b{display:block}
+.reddot{width:8px;height:8px;border-radius:50%;background:var(--warn);display:inline-block;margin-left:6px;vertical-align:middle}
+.toast{position:absolute;left:16px;right:16px;bottom:92px;z-index:40;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="note">Layout mock-up · tap around · nothing is saved</div>
+  <div class="screens">
+
+    <!-- HOME -->
+    <section class="screen on" id="s-home">
+      <div class="top"><div><p class="muted" id="greet">Good morning</p><h1>Your portfolio</h1></div><button class="dot" data-go="settings" aria-label="Settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.17l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.17 14H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.17-2.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9.91 3.17V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 2.82 1.17l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.83 10H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
+      <div class="card hero" style="margin-top:14px">
+        <div class="lab">Equity across 3 properties</div>
+        <div class="big">$1,310,000</div>
+        <div class="row3"><div><b>$2.36m</b><span>Value</span></div><div><b>$1.05m</b><span>Lending</span></div><div><b>44%</b><span>LVR</span></div></div>
+        <div class="chipline"><svg class="i" viewBox="0 0 24 24"><path d="M23 18l-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/></svg><span><b>−$3,916</b> a month cash flow, mostly reno holding costs</span></div>
+      </div>
+      <h2>Quick actions</h2>
+      <div class="qa">
+        <button data-quick="rent"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Log rent</button>
+        <button data-quick="cost"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/></svg></span>Reno cost</button>
+        <button data-quick="receipt"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>Receipt</button>
+        <button data-go="tools"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></span>Deal check</button>
+      </div>
+      <h2>Needs attention <span class="muted" style="font-weight:400">· 5</span></h2>
+      <div class="card">
+        <div class="att" data-open="road"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><div><b>$8,200 invoice unpaid</b><p class="muted">24 Sample Road · Example Electrical</p></div><span class="chev">›</span></div>
+        <div class="att" data-open="road"><span class="ib"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><div><b>Kitchen install overdue</b><p class="muted">24 Sample Road · was due 20 Oct</p></div><span class="chev">›</span></div>
+        <div class="att" data-open="ave"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><div><b>Re-fix in 37 days</b><p class="muted">8 Demo Avenue · 6.9% interest-only</p></div><span class="chev">›</span></div>
+        <div class="att" data-open="ave"><span class="ib"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div><b>Lease ends in 46 days</b><p class="muted">8 Demo Avenue</p></div><span class="chev">›</span></div>
+        <div class="att" data-go="props"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div><b>Over budget by $6,000</b><p class="muted">3 Example Street</p></div><span class="chev">›</span></div>
+      </div>
+      <h2>Recent activity</h2>
+      <div class="card list">
+        <div class="r"><span>Rent received · 8 Demo Ave</span><b class="pos">+$2,560</b></div>
+        <div class="r"><span>Paint and supplies · 24 Sample Rd</span><b>−$3,200</b></div>
+        <div class="r"><span>Leaking tap · 8 Demo Ave</span><b>−$340</b></div>
+      </div>
+    </section>
+
+    <!-- PROPERTIES -->
+    <section class="screen" id="s-props">
+      <h1>Properties</h1><p class="muted">3 owned · 1 potential buy</p>
+      <div class="chips" id="chips"><button class="on" data-f="all">All</button><button data-f="proj">Reno projects</button><button data-f="rent">Rentals</button><button data-f="pot">Potential buys</button></div>
+      <div class="card prop" data-k="proj" data-open="road"><div class="ph p1"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/></svg></div><div class="info"><b>24 Sample Road</b><span class="muted">Auckland</span><br><span class="tag t-proj">Reno · 58% of budget</span></div><div class="num"><b class="pos">+$55,200</b><span>equity gain</span></div></div>
+      <div class="card prop" data-k="rent" data-open="ave"><div class="ph p2"><svg class="i" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg></div><div class="info"><b>8 Demo Avenue</b><span class="muted">Hamilton</span><br><span class="tag t-rent">Rental · $640/wk</span></div><div class="num"><b class="neg">−$516</b><span>a month</span></div></div>
+      <div class="card prop" data-k="proj"><div class="ph p3"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/></svg></div><div class="info"><b>3 Example Street</b><span class="muted">Tauranga</span><br><span class="tag t-proj">Reno · 110% of budget</span></div><div class="num"><b class="neg">−$35,100</b><span>equity gain</span></div></div>
+      <div class="card prop" data-k="pot"><div class="ph p4"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></div><div class="info"><b>51 Prospect Lane</b><span class="muted">Hamilton East</span><br><span class="tag t-pot">Reno to sell</span></div><div class="num"><b class="pos">$67,896</b><span>est. profit</span></div></div>
+    </section>
+
+    <!-- PROPERTY PAGE (pushed full screen) -->
+    <section class="screen push" id="s-road">
+      <div class="cover p1"><button class="back" data-back aria-label="Back"><svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><button class="addph">Add photo</button><div><h1>24 Sample Road</h1><p>Auckland · Renovation project</p></div></div>
+      <div class="card" style="margin-top:-14px;position:relative">
+        <p class="muted">Equity gain after reno</p><div class="big2 pos">+$55,200</div>
+        <div class="bar"><i style="width:58%"></i></div><p class="muted">$52,000 of $90,000 budget spent · $70,800 committed</p>
+      </div>
+      <div class="seg" id="seg"><button class="on" data-t="ov">Overview</button><button class="flag" data-t="costs">Costs</button><button class="flag" data-t="tl">Timeline</button><button data-t="loan">Mortgage</button></div>
+      <div class="pane" data-p="ov"><div class="card list">
+        <div class="r"><span>Purchase price</span><b>$850,000</b></div><div class="r"><span>Est. value now</span><b>$960,000</b></div>
+        <div class="r"><span>Total cost in</span><b>$904,800</b></div><div class="r"><span>Budget remaining</span><b>$38,000</b></div><div class="r"><span>Days owned</span><b>229</b></div>
+      </div></div>
+      <div class="pane" data-p="costs" hidden><div class="card">
+        <div class="cat"><div class="t"><b>Kitchen</b><span>$11,000 of $24,000</span></div><div class="bar"><i style="width:46%"></i></div></div>
+        <div class="cat"><div class="t"><b>Bathroom</b><span class="neg">$10,400 of $12,000</span></div><div class="bar"><i style="width:87%"></i></div></div>
+        <div class="cat"><div class="t"><b>Electrical</b><span>$8,200 of $9,000</span></div><div class="bar"><i style="width:91%"></i></div></div>
+        <div class="cat"><div class="t"><b>Contingency</b><span>$5,400 of $9,000</span></div><div class="bar"><i style="width:60%"></i></div></div>
+        <button class="go" data-quick="cost">Add reno cost</button>
+      </div></div>
+      <div class="pane" data-p="tl" hidden><div class="card list">
+        <div class="r"><span>Target finish</span><b>18 Dec 2026</b></div><div class="r"><span>Behind original target</span><b class="neg">21 days</b></div>
+        <div class="r"><span>Kitchen install</span><b class="neg">Overdue</b></div><div class="r"><span>Flooring</span><b>20 Nov</b></div><div class="r"><span>Final inspection and CCC</span><b>10 Dec</b></div>
+      </div></div>
+      <div class="pane" data-p="loan" hidden><div class="card list">
+        <div class="r"><span>Loan</span><b>$620,000 at 5.49%</b></div><div class="r"><span>Repayment</span><b>$3,516 / month</b></div><div class="r"><span>Re-fix date</span><b>10 Feb 2027</b></div>
+      </div></div>
+    </section>
+
+    <section class="screen push" id="s-ave">
+      <div class="cover p2"><button class="back" data-back aria-label="Back"><svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><button class="addph">Add photo</button><div><h1>8 Demo Avenue</h1><p>Hamilton · Rental</p></div></div>
+      <div class="card" style="margin-top:-14px;position:relative">
+        <p class="muted">Cash flow after mortgage</p><div class="big2 neg">−$516 a month</div>
+        <p class="muted" style="margin-top:6px">$640 a week rent · 5.1% gross yield · re-fix in 37 days</p>
+      </div>
+      <div class="seg"><button class="on">Overview</button><button>Money</button><button class="flag">Tenancy</button><button class="flag">Mortgage</button></div>
+      <div class="card list">
+        <div class="r"><span>Rent this tax year</span><b class="pos">$20,480</b></div><div class="r"><span>Expenses this tax year</span><b>$3,280</b></div>
+        <div class="r"><span>Est. value now</span><b>$655,000</b></div><div class="r"><span>Healthy Homes</span><b>4 of 5 done</b></div>
+      </div>
+    </section>
+
+    <!-- TOOLS -->
+    <section class="screen" id="s-tools">
+      <h1>Tools</h1><p class="muted">Calculators for deals, loans and rentals</p>
+      <div class="tiles" style="margin-top:14px">
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></span><b>Quick deal check</b><span>Profit or yield in seconds</span></div>
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><b>Mortgage repayments</b><span>Any loan, rate and frequency</span></div>
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg></span><b>Rental yield</b><span>Gross and net</span></div>
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><b>Holding costs</b><span>Monthly cost to hold</span></div>
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><b>Break-even rent</b><span>Rent that covers costs</span></div>
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span><b>Usable equity</b><span>For the next purchase</span></div>
+        <div><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><b>Selling costs</b><span>Commission and fees</span></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="s-settings">
+      <h1>Settings</h1>
+      <div class="card" style="margin-top:14px">
+        <div class="setrow"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><div><b>Backup <span class="reddot"></span></b><span class="muted">Not backed up yet</span></div><span class="chev">›</span></div>
+        <div class="setrow"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><div><b>Restore from backup</b><span class="muted">Replaces what’s on this device</span></div><span class="chev">›</span></div>
+        <div class="setrow"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div><b>Install the app</b><span class="muted">Add to your home screen</span></div><span class="chev">›</span></div>
+        <div class="setrow"><svg class="i" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><b>Sales data</b><span class="muted">Import a REINZ export</span></div><span class="chev">›</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- + MENU -->
+  <div class="sheet" id="plus"><div class="bg" data-close></div><div class="box"><div class="grab"></div>
+    <div id="plus-home"><h2 style="margin-top:0">Add</h2>
+      <div class="opts">
+        <button data-quick="rent"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><b>Rent or expense</b><span>For a rental</span></button>
+        <button data-quick="cost"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/></svg></span><b>Reno cost</b><span>With a receipt photo</span></button>
+        <button data-quick="ms"><span class="ib"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><b>Milestone</b><span>Trade, inspection…</span></button>
+        <button data-quick="prop"><span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></span><b>Property</b><span>Owned or potential</span></button>
+      </div></div>
+    <div id="plus-pick" hidden><h2 style="margin-top:0" id="pick-title">Which property?</h2>
+      <button class="pick" data-form><div class="ph p1"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/></svg></div><div><b>24 Sample Road</b><br><span class="muted">Reno project</span></div></button>
+      <button class="pick" data-form><div class="ph p3"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/></svg></div><div><b>3 Example Street</b><br><span class="muted">Reno project</span></div></button>
+    </div>
+    <div id="plus-form" hidden><h2 style="margin-top:0">Add reno cost · 24 Sample Road</h2>
+      <label>What was it?</label><input placeholder="e.g. Kitchen benchtop">
+      <div class="two"><div><label>Amount</label><input value="$1,850"></div><div><label>Category</label><select><option>Kitchen</option><option>Bathroom</option></select></div></div>
+      <button class="go" data-save>Save · add receipt photo next</button>
+    </div>
+  </div></div>
+  <div class="toast" id="toast">Saved (not really, this is a mock-up)</div>
+
+  <nav>
+    <button class="on" data-go="home"><svg class="i" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Home</button>
+    <button data-go="props"><svg class="i" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Properties</button>
+    <button aria-label="Add" id="plusbtn"><span class="plus"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></button>
+    <button data-go="tools"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/></svg>Tools</button>
+    <button data-go="settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings<span class="reddot" style="position:absolute;top:4px;left:calc(50% + 6px);margin:0"></span></button>
+  </nav>
+</div>
+<script>
+// Mock-up navigation only.
+var $=function(s){return document.querySelector(s)},all=function(s){return document.querySelectorAll(s)},last='home';
+var h=new Date().getHours();$('#greet').textContent=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+function show(id){all('.screen').forEach(function(s){s.classList.toggle('on',s.id==='s-'+id)});all('nav [data-go]').forEach(function(b){b.classList.toggle('on',b.dataset.go===id||(id==='road'||id==='ave')&&b.dataset.go==='props')});
+  if(['home','props','tools','settings'].indexOf(id)>=0)last=id;var s=$('#s-'+id);if(s)s.scrollTop=0}
+function sheet(on){$('#plus').classList.toggle('on',on);if(on){$('#plus-home').hidden=false;$('#plus-pick').hidden=true;$('#plus-form').hidden=true}}
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-go],[data-open],[data-back],[data-quick],[data-close],[data-form],[data-save],#plusbtn,[data-f],[data-t]');if(!t)return;
+  if(t.id==='plusbtn')return sheet(true);
+  if(t.dataset.close!==undefined)return sheet(false);
+  if(t.dataset.go){sheet(false);return show(t.dataset.go)}
+  if(t.dataset.open)return show(t.dataset.open);
+  if(t.dataset.back!==undefined)return show(last==='home'?'home':'props');
+  if(t.dataset.quick){if(t.dataset.quick==='prop'){sheet(false);toast('In the real app this opens the property type choice');return}
+    if(!$('#plus').classList.contains('on'))sheet(true);$('#plus-home').hidden=true;$('#plus-pick').hidden=false;$('#plus-form').hidden=true;
+    $('#pick-title').textContent={rent:'Which rental?',cost:'Which reno project?',receipt:'Receipt for which property?',ms:'Milestone for which project?'}[t.dataset.quick];return}
+  if(t.dataset.form!==undefined){$('#plus-pick').hidden=true;$('#plus-form').hidden=false;return}
+  if(t.dataset.save!==undefined){sheet(false);toast('Saved (not really, this is a mock-up)');return}
+  if(t.dataset.f){all('#chips button').forEach(function(b){b.classList.toggle('on',b===t)});all('#s-props .prop').forEach(function(p){p.style.display=t.dataset.f==='all'||p.dataset.k===t.dataset.f?'':'none'});return}
+  if(t.dataset.t){all('#seg button').forEach(function(b){b.classList.toggle('on',b===t)});all('#s-road .pane').forEach(function(p){p.hidden=p.dataset.p!==t.dataset.t})}
+});
+function toast(m){var x=$('#toast');x.textContent=m;x.classList.add('on');setTimeout(function(){x.classList.remove('on')},2200)}
+</script>
+</body>
+</html>

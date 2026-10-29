@@ -17,7 +17,8 @@ function holdCalc(){
 }
 function potView(p){
   var flip=p.intent!=='rental',d=deal(p);
-  var h='<div class="card"><div class="row" style="cursor:default"><span class="badge">Potential · '+(flip?'Reno to sell':'Buy to rent')+'</span><button class="edit" id="edit">Edit details</button></div><h1>'+esc(p.addr)+'</h1><p class="sub">'+[esc(p.sub),p.beds?p.beds+' bed':'',p.land?p.land+' m² land':''].filter(Boolean).join(' · ')+'</p>';
+  // The address, plan and headline number are in the page's cover and headline card, above this.
+  var h='<div class="card">'+hd('chart','Deal estimates')+(p.beds||p.land?'<p class="sub" style="margin-top:4px">'+[p.beds?p.beds+' bed':'',p.land?p.land+' m² land':''].filter(Boolean).join(' · ')+'</p>':'');
   h+='<div class="grid">'+(flip
     ?stat('Asking / offer price',$$(p.price))+stat('Est. sale price',$$(p.value))+stat('Est. profit',$$(d.prof),d.prof<0?'neg':'pos')+stat('Return on costs',pct(d.roc),d.prof<0?'neg':'')
     :stat('Total cost in',$$(d.cost))+stat('Est. value after reno',$$(p.value))+stat('Equity after reno',$$(p.value-d.cost),p.value<d.cost?'neg':'pos')+stat('Gross / net yield on cost',d.cost?(d.ann/d.cost*100).toFixed(1)+'% / '+(d.net/d.cost*100).toFixed(1)+'%':'–')+stat('Weekly rent',$$(p.rent||0))+stat('Net annual income',$$(d.net),d.net<0?'neg':''))+'</div>';

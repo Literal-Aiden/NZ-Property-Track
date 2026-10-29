@@ -1,31 +1,46 @@
 // Rendering, navigation and event wiring. Loaded last.
-var track=$('track');
-// Phone Back button: each panel that opens (tools, a calculator in it, settings, the edit panel) adds a history entry,
-// so Back closes the top panel instead of leaving the app. Closing a panel with its own buttons also goes back
-// through history, so the entries never pile up. ovs is the stack of open panels.
-var ovs=[];
+// Navigation: one screen shows at a time. Tabs (home, p0 properties, toolbody tools, setbody settings) switch from
+// the bottom bar; pages (p1 a property, p2 adding one) open on top of the current tab. Pages and panels (the + menu,
+// the edit panel, a calculator) add a history entry when opened, so the phone's Back button closes the top one
+// instead of leaving the app. Their own close buttons go back through history too, so entries never pile up.
+// ovs is that stack.
+var tab='home',ovs=[];
 function ovOpen(id){ovs.push(id);try{history.pushState({nz:ovs.length},'')}catch(e){}}
 function ovClose(id){var i=ovs.lastIndexOf(id);if(i<0)ovShut(id);else history.go(i-ovs.length)}
-function ovShut(id){if(id==='tools')closeToolsNow();else if(id==='tool'){toolCur=null;drawTools()}else if(id==='settings')closeSettingsNow();else if(id==='sheet')closeSheetNow()}
+// Replaces the top entry without adding history, e.g. the + menu turning into the property page it opened.
+function ovSwap(id){ovs[ovs.length-1]=id;try{history.replaceState({nz:ovs.length},'')}catch(e){}}
+function ovShut(id){if(id==='tool'){toolCur=null;drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();reshow()}
 window.addEventListener('popstate',function(e){var l=(e.state&&e.state.nz)||0;while(ovs.length>l)ovShut(ovs.pop())});
-function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · <a href="#" id="opset">'+(l?'last backup '+fmtD(l):'not backed up yet')+'</a>')+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
+function reshow(){var pg=ovs.filter(function(x){return x==='p1'||x==='p2'}).pop();show(pg||tab)}
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)});
+  document.querySelectorAll('#nav [data-tab]').forEach(function(b){b.classList.toggle('on',b.dataset.tab===tab)});
+}
+// Opens a page (p1 or p2) on top of the current tab.
+function openPage(id){
+  var top=ovs[ovs.length-1];
+  if(top==='plus'){closePlusNow();ovSwap(id)}
+  else if(top==='p2'&&id==='p1')ovSwap(id);
+  else if(ovs.indexOf(id)<0)ovOpen(id);
+  show(id);$(id).scrollTop=0;
+}
+function go(i){if(i===0)navTab('p0');else openPage(i===1?'p1':'p2')}
+// Switching tabs closes any pages and panels on top first.
+function navTab(t){tab=t;if(t==='toolbody'&&ovs.indexOf('tool')<0){toolCur=null;drawTools()}if(ovs.length)history.go(-ovs.length);else{show(t);$(t).scrollTop=0}}
+function banner(){drawHome();drawSettings()}
 function render(){if(!isSample){save();persist()}list();current();form();banner()}
-function go(i,smooth){track.scrollTo({left:i*track.clientWidth,behavior:smooth?'smooth':'auto'})}
-var pane=1,paneW=0;
-function sync(){var i=Math.round(track.scrollLeft/track.clientWidth);if(track.clientWidth===paneW)pane=i;document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',+t.dataset.i===i)})}
-
-$('tabs').addEventListener('click',function(e){var t=e.target.closest('.tab');if(!t)return;var i=+t.dataset.i;
-  // Tapping Add new while already on it goes back to the choice of property type.
-  if(i===2&&Math.round(track.scrollLeft/track.clientWidth)===2&&newType){newType=null;loanOpen=false;form();$('p2').scrollTop=0}
-  if(i===2&&editIdx!==null){editIdx=null;form()}go(i,true)});
-track.addEventListener('scroll',sync);
+$('nav').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(b)navTab(b.dataset.tab);else if(e.target.closest('#plusbtn'))openPlus()});
+document.addEventListener('click',function(e){if(e.target.closest('[data-back]')){if(ovs.length)history.back();else show(tab)}});
+// The phone keyboard covers the bottom of the screen, so the tab bar hides while typing.
+document.addEventListener('focusin',function(e){if(e.target.matches('input:not([type=checkbox]):not([type=file]),select,textarea'))document.body.classList.add('typing')});
+document.addEventListener('focusout',function(){setTimeout(function(){if(!document.activeElement||!document.activeElement.matches('input,select,textarea'))document.body.classList.remove('typing')},50)});
 // Deleting happens straight away with an Undo message. Receipt files are only removed once the message goes.
 var undoT=null,undoData=null;
 function delProp(i){
   if(undoData)finishDel();
   undoData={p:props.splice(i,1)[0],i:i};
   if(cur>=props.length)cur=Math.max(0,props.length-1);
-  editIdx=null;newType=null;resetCur();isSample=false;render();
+  editIdx=null;newType=null;resetCur();isSample=false;render();navTab('p0');
   $('toastmsg').textContent='Deleted '+undoData.p.addr;$('toast').hidden=false;
   undoT=setTimeout(finishDel,7000);
 }
@@ -34,18 +49,18 @@ $('undo').addEventListener('click',function(){
   if(!undoData)return;clearTimeout(undoT);props.splice(undoData.i,0,undoData.p);cur=undoData.i;undoData=null;$('toast').hidden=true;resetCur();render();
 });
 $('p0').addEventListener('click',function(e){
-  var r=e.target.closest('.prop');if(r){if(cur!==+r.dataset.i)resetCur();cur=+r.dataset.i;editIdx=null;render();go(1,true);return}
-  var b=e.target.closest('[data-x]');if(!b)return;
-  if(b.dataset.x==='att'){var i=+b.dataset.i;if(cur!==i)resetCur();cur=i;sec=b.dataset.sec;editIdx=null;render();$('p1').scrollTop=0;go(1,true)}
-  if(b.dataset.x==='tobk')openSettings();
-  if(b.dataset.x==='ioshint'){try{localStorage.setItem('nzpt.ioshint','1')}catch(err){}list()}
+  var r=e.target.closest('.prop');if(r){openProp(+r.dataset.i);return}
+  var f=e.target.closest('[data-f]');if(f){propFilter=f.dataset.f;list()}
+  if(e.target.closest('[data-x="hadd"]')){newType=null;form();go(2)}
 });
+// Opens a property's page, optionally at a section.
+function openProp(i,s){if(cur!==i)resetCur();cur=i;if(s)sec=s;editIdx=null;render();go(1)}
 // Reno costs, rental money and tenancy, receipts, timeline, and converting between property types.
 $('p1').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   var p=props[cur],x=b.dataset.x,k=+b.dataset.k;
   function edit(id){current();var c=$(id||'costs');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})}
-  if(x==='sec'){sec=b.dataset.sec;current();$('p1').scrollTop=0}
+  if(x==='sec'){sec=b.dataset.sec;current()}
   else if(x==='cat'){var n=cats(p)[k].n;costOpen=costOpen===n?null:n;current()}
   else if(x==='add'){itemEdit='new';delItem=false;rcMsg='';edit()}
   else if(x==='item'){itemEdit=k;delItem=false;rcMsg='';edit()}
@@ -131,14 +146,10 @@ $('p1').addEventListener('change',function(e){
   if(e.target.id==='nearbeds'){nearBeds=e.target.checked;drawNear()}
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
   if(e.target.classList.contains('hhin')&&e.target.files.length)addHhDocs(props[cur],e.target.files);
+  if(e.target.classList.contains('phin')&&e.target.files[0])addPhoto(props[cur],e.target.files[0]);
 });
-document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2,true)}
-  if(e.target.id==='install'&&installEvt){e.preventDefault();installEvt.prompt();installEvt=null;banner()}
-  if(e.target.id==='opset'){e.preventDefault();openSettings()}});
-// The phone keyboard opening or closing changes only the height, so stay on the same pane.
-// A width change (e.g. rotating the phone) re-aligns to the pane you were on.
-window.addEventListener('resize',function(){if(track.clientWidth!==paneW){paneW=track.clientWidth;go(pane)}});
+document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2)}});
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;banner()});
 window.addEventListener('appinstalled',function(){installEvt=null;banner()});
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){});
-paneW=track.clientWidth;render();go(1);sync();
+render();drawTools();show('home');

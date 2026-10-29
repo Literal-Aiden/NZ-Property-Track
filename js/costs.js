@@ -5,7 +5,7 @@ var costOpen=null,itemEdit=null,delItem=false,catDraft=null,pendRc=[],dropRc=[],
 function cmt(x){return Math.max(x.amt||0,x.quote||0)}
 function cats(p){return p.cats||(p.cats=catList([]))}
 function syncSpent(p){if(p.items&&p.items.length)p.spent=sum(p.items,function(x){return x.amt})}
-function rcIds(p){return (p.items||[]).concat(p.money||[],[{rc:p.hhDocs}]).reduce(function(a,x){return a.concat((x.rc||[]).map(function(r){return r.id}))},[])}
+function rcIds(p){return (p.items||[]).concat(p.money||[],[{rc:p.hhDocs},{rc:p.photo?[p.photo]:[]}]).reduce(function(a,x){return a.concat((x.rc||[]).map(function(r){return r.id}))},[])}
 function costCard(p){
   var it=p.items||[],C=cats(p),busy=itemEdit!==null||catDraft;
   var h='<div class="card" id="costs"><div class="row" style="cursor:default">'+hd('dollar','Reno costs')+''+(it.length&&!busy?'<button class="edit" data-x="csv">Export CSV</button>':'')+'</div>';

@@ -25,45 +25,65 @@ function fillCur(p){
 }
 // Re-render the current pane without losing what's been typed in one card.
 function keepIn(id){var v={};document.querySelectorAll('#'+id+' input[id],#'+id+' select[id]').forEach(function(e){v[e.id]=e.type==='checkbox'?e.checked:e.value});current();for(var k in v){var e=$(k);if(e){if(e.type==='checkbox')e.checked=v[k];else e.value=v[k]}}}
+// Property types: label, icon, and the class for their colour (cover, thumbnail and tag).
+var TYPE={project:['Renovation project','tool','c-proj'],rental:['Rental','key','c-rent'],potential:['Potential buy','search','c-pot']};
+function thumb(p){var t=TYPE[p.type];return '<span class="ph '+t[2]+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">':ic(t[1]))+'</span>'}
+function signed(n,suf){return '<span class="'+(n<0?'neg':'pos')+'">'+(n<0?'−':'+')+$$(Math.abs(n))+(suf||'')+'</span>'}
+// The one number that matters most for each property, used for its page and its card in the list.
+function headline(p){
+  if(p.type==='project'){var g=p.value-basis(p),used=p.budget?Math.round(p.spent/p.budget*100):0;
+    return {lab:'Equity gain after reno',big:signed(g),short:'equity gain',tag:'Reno · '+used+'% of budget',bar:used,
+      sub:$$(p.spent)+' of '+$$(p.budget)+' budget spent'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed':'')}}
+  if(p.type==='rental'){var cf=cashFlow(p);
+    return {lab:'Cash flow after mortgage',big:signed(cf,' a month'),short:'a month',num:signed(cf),tag:'Rental · '+$$(p.rent)+'/wk',
+      sub:$$(p.rent)+' a week rent · '+(p.value?(p.rent*52/p.value*100).toFixed(1):'0')+'% gross yield'}}
+  var d=deal(p);
+  if(p.intent==='rental')return {lab:'Gross yield on total cost',big:(d.cost?(d.ann/d.cost*100).toFixed(1):'0')+'%',short:'yield on cost',tag:'Buy to rent',sub:'Total cost in '+$$(d.cost)+' · '+$$(p.rent||0)+' a week rent'};
+  return {lab:'Estimated profit, before tax',big:signed(d.prof),short:'est. profit',tag:'Reno to sell',sub:'Return on costs '+pct(d.roc)+' · asking '+$$(p.price)};
+}
+function rows(r){return '<div class="card list">'+r.filter(Boolean).map(function(x){return '<div class="r"><span>'+x[0]+'</span><b class="'+(x[2]||'')+'">'+x[1]+'</b></div>'}).join('')+'</div>'}
+// A property's page: cover photo, headline number, then its sections.
 function current(){
   var p=props[cur];
-  if(!p){$('p1').innerHTML='<div class="card"><p class="sub">No properties yet. Swipe right to add one.</p></div>';return}
-  if(p.type==='potential'){$('p1').innerHTML=potView(p)+'<p class="hint">← all properties · add new →</p>';fillCur(p);if(nearOpen)drawNear();return}
+  if(!p){$('p1').innerHTML='<div class="pagebar"><button class="pback" data-back aria-label="Back">'+ic('back')+'</button></div><div class="card"><p class="sub">No property selected.</p></div>';return}
+  var T=TYPE[p.type],hl=headline(p),pt=p.type==='potential';
+  var h='<div class="cover '+T[2]+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">':'<span class="cvic">'+ic(T[1])+'</span>')+
+    '<button class="cback" data-back aria-label="Back">'+ic('back')+'</button>'+
+    '<label class="cphoto">'+ic('camera')+(p.photo?'Change photo':'Add photo')+'<input type="file" class="phin" accept="image/*" hidden></label>'+
+    '<div class="ctext"><h1>'+esc(p.addr)+'</h1><p>'+[esc(p.sub),T[0],pt?hl.tag:''].filter(Boolean).join(' · ')+'</p></div></div>'+
+    '<div class="card herocard"><div class="row" style="cursor:default"><span class="sub">'+hl.lab+'</span><button class="edit" id="edit">Edit details</button></div>'+
+    '<div class="big2">'+hl.big+'</div>'+(hl.bar!==undefined?'<div class="bar"><i class="'+(hl.bar>100?'over':'')+'" style="width:'+Math.min(hl.bar,100)+'%"></i></div>':'')+'<p class="sub">'+hl.sub+'</p></div>';
+  if(pt){$('p1').innerHTML=h+potView(p);fillCur(p);if(nearOpen)drawNear();return}
   var pr=p.type==='project',S=pr?SECS:SECS_R;
   if(!S.some(function(s){return s[0]===sec}))sec='ov';
   // Owned properties are split into sections so the page stays short on a phone. A dot marks a section with something to deal with.
   var flag={};alerts(p).forEach(function(a){flag[a.sec]=1});
-  var h='<div class="card"><div class="row" style="cursor:default"><span class="badge">'+(pr?'Renovation project':'Rental')+'</span><button class="edit" id="edit">Edit details</button></div><h1>'+esc(p.addr)+'</h1><p class="sub">'+esc(p.sub)+'</p></div>'+
-    '<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+ic(s[2])+s[1]+'</button>'}).join('')+'</div>';
+  h+='<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
   var body={costs:costCard,tl:timeCard,money:moneyCard,ten:tenCard,loan:loanCard}[sec];
-  if(body){$('p1').innerHTML=h+body(p)+'<p class="hint">← all properties · add new →</p>';fillCur(p);return}
-  h+='<div class="card">';
+  if(body){$('p1').innerHTML=h+body(p);fillCur(p);return}
   if(pr){
-    var pct=p.budget?Math.round(p.spent/p.budget*100):0,gain=p.value-basis(p),left=p.budget-p.spent;
-    h+='<div>'+hd('tool','Reno budget')+'<div class="bar"><i class="'+(pct>100?'over':'')+'" style="width:'+Math.min(pct,100)+'%"></i></div><span class="sub">'+$$(p.spent)+' of '+$$(p.budget)+' spent ('+pct+'%)'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed incl. quotes':'')+'</span></div>';
-    h+='<div class="grid">'+stat('Purchase price',$$(p.price))+stat('Est. value now',$$(p.value))+stat('Budget remaining',$$(left),left<0?'neg':'')+stat('Equity gain after reno',$$(gain),gain<0?'neg':'pos')+stat('Total cost in',$$(basis(p)))+stat('Days owned',dOwn(p))+'</div>';
-    if(p.done)h+=toRentBlock(p);
+    var left=p.budget-p.spent;
+    h+=rows([['Purchase price',$$(p.price)],['Est. value now',$$(p.value)],['Total cost in',$$(basis(p))],['Budget remaining',$$(left),left<0?'neg':''],['Days owned',dOwn(p)]]);
+    if(p.done)h+='<div class="card">'+toRentBlock(p)+'</div>';
   }else{
     var ann=p.rent*52,net=ann-p.exp;
-    h+='<div class="grid" style="margin-top:0">'+stat('Weekly rent',$$(p.rent))+stat('Annual expenses',$$(p.exp))+stat('Net annual income',$$(net),net<0?'neg':'pos')+stat('Gross / net yield',(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%')+stat('Purchase price',$$(p.price))+stat('Est. value now',$$(p.value))+stat('Total cost in',$$(basis(p)))+stat('Days owned',dOwn(p))+'</div>';
-    if(p.fromProject&&p.spent)h+='<p class="sub" style="margin-top:10px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
+    h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%'],
+      ['Purchase price',$$(p.price)],['Est. value now',$$(p.value)],['Total cost in',$$(basis(p))],['Days owned',dOwn(p)]]);
+    if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
-  $('p1').innerHTML=h+'</div>'+(p.plan?planCard(p):'')+'<p class="hint">← all properties · add new →</p>';
+  $('p1').innerHTML=h+(p.plan?planCard(p):'');
   fillCur(p);
 }
-var SECS=[['ov','Overview','grid'],['costs','Costs','dollar'],['tl','Timeline','clock'],['loan','Mortgage','percent']],SECS_R=[['ov','Overview','grid'],['money','Money','dollar'],['ten','Tenancy','users'],['loan','Mortgage','percent']],sec='ov';
+var SECS=[['ov','Overview'],['costs','Costs'],['tl','Timeline'],['loan','Mortgage']],SECS_R=[['ov','Overview'],['money','Money'],['ten','Tenancy'],['loan','Mortgage']],sec='ov';
+// Cover photo: one image per property, stored with the receipt files and included in backups.
+function addPhoto(p,f){
+  shrink(f).then(function(b){var r={id:uid(),name:f.name,type:b.type||f.type,added:iso(new Date())};return rcPut(Object.assign({blob:b},r)).then(function(){return r})})
+    .then(function(r){if(p.photo)rcDel([p.photo.id]);p.photo=r;isSample=false;render()}).catch(function(){});
+}
 
 // Portfolio totals for owned properties. Cash flow: rentals are rent less expenses and repayments; projects are their holding cost.
 function loanPay(p){return p.loan?(p.ltype==='io'?p.loan*p.rate/1200:pmt(p.loan,p.rate,p.term||30)):0}
 function cashFlow(p){return p.type==='rental'?((p.rent||0)*52-(p.exp||0))/12-loanPay(p):-(p.hold||loanPay(p))}
-function portfolioCard(){
-  var own=props.filter(function(p){return p.type!=='potential'});if(!own.length)return '';
-  var val=sum(own,function(p){return p.value}),debt=sum(own,function(p){return p.loan}),eq=val-debt,cf=sum(own,cashFlow);
-  return '<div class="card"><div class="row" style="cursor:default">'+hd('pie','Portfolio')+'<span class="sub">'+own.length+' owned</span></div>'+
-    '<div class="grid">'+stat('Total value (est.)',$$(val))+stat('Total lending',$$(debt))+stat('Equity',$$(eq),eq<0?'neg':'pos')+stat('LVR',val?Math.round(debt/val*100)+'%':'–')+
-    '<div class="stat wide"><b class="'+(cf<0?'neg':'pos')+'">'+$$(cf)+' a month</b><span>Cash flow: rent less expenses and mortgage repayments for rentals, holding costs for reno projects</span></div></div>'+
-    '<p class="sub" style="margin-top:8px">Estimates only, based on the figures you’ve entered.</p></div>';
-}
 
 // Things that need attention, each pointing at the project section that deals with it.
 function alerts(p){
@@ -88,23 +108,18 @@ function alerts(p){
   }
   return a;
 }
-function attnCard(){
-  var h='',l=lastBackup(),bd=l?days(l):null;
-  props.forEach(function(p,i){alerts(p).forEach(function(a){h+='<button class="att" data-x="att" data-i="'+i+'" data-sec="'+a.sec+'"><span>'+esc(p.addr)+'</span><b>'+esc(a.t)+'</b></button>'})});
-  if(!isSample&&props.length&&(bd===null||bd>30))h+='<button class="att" data-x="tobk"><span>Backup</span><b>'+(l?'Last backup '+bd+' days ago':'Not backed up yet')+'</b></button>';
-  return h?'<div class="card attn">'+hd('alert','Needs attention')+''+h+'</div>':'';
-}
-
+// Properties tab: filter chips, then a card per property with its photo, type and headline number.
+// An amber dot on the photo means something needs attention. Deleting lives in a property's Edit details panel.
+var propFilter='all',FILTERS=[['all','All'],['project','Reno projects'],['rental','Rentals'],['potential','Potential buys']];
 function list(){
-  var own='',pot='';
-  props.forEach(function(p,i){
-    var pt=p.type==='potential',d=pt&&deal(p),fl=alerts(p);
-    var line=pt?(p.intent==='rental'?'Yield on cost '+(d.cost?(d.ann/d.cost*100).toFixed(1):'0')+'% gross':'Est. profit '+$$(d.prof)):p.type==='project'?'Reno '+$$(p.spent)+' of '+$$(p.budget):$$(p.rent)+'/wk rent';
-    var kind=pt?(p.intent==='rental'?'Buy to rent':'Reno to sell'):p.type==='project'?'Project':'Rental';
-    // The property being viewed gets an accent border; deleting lives in its Edit details panel.
-    var c='<div class="card row prop'+(i===cur?' cur':'')+'" data-i="'+i+'"'+(i===cur?' aria-current="true"':'')+'><span class="pico">'+ic(pt?'search':p.type==='project'?'tool':'key')+'</span><div><b>'+esc(p.addr)+'</b><p class="sub">'+esc(p.sub)+' · '+kind+'</p><p class="sub">'+line+'</p>'+(fl.length?'<div class="flags">'+fl.map(function(a){return '<span class="flag">'+esc(a.t)+'</span>'}).join('')+'</div>':'')+'</div><i class="chev" aria-hidden="true">›</i></div>';
-    if(pt)pot+=c;else own+=c;
-  });
-  $('p0').innerHTML=portfolioCard()+attnCard()+((own&&pot?'<p class="grp">Owned</p>':'')+own+(pot?'<p class="grp">Potential buys</p>'+pot:'')||'<div class="card"><p class="sub">Nothing added yet.</p></div>')+iosHint();
-  if(!$('settings').hidden)drawSettings();
+  var own=props.filter(function(p){return p.type!=='potential'}).length,shown=props.map(function(p,i){return i}).filter(function(i){return propFilter==='all'||props[i].type===propFilter});
+  var h='<h1 class="ptitle">Properties</h1><p class="sub">'+own+' owned · '+(props.length-own)+' potential buy'+(props.length-own===1?'':'s')+'</p>'+
+    '<div class="chips">'+FILTERS.map(function(f){return '<button data-f="'+f[0]+'" class="'+(propFilter===f[0]?'on':'')+'">'+f[1]+'</button>'}).join('')+'</div>';
+  h+=shown.map(function(i){
+    var p=props[i],hl=headline(p),T=TYPE[p.type];
+    return '<button class="card prop" data-i="'+i+'">'+thumb(p)+(alerts(p).length?'<span class="adot" title="Needs attention"></span>':'')+
+      '<span class="info"><b>'+esc(p.addr)+'</b><span class="sub">'+esc(p.sub)+'</span><span class="tag t-'+p.type+'">'+hl.tag+'</span></span>'+
+      '<span class="num"><b>'+(hl.num||hl.big)+'</b><span>'+hl.short+'</span></span></button>';
+  }).join('')||'<div class="card"><p class="sub">'+(props.length?'Nothing here yet.':'No properties yet.')+'</p><button class="go" data-x="hadd">Add a property</button></div>';
+  $('p0').innerHTML=h;fillThumbs();
 }

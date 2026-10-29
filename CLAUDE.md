@@ -6,15 +6,17 @@ An app for New Zealand property investors and flippers to track their rental pro
 
 A working prototype: plain HTML, CSS and JavaScript with no build step. The only library is Leaflet for the nearby-sales map, loaded from a CDN when needed.
 
-- `index.html` – page shell and tab bar
-- `styles.css` – all styling, with light and dark themes via CSS variables. Colour scheme is pōhutukawa red on sand: `--acc` red for buttons, links and selected states; `--good` green for equity, profit, progress bars and ticks; `--warn` amber for over budget and overdue. Keep red for actions, not for "bad" numbers
+- `index.html` – page shell: the screens, bottom tab bar, + menu and edit panel
+- `layout.css` – the app layout (screens, tab bar, Home, Properties list, property page, + menu); loaded after `styles.css`
+- `styles.css` – base styling, with light and dark themes via CSS variables. Colour scheme is pōhutukawa red on sand: `--acc` red for buttons, links and selected states; `--good` green for equity, profit, progress bars and ticks; `--warn` amber for over budget and overdue. Keep red for actions, not for "bad" numbers
 - Icons: Feather-style line icons in `ICONS` (`util.js`); `ic(name)` gives an inline SVG and `hd(name, title)` a card heading with an icon. The tab bar icons are inline in `index.html`
 - `js/` – all logic and rendering, as plain scripts sharing one global scope (no modules, no build). `index.html` loads them in order and `main.js` must stay last:
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
   - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
-  - `views.js` current property view, portfolio, alerts, property list · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` rendering, navigation, event wiring, delete/undo
-- When adding a file, add it to the `<script>` list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
+  - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
+- When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
+- `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
 - `sw.js`, `manifest.webmanifest`, `icons/` – install-as-app and offline support
 - Data is saved in the browser's localStorage under the key `nzpt.v1`, so it stays on one device only. First load shows sample properties, and "Start fresh" clears them.
 
@@ -22,13 +24,15 @@ Open `index.html` in a browser to run it.
 
 ## Layout (keep this)
 
-A header bar with the app icon, "NZ Property Tracker", a Tools (calculator) button and a settings (gear) button. Each opens as a slide-up panel: Tools holds the calculators; Settings holds Backup/restore and Install the app.
+A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Settings**. The owner chose this from a clickable mock-up (`mockup/index.html`). One screen shows at a time; the tab bar hides while typing so it doesn't sit above the keyboard.
 
-Three panes the user swipes between, with matching tabs at the top:
-
-- **Left – Properties:** a Portfolio summary, the Needs attention card, then every property (the one being viewed has an accent border). Deleting is in a property's Edit details panel and happens straight away with an Undo message for 7 seconds; its receipt files are only removed once the message goes.
-- **Centre – Current (opens here):** the selected property.
-- **Right – Add new:** starts with three choices (Current renovation project, Current rental property, Potential purchase: rental investment or renovation flip). Picking one shows that type's form, with "‹ Change type" to go back. Tapping the Add new tab while already on it also goes back to the choices. It returns to the choices after adding.
+- **Home (opens here):** greeting, a red portfolio card (equity, value, lending, LVR, monthly cash flow), quick actions (Log rent, Reno cost, Milestone, Deal check), Needs attention, and Recent activity (latest dated rent, expenses and reno costs). Sample-data note with "Start fresh" when showing sample properties; a welcome card when there are no owned properties
+- **Properties:** filter chips (All, Reno projects, Rentals, Potential buys) and a card per property with its photo (or a coloured placeholder by type), a type tag and one headline number (equity gain, monthly cash flow, est. profit or yield on cost). An amber dot means it needs attention. Tapping opens the property page
+- **Property page (opens full screen on top, with a back button):** a cover (photo with "Add photo"/"Change photo", or a coloured placeholder), the address, a headline card with the key number and "Edit details", then section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). Overview figures are a simple list. Potential buys show their deal estimates, maximum offer and comparable sales below the headline
+- **+ menu (slide-up):** Rent or expense, Reno cost, Milestone, Property, and Quick deal check. Rent/cost/milestone ask which property (skipped when there's only one) and open its page with the form ready. Property opens the add page (choose type, then the form)
+- **Tools:** the calculators; a calculator opens with a back button to the list
+- **Settings:** Backup/restore and Install the app. A dot on the Settings tab means a backup is due
+- Deleting is in a property's Edit details panel and happens straight away with an Undo message for 7 seconds; its receipt files are only removed once the message goes
 
 ## Features built so far
 
@@ -54,7 +58,7 @@ Three panes the user swipes between, with matching tabs at the top:
 - Healthy Homes checklist (`p.hh`, date each standard was ticked): heating, insulation, ventilation, moisture ingress and drainage, draught stopping, with a note to check current requirements and deadlines at tenancy.govt.nz. "Mark all as done" ticks the rest at once. A compliance report (PDFs or photos) can be uploaded below the checklist; files are saved straight away in IndexedDB (`p.hhDocs`), and removing one needs a second tap
 - A finished reno project (after "Mark reno finished") can be turned into a rental. Its reno spend stays in `p.spent` (so in total cost in), its costs/timeline data are kept, and `p.fromProject` records the date
 
-**Portfolio** (top of the Properties pane, owned properties only)
+**Portfolio** (red card at the top of Home, owned properties only)
 - Total value, total lending, equity, LVR, and monthly cash flow: rentals are rent less expenses and mortgage repayments; projects are their holding cost (or repayments if no holding cost is set)
 
 **Mortgage (optional, per property)**
@@ -94,16 +98,17 @@ Three panes the user swipes between, with matching tabs at the top:
 - "Bought it? Track it as a reno project" converts a potential buy (purchase price, date and reno budget required), keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
 
 **Phone app feel**
-- Installable: `manifest.webmanifest`, icons in `icons/`, and `sw.js` (network first for the app's own files, cached copy offline; never caches other sites or `.csv`). Only works when served over http(s), not from `file://`. Chrome shows "Install app" in the banner; iPhone gets a one-off "Add to Home Screen" hint card
+- Installable: `manifest.webmanifest`, icons in `icons/`, and `sw.js` (network first for the app's own files, cached copy offline; never caches other sites or `.csv`). Only works when served over http(s), not from `file://`. Chrome offers an "Install app" button in Settings; iPhone gets a one-off "Add to Home Screen" hint card on Home
 - Asks the browser for persistent storage once there's real data, so receipts aren't cleared when space runs low
 - Owned properties are split into section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). A dot marks a section with something needing attention
-- "Edit details" and "Edit mortgage" open in a slide-up panel over the current page (closes on Cancel, tapping outside, or Escape). Adding a property still uses the Add new pane
-- Phone Back button: Tools, a calculator inside Tools, Settings and the edit panel each add a history entry when opened (`ovOpen` in `main.js`), so Back closes the top panel (a calculator goes back to the tools list first) instead of leaving the app. Their own close buttons go through `ovClose`, which steps back through history, so entries don't pile up. A new panel needs an `ovOpen` call, an `ovClose` for its close button, and a case in `ovShut`
+- "Edit details" and "Edit mortgage" open in a slide-up panel over the property page (closes on Cancel, tapping outside, or Escape)
+- Navigation (`main.js`): tabs are `home`, `p0` (Properties), `toolbody` (Tools), `setbody` (Settings); pages opened on top are `p1` (property) and `p2` (add a property). `navTab()` switches tab, `openPage()` / `go(1|2)` opens a page, `openProp(i, section)` opens a property
+- Phone Back button: pages (`p1`, `p2`) and panels (the + menu, the edit panel, a calculator) add a history entry when opened (`ovOpen`), so Back closes the top one instead of leaving the app. Their own close buttons go through `ovClose`, which steps back through history, so entries don't pile up. `ovSwap` replaces the top entry (e.g. the + menu turning into the property page it opened). Switching tabs steps back past everything open. A new panel needs an `ovOpen` call, an `ovClose` for its close button, and a case in `ovShut`
 
 **Needs attention**
-- Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, and no backup in 30 days. Tapping one opens that property at the right section
+- Home shows a "Needs attention" list (and the Properties list an amber dot on each affected property): re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, and no backup in 30 days. Tapping one opens that property at the right section
 
-**Tools & calculators** (header button, `tools.js`)
+**Tools & calculators** (Tools tab, `tools.js`; Quick deal check is also on Home and in the + menu)
 - Each calculator is declared in `TOOLS` as fields plus a `calc()` returning the result. Last-used inputs are remembered per calculator in localStorage (`nzpt.tools.v1`). Most can be filled in from a property ("Fill in from a property…")
 - Quick deal check: reno to sell (profit, return on costs) or buy to rent (yield on total cost, equity), using the same `deal()` maths as potential buys. "Save as potential buy" opens the Add new form with the figures filled in (loan and other monthly costs go into "Other / month")
 - Mortgage repayments: monthly, fortnightly or weekly, P&I or interest-only, with the other loan type, monthly equivalent and total interest
@@ -114,7 +119,10 @@ Three panes the user swipes between, with matching tabs at the top:
 - Selling costs: commission as tiered % (e.g. 3.95% on the first $400,000, 2% on the rest), flat %, or a flat $ fee (all defaults are examples, user-editable), plus GST or no GST (GST fixed at 15% in `GST` in `tools.js`, the owner's choice; update it there if the rate changes), one combined "Marketing, legal & other" amount, and what the seller receives
 
 **Backup**
-- In Settings (gear in the header; also opened from the banner's backup status or the "Needs attention" backup item): download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner
+- In the Settings tab (also reached from the "Needs attention" backup item on Home): download a JSON backup of all properties plus their receipt files and cover photos, or restore one (replaces everything, after confirming). REINZ sales data is never included. A dot on the Settings tab shows when a backup is due (none yet, or over 30 days)
+
+**Cover photos**
+- One photo per property (`p.photo`), added from the property page's cover. Stored in IndexedDB like receipts, scaled to 1600px JPEG, included in backups, and removed with the property
 
 **Sales data import and nearby sales map**
 - "Import sales CSV" on a potential buy reads a REINZ Statistics Search export (columns matched by header name: Street Number, Street, Suburb, Sale Price, Sale Date, plus optional List Price, Days To Sell, Sale Category, Valuation, Bedrooms, Floor Area, Land Area m2). Stored in localStorage under `nzpt.sales.v1`, separate from properties. Rows without a usable street number, price or date (Lot/null/malformed) are skipped

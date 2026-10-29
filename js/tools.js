@@ -124,15 +124,15 @@ function tfield(f){
   return '<div id="w_'+f.i+'"'+(f.wide?' class="wide"':'')+'><label>'+f.l+(f.opt?OPT:'')+'</label>'+inp+'</div>';
 }
 function drawTools(){
-  var t=toolCur&&toolById(toolCur),done='<button class="edit" data-x="tclose">Done</button>';
+  var t=toolCur&&toolById(toolCur);
   if(!t){
-    $('toolbody').innerHTML='<div class="row" style="cursor:default;margin-bottom:12px"><b class="ftitle" id="tooltitle">Tools &amp; calculators</b>'+done+'</div><div class="tgrid">'+
+    $('toolbody').innerHTML='<h1 class="ptitle">Tools</h1><p class="sub" style="margin-bottom:14px">Calculators for deals, loans and rentals</p><div class="tgrid">'+
       TOOLS.map(function(t){return '<button class="tile" data-tool="'+t.id+'"><span class="tico">'+ic(t.icon)+'</span><b>'+t.name+'</b><span class="sub">'+t.desc+'</span></button>'}).join('')+'</div>';
     return;
   }
   var srcs=t.from?props.map(function(p,i){return t.from(p)?'<option value="'+i+'">'+esc(p.addr)+'</option>':''}).join(''):'';
-  $('toolbody').innerHTML='<div class="row" style="cursor:default"><button class="back" data-x="thome" style="padding:0">‹ All tools</button>'+done+'</div>'+
-    '<div class="card enter" style="margin-top:10px"><span class="hd" id="tooltitle">'+ic(t.icon)+'<b>'+t.name+'</b></span><p class="sub" style="margin-top:4px">'+t.desc+'</p>'+
+  $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b>'+t.name+'</b></div>'+
+    '<div class="card enter"><p class="sub">'+t.desc+'</p>'+
     (srcs?'<select id="q_from" style="margin-top:12px"><option value="">Fill in from a property…</option>'+srcs+'</select>':'')+
     (t.all&&props.some(function(p){return p.type!=='potential'})?'<button class="edit" data-x="tport" style="margin-top:12px">Use my portfolio</button>':'')+
     '<div class="fgrid">'+t.f.map(tfield).join('')+'</div><div class="tout" id="q_out"></div></div>';
@@ -150,23 +150,16 @@ function tfill(vals){
   for(var k in vals){var e=$('q_'+k),x=vals[k];if(!e||x===undefined||x===null)continue;e.value=e.classList.contains('money')?(x?fmtMoney(Math.round(x*100)/100):''):x}
   tcalc();
 }
-function openTools(){toolCur=null;drawTools();$('tools').hidden=false;$('toolbody').scrollTop=0;ovOpen('tools')}
-function closeTools(){ovClose('tools')}
-function closeToolsNow(){$('tools').hidden=true;toolCur=null}
-// Turns a quick deal check into a potential buy, with its figures already in the Add new form.
+// Turns a quick deal check into a potential buy, with its figures already in the add form.
 function dealToProp(){
-  var v=tread(toolById('deal')),f=v.plan==='flip';closeTools();
+  var v=tread(toolById('deal')),f=v.plan==='flip';
   editIdx=null;newType='potential';newIntent=v.plan;newLoan='pi';loanOpen=false;formAnim=true;form();formAnim=false;
   setv({f_price:v.price,f_reno:v.reno,f_legal:v.legal,f_rates:v.rates,f_ins:v.ins,f_oth:v.othm,f_months:v.months,f_value:f?v.value:v.value2,f_sell:f?v.sell:0,f_rent:f?0:v.rent,f_exp:f?0:v.exp});
-  holdCalc();go(2,true);$('p2').scrollTop=0;
+  holdCalc();go(2);
 }
-$('toolbtn').addEventListener('click',openTools);
-$('toolbg').addEventListener('click',closeTools);
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('tools').hidden)closeTools()});
 $('toolbody').addEventListener('click',function(e){
   var tile=e.target.closest('[data-tool]');if(tile){toolCur=tile.dataset.tool;drawTools();$('toolbody').scrollTop=0;ovOpen('tool');return}
   var b=e.target.closest('[data-x]');if(!b)return;
-  if(b.dataset.x==='tclose')closeTools();
   if(b.dataset.x==='thome')ovClose('tool');
   if(b.dataset.x==='tsave')dealToProp();
   if(b.dataset.x==='tport'){var own=props.filter(function(p){return p.type!=='potential'});tfill({val:sum(own,function(p){return p.value}),debt:sum(own,function(p){return p.loan})})}

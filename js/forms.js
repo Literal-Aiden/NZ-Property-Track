@@ -24,9 +24,10 @@ function chooser(){
 }
 var OPT=' <i class="opt">optional</i>';
 function fsec(n,t){return '<p class="fsec">'+ic(n)+t+'</p>'}
+var ADDBAR='<div class="pagebar"><button class="pback" data-back aria-label="Back">'+ic('back')+'</button><b>Add a property</b></div>';
 function form(){
   clearTimeout(acT);acList=[];acSel=-1;
-  if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=chooser()+'<p class="hint">← back to current</p>';return}
+  if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=ADDBAR+chooser();return}
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
   var N=MONEY,ed=editIdx!==null,kind=KINDS_ADD.filter(function(k){return k[0]===newType})[0];
   var RQ=' required';
@@ -75,7 +76,7 @@ function form(){
    (ed&&sd?'<button class="edit del" id="delprop" style="margin-top:16px">Delete this property</button>':'')+'</div>';
   // Adding happens in the Add new pane; editing slides up over the current property so you stay where you are.
   $('sheet').hidden=!ed;
-  if(ed){$('p2').innerHTML='';$('sheetbody').innerHTML=h;$('sheetbody').scrollTop=0}else{$('sheetbody').innerHTML='';$('p2').innerHTML=h+'<p class="hint">← back to current</p>'}
+  if(ed){$('p2').innerHTML='';$('sheetbody').innerHTML=h;$('sheetbody').scrollTop=0}else{$('sheetbody').innerHTML='';$('p2').innerHTML=ADDBAR+h}
   if(editIdx!==null)fill(props[editIdx]);
   holdCalc();
   if($('f_fix')){$('f_fix').value='12';if(editIdx!==null){var q=props[editIdx];$('f_fix').value=q.fixTerm||(q.refix?'custom':'12')}if(!$('f_fixstart').value)$('f_fixstart').value=iso(new Date());fixPreview()}
@@ -108,7 +109,7 @@ function addProp(){
   if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}else{p.rent=num('f_rent');p.exp=num('f_exp')}
   if(newType!=='potential'&&num('f_loan')){p.loan=num('f_loan');p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
-  isSample=false;newLoan='pi';loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);if(wasEdit)ovClose('sheet');
+  isSample=false;newLoan='pi';loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','photo','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
 function keepForm(){var v={},lm=$('loanmore');loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}holdCalc()}
@@ -131,7 +132,7 @@ $(id).addEventListener('click',function(e){
   var n=e.target.closest('[data-n]');
   if(n){newIntent=n.dataset.n;keepForm();return}
   if(e.target.id==='cancel'){closeSheet();return}
-  if(e.target.id==='delprop'){var i=editIdx;closeSheet();delProp(i);return}
+  if(e.target.id==='delprop'){var i=editIdx;closeSheetNow();delProp(i);return}
   if(e.target.id==='add')addProp();
 });
 });

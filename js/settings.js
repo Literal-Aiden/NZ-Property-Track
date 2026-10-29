@@ -1,4 +1,4 @@
-// Settings panel: backup, restore, installing the app and persistent storage.
+// Settings tab: backup, restore, installing the app and persistent storage.
 // Backup: one JSON file with every property and the receipt files they use. Imported sales data is licensed, so it's left out.
 var BKEY='nzpt.backup',bkPend=null,bkMsg='';
 function lastBackup(){try{return localStorage.getItem(BKEY)}catch(e){return null}}
@@ -16,7 +16,7 @@ function installCard(){
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
 function drawSettings(){
-  $('setbody').innerHTML='<div class="row" style="cursor:default;margin-bottom:12px"><b class="ftitle" id="settitle">Settings</b><button class="edit" id="setclose" data-x="setclose">Done</button></div>'+backupCard()+installCard();
+  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+installCard();
 }
 function b2d(b){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=no;r.readAsDataURL(b)})}
 function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]})}
@@ -27,12 +27,12 @@ function exportBackup(){
   }).then(function(rc){
     var t=iso(new Date());
     download('nz-property-tracker-backup-'+t+'.json',JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc}),'application/json');
-    try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';list();banner();
-  }).catch(function(){bkMsg='Couldn’t make the backup file.';list()});
+    try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner();
+  }).catch(function(){bkMsg='Couldn’t make the backup file.';drawSettings()});
 }
 function readBackup(f){
   var rd=new FileReader();
-  rd.onload=function(){bkMsg='';try{var d=JSON.parse(rd.result);if(d.app!=='nzpt'||!Array.isArray(d.props))throw 0;d.receipts=d.receipts||[];bkPend=d}catch(e){bkMsg='That file isn’t an NZ Property Tracker backup.'}list()};
+  rd.onload=function(){bkMsg='';try{var d=JSON.parse(rd.result);if(d.app!=='nzpt'||!Array.isArray(d.props))throw 0;d.receipts=d.receipts||[];bkPend=d}catch(e){bkMsg='That file isn’t an NZ Property Tracker backup.'}drawSettings()};
   rd.readAsText(f);
 }
 function restore(){
@@ -40,7 +40,7 @@ function restore(){
   d.receipts.forEach(function(r){try{recs.push({id:r.id,name:r.name,type:r.type,added:r.added,blob:d2b(r.data)})}catch(e){}});
   rcTx('readwrite',function(s){s.clear();recs.forEach(function(r){s.put(r)})}).catch(function(){bkMsg='Receipts couldn’t be restored in this browser.'}).then(function(){
     for(var k in RCU)URL.revokeObjectURL(RCU[k]);RCU={};
-    props=d.props;cur=0;bkPend=null;resetCur();isSample=false;save();closeSettings();render();go(1,true);
+    props=d.props;cur=0;bkPend=null;resetCur();isSample=false;save();render();navTab('home');
   });
 }
 // Installing as an app: Android/desktop Chrome offer an install prompt; iPhone needs Share → Add to Home Screen.
@@ -53,16 +53,9 @@ function iosHint(){
 // Ask the browser not to clear this app's data (receipts especially) when the device runs low on space.
 var persistAsked=false;
 function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.storage.persist)return;persistAsked=true;navigator.storage.persisted().then(function(y){if(!y)return navigator.storage.persist()}).catch(function(){})}
-// Settings panel: backup, restore and installing the app.
-function openSettings(){drawSettings();$('settings').hidden=false;$('setbody').scrollTop=0;$('setclose').focus();ovOpen('settings')}
-function closeSettings(){ovClose('settings')}
-function closeSettingsNow(){$('settings').hidden=true;bkPend=null;bkMsg=''}
-$('gear').addEventListener('click',openSettings);
-$('setbg').addEventListener('click',closeSettings);
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('settings').hidden)closeSettings()});
+// Settings tab: backup, restore and installing the app.
 $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
-  if(b.dataset.x==='setclose')closeSettings();
   if(b.dataset.x==='bkdl')exportBackup();
   if(b.dataset.x==='bkok')restore();
   if(b.dataset.x==='bkno'){bkPend=null;drawSettings()}
