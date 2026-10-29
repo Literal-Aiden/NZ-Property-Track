@@ -121,6 +121,9 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 **Backup**
 - In the Settings tab (also reached from the "Needs attention" backup item on Home): download a JSON backup of all properties plus their receipt files and cover photos, or restore one (replaces everything, after confirming). REINZ sales data is never included. A dot on the Settings tab shows when a backup is due (none yet, or over 30 days)
 
+**Testing card (TEMPORARY, remove before a real launch)**
+- Settings has a "Testing" card (`testCard()` / `testRun()` in `settings.js`): "Load example properties" swaps everything for the sample properties, and "Clear all data" leaves no properties. Both clear receipts and photos, need a second tap within 4 seconds, and go to Home
+
 **Cover photos**
 - One photo per property (`p.photo`), added from the property page's cover. Stored in IndexedDB like receipts, scaled to 1600px JPEG, included in backups, and removed with the property
 

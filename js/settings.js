@@ -16,7 +16,26 @@ function installCard(){
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
 function drawSettings(){
-  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+installCard();
+  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+installCard()+testCard();
+}
+// TEMPORARY, for testers: wipe this device's properties, or swap them for the example ones. Both need a second tap.
+// Remove this card (and its handlers below) before a real launch.
+var testArm=null,testT=null;
+function testCard(){
+  function btn(x,label,cls){return '<button class="go'+(cls||'')+'" data-x="'+x+'">'+(testArm===x?'Tap again to confirm':label)+'</button>'}
+  return '<div class="card">'+hd('alert','Testing')+'<p class="sub" style="margin-top:4px">Temporary, for trying the app out. Both replace everything on this device, including receipts and photos.</p>'+
+    '<div class="btns">'+btn('tsample','Load example properties')+btn('tclear','Clear all data',' ghost')+'</div></div>';
+}
+function testRun(x){
+  if(testArm!==x){testArm=x;clearTimeout(testT);testT=setTimeout(function(){testArm=null;drawSettings()},4000);drawSettings();return}
+  testArm=null;clearTimeout(testT);
+  rcTx('readwrite',function(s){s.clear()}).catch(function(){}).then(function(){
+    for(var k in RCU)URL.revokeObjectURL(RCU[k]);RCU={};
+    cur=0;resetCur();propFilter='all';
+    if(x==='tsample'){try{localStorage.removeItem(KEY)}catch(e){}props=JSON.parse(JSON.stringify(SAMPLE));isSample=true}
+    else{props=[];save()}
+    render();navTab('home');
+  });
 }
 function b2d(b){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=no;r.readAsDataURL(b)})}
 function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]})}
@@ -57,6 +76,7 @@ function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.sto
 $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='bkdl')exportBackup();
+  if(b.dataset.x==='tsample'||b.dataset.x==='tclear')testRun(b.dataset.x);
   if(b.dataset.x==='bkok')restore();
   if(b.dataset.x==='bkno'){bkPend=null;drawSettings()}
   if(b.dataset.x==='inst'&&installEvt){installEvt.prompt();installEvt=null;banner();drawSettings()}
