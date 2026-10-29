@@ -16,11 +16,13 @@ Open `index.html` in a browser to run it.
 
 ## Layout (keep this)
 
+A header bar with the app icon, "NZ Property Tracker" and a settings (gear) button. Settings opens as a slide-up panel holding Backup/restore and Install the app.
+
 Three panes the user swipes between, with matching tabs at the top:
 
 - **Left – Properties:** every property added, each with a Delete button that needs a second tap to confirm.
 - **Centre – Current (opens here):** the selected property.
-- **Right – Add new:** form for adding a rental or a renovation project.
+- **Right – Add new:** starts with three choices (Current renovation project, Current rental property, Potential purchase: rental investment or renovation flip). Picking one shows that type's form, with "‹ Change type" to go back. Tapping the Add new tab while already on it also goes back to the choices. It returns to the choices after adding.
 
 ## Features built so far
 
@@ -86,7 +88,7 @@ Three panes the user swipes between, with matching tabs at the top:
 - Properties pane shows a "Needs attention" card and badges on each property: re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, and no backup in 30 days. Tapping one opens that property at the right section
 
 **Backup**
-- Properties pane: download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner
+- In Settings (gear in the header; also opened from the banner's backup status or the "Needs attention" backup item): download a JSON backup of all properties plus their receipt files, or restore one (replaces everything, after confirming). REINZ sales data is never included. Last backup date shows in the banner
 
 **Sales data import and nearby sales map**
 - "Import sales CSV" on a potential buy reads a REINZ Statistics Search export (columns matched by header name: Street Number, Street, Suburb, Sale Price, Sale Date, plus optional List Price, Days To Sell, Sale Category, Valuation, Bedrooms, Floor Area, Land Area m2). Stored in localStorage under `nzpt.sales.v1`, separate from properties. Rows without a usable street number, price or date (Lot/null/malformed) are skipped

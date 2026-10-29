@@ -6,6 +6,13 @@ html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
 header{padding:12px 16px 0}
 .sample{font-size:12px;color:var(--mute);margin:0 0 8px}
+.appbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{border-radius:8px;flex:none}
+.brand h1{font-size:18px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gear{flex:none;width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer}
+.gear:hover,.gear:focus-visible{border-color:var(--acc);color:var(--acc)}
+.gear svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tabs{display:flex;gap:6px;background:var(--acc2);padding:4px;border-radius:12px}
 .tab{flex:1;border:0;background:none;color:var(--mute);padding:8px 4px;border-radius:9px;font:inherit;font-size:14px;cursor:pointer}
 .tab.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -105,8 +112,22 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 .sheetbox{position:relative;max-height:90vh;overflow-y:auto;background:var(--bg);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
 .sheetbox::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 10px}
 .sheetbox .card{margin:0}
+#setbody .card+.card{margin-top:12px}
 @keyframes up{from{transform:translateY(40px);opacity:.6}}
 @media (prefers-reduced-motion:reduce){.sheetbox{animation:none}}
+.pick{display:flex;align-items:center;gap:14px;width:100%;margin-top:12px;padding:16px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.pick:hover,.pick:focus-visible{border-color:var(--acc);background:var(--acc2)}
+.pick:active{transform:scale(.99)}
+.pick svg{flex:none;width:42px;height:42px;padding:9px;border-radius:12px;background:var(--acc2);color:var(--acc);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pick>span{flex:1;min-width:0}
+.pick b{display:block;font-size:16px}
+.pick .sub{display:block;margin-top:2px}
+.pick i{font-style:normal;font-size:22px;color:var(--mute)}
+.back{border:0;background:none;color:var(--acc);font:inherit;font-size:14px;padding:0 0 8px;cursor:pointer}
+.ftitle{display:block;font-size:20px}
+.enter{animation:fadeup .22s ease-out}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){.enter{animation:none}}
 input.bad,select.bad{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
 .more{margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
 .more summary{padding:12px 0;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between}

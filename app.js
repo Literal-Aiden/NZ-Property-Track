@@ -30,7 +30,7 @@ var KEY='nzpt.v1',isSample=true;
 function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);isSample=false;return d.props||[]}}catch(e){}return JSON.parse(JSON.stringify(SAMPLE))}
 function save(){isSample=false;try{localStorage.setItem(KEY,JSON.stringify({props:props}))}catch(e){}}
 var props=load();
-var cur=0,newType='project',newIntent='flip',newLoan='pi',editIdx=null,editSec='details',delIdx=null;
+var cur=0,newType=null,newIntent='flip',newLoan='pi',editIdx=null,editSec='details',delIdx=null;
 var $=function(id){return document.getElementById(id)};
 var track=$('track');
 var nz=new Intl.NumberFormat('en-NZ',{style:'currency',currency:'NZD',maximumFractionDigits:0});
@@ -412,6 +412,16 @@ function backupCard(){
   if(bkPend){var n=bkPend.props.length,r=bkPend.receipts.length;return h+'<p style="margin:12px 0 0;font-size:14px">Backup from '+(bkPend.exported?fmtD(bkPend.exported):'an unknown date')+': '+n+' propert'+(n===1?'y':'ies')+', '+r+' receipt'+(r===1?'':'s')+'. Restoring replaces everything on this device.</p><div class="btns"><button class="go" data-x="bkok">Replace with backup</button><button class="go ghost" data-x="bkno">Cancel</button></div></div>'}
   return h+'<div class="btns"><button class="go" data-x="bkdl">Download backup</button><label class="go ghost filebtn">Restore<input type="file" accept=".json,application/json" class="bkin" hidden></label></div></div>';
 }
+function installCard(){
+  var t=standalone?'Installed: you’re using the app version.'
+    :installEvt?'Add it to your home screen so it opens full screen and works offline.'
+    :IOS?'In Safari, tap the Share button, then “Add to Home Screen”. It then opens full screen and works offline.'
+    :'Open this page on your phone and use the browser menu to add it to your home screen.';
+  return '<div class="card"><b>Install the app</b><p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
+}
+function drawSettings(){
+  $('setbody').innerHTML='<div class="row" style="cursor:default;margin-bottom:12px"><b class="ftitle" id="settitle">Settings</b><button class="edit" id="setclose" data-x="setclose">Done</button></div>'+backupCard()+installCard();
+}
 function b2d(b){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=no;r.readAsDataURL(b)})}
 function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]})}
 function exportBackup(){
@@ -434,7 +444,7 @@ function restore(){
   d.receipts.forEach(function(r){try{recs.push({id:r.id,name:r.name,type:r.type,added:r.added,blob:d2b(r.data)})}catch(e){}});
   rcTx('readwrite',function(s){s.clear();recs.forEach(function(r){s.put(r)})}).catch(function(){bkMsg='Receipts couldn’t be restored in this browser.'}).then(function(){
     for(var k in RCU)URL.revokeObjectURL(RCU[k]);RCU={};
-    props=d.props;cur=0;bkPend=null;resetCur();isSample=false;save();render();go(1,true);
+    props=d.props;cur=0;bkPend=null;resetCur();isSample=false;save();closeSettings();render();go(1,true);
   });
 }
 function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false}
@@ -509,7 +519,8 @@ function list(){
     var c='<div class="card row" data-i="'+i+'"><div><b>'+esc(p.addr)+'</b><p class="sub">'+esc(p.sub)+' · '+kind+'</p><p class="sub">'+line+'</p>'+(fl.length?'<div class="flags">'+fl.map(function(a){return '<span class="flag">'+esc(a.t)+'</span>'}).join('')+'</div>':'')+'</div><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><span class="badge">'+(i===cur?'Viewing':'Open')+'</span><button class="edit del" data-d="'+i+'">'+(delIdx===i?'Tap to confirm':'Delete')+'</button></div></div>';
     if(pt)pot+=c;else own+=c;
   });
-  $('p0').innerHTML=attnCard()+((own&&pot?'<p class="grp">Owned</p>':'')+own+(pot?'<p class="grp">Potential buys</p>'+pot:'')||'<div class="card"><p class="sub">Nothing added yet.</p></div>')+iosHint()+backupCard();
+  $('p0').innerHTML=attnCard()+((own&&pot?'<p class="grp">Owned</p>':'')+own+(pot?'<p class="grp">Potential buys</p>'+pot:'')||'<div class="card"><p class="sub">Nothing added yet.</p></div>')+iosHint();
+  if(!$('settings').hidden)drawSettings();
 }
 
 // Installing as an app: Android/desktop Chrome offer an install prompt; iPhone needs Share → Add to Home Screen.
@@ -584,13 +595,24 @@ function potView(p){
   return h;
 }
 
+// Add new starts with a choice of what's being added; the form for that type appears once one is picked.
+var KINDS_ADD=[
+  ['project','Current renovation project','A property you own and are renovating now','<path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/>'],
+  ['rental','Current rental property','A property you own that’s tenanted','<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>'],
+  ['potential','Potential purchase','Rental investment or renovation flip you’re considering','<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>']];
+var formAnim=false;
+function chooser(){
+  return '<div class="card enter"><b>What are you adding?</b><p class="sub" style="margin-top:4px">Choose one to see the details needed.</p>'+KINDS_ADD.map(function(k){
+    return '<button class="pick" data-t="'+k[0]+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+k[3]+'</svg><span><b>'+k[1]+'</b><span class="sub">'+k[2]+'</span></span><i aria-hidden="true">›</i></button>';
+  }).join('')+'</div>';
+}
 function form(){
   clearTimeout(acT);acList=[];acSel=-1;
+  if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=chooser()+'<p class="hint">← back to current</p>';return}
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
-  var N=MONEY,ed=editIdx!==null;
+  var N=MONEY,ed=editIdx!==null,kind=KINDS_ADD.filter(function(k){return k[0]===newType})[0];
   var RQ=' required';
-  var h='<div class="card"><b>'+(editIdx===null?'Add a property':(editSec==='loan'?'Edit mortgage':'Edit property details'))+'</b><p class="sub" style="margin-top:4px">Fields marked optional can be left blank.</p>'+
-   (editIdx===null?'<label>Type</label><div class="seg"><button data-t="project" class="'+(pr?'on':'')+'">Reno project</button><button data-t="rental" class="'+(newType==='rental'?'on':'')+'">Rental</button><button data-t="potential" class="'+(pt?'on':'')+'">Potential buy</button></div>':'')+
+  var h='<div class="card'+(formAnim?' enter':'')+'">'+(editIdx===null?'<button class="back" id="chg">‹ Change type</button><b class="ftitle">New '+kind[1].replace(/^Current /,'').replace(/^P/,'p')+'</b>':'<b>'+(editSec==='loan'?'Edit mortgage':'Edit property details')+'</b>')+'<p class="sub" style="margin-top:4px">Fields marked optional can be left blank.</p>'+
    (pt?'<label>Plan</label><div class="seg"><button data-n="flip" class="'+(flip?'on':'')+'">Reno to sell</button><button data-n="rental" class="'+(flip?'':'on')+'">Buy to rent</button></div>':'')+
    (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off" required><div class="sugg" role="listbox" hidden></div></div>'+
    '<label>Suburb / city</label><input id="f_sub" required>':'')+
@@ -668,7 +690,7 @@ function saveLoan(){
   var p=props[editIdx],n=num('f_loan');
   if(n){p.loan=n;p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
   else{delete p.loan;delete p.rate;delete p.refix;delete p.fixTerm;delete p.fixStart;delete p.ltype;delete p.term}
-  isSample=false;cur=editIdx;editIdx=null;newLoan='pi';render();go(1,true);
+  isSample=false;cur=editIdx;editIdx=null;newLoan='pi';newType=null;render();go(1,true);
 }
 function addProp(){
   if(missing())return;
@@ -678,28 +700,42 @@ function addProp(){
   if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}else{p.rent=num('f_rent');p.exp=num('f_exp')}
   if(newType!=='potential'&&num('f_loan')){p.loan=num('f_loan');p.rate=num('f_rate');readFix(p);p.ltype=newLoan;p.term=num('f_term')||30}
-  isSample=false;newLoan='pi';loanOpen=false;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);
+  isSample=false;newLoan='pi';loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1}render();go(1,true);
 }
 
-function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · '+(l?'last backup '+fmtD(l):'not backed up yet'))+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
+function banner(){var b=$('banner'),l=lastBackup();b.innerHTML=(isSample?'Showing sample properties · <a href="#" id="fresh">Start fresh</a>':'Saved on this device · <a href="#" id="opset">'+(l?'last backup '+fmtD(l):'not backed up yet')+'</a>')+(installEvt?' · <a href="#" id="install">Install app</a>':'')}
 function render(){if(!isSample){save();persist()}list();current();form();banner()}
 function go(i,smooth){track.scrollTo({left:i*track.clientWidth,behavior:smooth?'smooth':'auto'})}
 function sync(){var i=Math.round(track.scrollLeft/track.clientWidth);document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',+t.dataset.i===i)})}
 
-$('tabs').addEventListener('click',function(e){var t=e.target.closest('.tab');if(t){if(+t.dataset.i===2&&editIdx!==null){editIdx=null;form()}go(+t.dataset.i,true)}});
+$('tabs').addEventListener('click',function(e){var t=e.target.closest('.tab');if(!t)return;var i=+t.dataset.i;
+  // Tapping Add new while already on it goes back to the choice of property type.
+  if(i===2&&Math.round(track.scrollLeft/track.clientWidth)===2&&newType){newType=null;loanOpen=false;form();$('p2').scrollTop=0}
+  if(i===2&&editIdx!==null){editIdx=null;form()}go(i,true)});
 track.addEventListener('scroll',sync);
 $('p0').addEventListener('click',function(e){var d=e.target.closest('[data-d]');
   if(d){var k=+d.dataset.d;if(delIdx===k){isSample=false;rcDel(rcIds(props[k]));props.splice(k,1);delIdx=null;if(cur>=props.length)cur=Math.max(0,props.length-1);editIdx=null;resetCur();render()}else{delIdx=k;list()}return}
   var r=e.target.closest('.row');delIdx=null;if(r){if(cur!==+r.dataset.i)resetCur();cur=+r.dataset.i;editIdx=null;render();go(1,true);return}
   var b=e.target.closest('[data-x]');if(!b)return;
-  if(b.dataset.x==='bkdl')exportBackup();
-  if(b.dataset.x==='bkok')restore();
-  if(b.dataset.x==='bkno'){bkPend=null;list()}
   if(b.dataset.x==='att'){var i=+b.dataset.i;if(cur!==i)resetCur();cur=i;sec=b.dataset.sec;editIdx=null;render();$('p1').scrollTop=0;go(1,true)}
-  if(b.dataset.x==='tobk')$('bk').scrollIntoView({behavior:'smooth',block:'start'});
+  if(b.dataset.x==='tobk')openSettings();
   if(b.dataset.x==='ioshint'){try{localStorage.setItem('nzpt.ioshint','1')}catch(err){}list()}
 });
-$('p0').addEventListener('change',function(e){if(e.target.classList.contains('bkin')&&e.target.files[0])readBackup(e.target.files[0])});
+// Settings panel: backup, restore and installing the app.
+function openSettings(){drawSettings();$('settings').hidden=false;$('setbody').scrollTop=0;$('setclose').focus()}
+function closeSettings(){$('settings').hidden=true;bkPend=null;bkMsg=''}
+$('gear').addEventListener('click',openSettings);
+$('setbg').addEventListener('click',closeSettings);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('settings').hidden)closeSettings()});
+$('setbody').addEventListener('click',function(e){
+  var b=e.target.closest('[data-x]');if(!b)return;
+  if(b.dataset.x==='setclose')closeSettings();
+  if(b.dataset.x==='bkdl')exportBackup();
+  if(b.dataset.x==='bkok')restore();
+  if(b.dataset.x==='bkno'){bkPend=null;drawSettings()}
+  if(b.dataset.x==='inst'&&installEvt){installEvt.prompt();installEvt=null;banner();drawSettings()}
+});
+$('setbody').addEventListener('change',function(e){if(e.target.classList.contains('bkin')&&e.target.files[0])readBackup(e.target.files[0])});
 // Reno costs, receipts, timeline and converting a potential buy.
 $('p1').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
@@ -764,7 +800,7 @@ $('p1').addEventListener('change',function(e){
 });
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
 function keepForm(){var v={},lm=$('loanmore');loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}holdCalc()}
-function closeSheet(){editIdx=null;form()}
+function closeSheet(){editIdx=null;newType=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){
@@ -791,7 +827,8 @@ $(id).addEventListener('click',function(e){
   var l=e.target.closest('[data-l]');
   if(l){newLoan=l.dataset.l;document.querySelectorAll('#lt button').forEach(function(x){x.classList.toggle('on',x===l)});holdCalc();return}
   var b=e.target.closest('[data-t]');
-  if(b){newType=b.dataset.t;keepForm();return}
+  if(b){newType=b.dataset.t;formAnim=true;form();formAnim=false;$('p2').scrollTop=0;var f=$('f_addr');if(f&&matchMedia('(pointer:fine)').matches)f.focus();return}
+  if(e.target.closest('#chg')){newType=null;loanOpen=false;form();$('p2').scrollTop=0;return}
   var n=e.target.closest('[data-n]');
   if(n){newIntent=n.dataset.n;keepForm();return}
   if(e.target.id==='cancel'){closeSheet();return}
@@ -799,7 +836,8 @@ $(id).addEventListener('click',function(e){
 });
 });
 document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2,true)}
-  if(e.target.id==='install'&&installEvt){e.preventDefault();installEvt.prompt();installEvt=null;banner()}});
+  if(e.target.id==='install'&&installEvt){e.preventDefault();installEvt.prompt();installEvt=null;banner()}
+  if(e.target.id==='opset'){e.preventDefault();openSettings()}});
 window.addEventListener('resize',function(){go(1)});
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;banner()});
 window.addEventListener('appinstalled',function(){installEvt=null;banner()});
