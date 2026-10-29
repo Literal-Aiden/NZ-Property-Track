@@ -44,7 +44,8 @@ function hd(n,t){return '<span class="hd">'+ic(n)+'<b>'+t+'</b></span>'}
 function stat(l,v,c){return '<div class="stat"><b class="'+(c||'')+'">'+v+'</b><span>'+l+'</span></div>'}
 
 function days(d){return d?Math.max(0,Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5)):null}
-function dOwn(p){var n=days(p.date);return n===null?'–':n}
+// How long it's been owned, in the unit that reads best: days, then months, then years.
+function dOwn(p){var n=days(p.date);if(n===null)return '–';if(n<62)return n+' day'+(n===1?'':'s');if(n<730){var m=Math.round(n/30.44);return m+' months'}var y=n/365.25;return (y<10?Math.floor(y*10)/10:Math.floor(y))+' years'}
 function basis(p){return p.price+(p.legal||0)+(p.extra||0)+(p.spent||0)}
 function pmt(l,r,y){var m=r/1200,n=y*12;return m?l*m/(1-Math.pow(1+m,-n)):l/n}
 function iso(x){return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}

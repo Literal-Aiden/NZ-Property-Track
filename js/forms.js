@@ -59,11 +59,13 @@ function form(){
    (pr?'<label>Legal fees and other purchase costs (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
       :'<label>Legal fees (optional)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (optional)</label><input id="f_extra"'+N)+
    '<label>Estimated value now (optional)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
+   // When adding, what's owed now sits in the main form (it matters more than the purchase details for a long-held
+   // property); the rate, term and re-fix details stay in the collapsed mortgage section below.
+   (editIdx===null?'<label>Current loan balance (optional)</label><input id="f_loan" placeholder="Leave blank if mortgage-free"'+N+'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.</p>':'')+
    (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+RQ+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (optional)</label><input id="f_spent"'+N)
       :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp"'+RQ+N)+'':'')+
    // When adding, the optional mortgage sits in a collapsed section so the form stays short.
-   (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen?' open':'')+'><summary>Mortgage (optional)</summary>':'')+
-   '<label>Loan amount (NZD)</label><input id="f_loan"'+N+
+   (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen?' open':'')+'><summary>Mortgage details (if there’s a loan)</summary>':'<label>Current loan balance (NZD)</label><input id="f_loan"'+N+'<p class="sub" style="margin-top:4px">What you owe on it now. Leave blank if it’s mortgage-free.</p>')+
    '<label>Interest rate % (enter your own, e.g. second-tier lender)</label><input id="f_rate"'+NUM+
    '<label>Fixed term</label><select id="f_fix">'+FIXOPTS+'</select>'+
    '<div id="fixwrap"><label>Rate fixed from</label><input id="f_fixstart" type="date"></div>'+

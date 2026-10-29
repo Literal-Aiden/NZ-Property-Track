@@ -39,7 +39,8 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 **Both property types**
 - Purchase price, purchase date, legal fees, estimated value now (left blank, it uses the purchase price)
 - Rentals: legal fees plus a separate "Healthy Homes / quick reno costs" field. Projects: one "Legal fees and other purchase costs" field (stored in `legal`, with `extra` 0; older projects show legal + extra combined when edited)
-- When adding, the mortgage fields sit in a collapsed "Mortgage (optional)" section
+- When adding, "Current loan balance (optional)" is in the main form (what's owed now, not the original loan; blank means mortgage-free), because for a long-held property it matters more than the purchase details. The rate, fixed term and other loan details sit in a collapsed "Mortgage details (if there's a loan)" section. Edit mortgage labels the loan "Current loan balance" too
+- Overview shows Current loan (or "Mortgage-free"), Equity (value − loan) and LVR, and "Owned for" in days, months or years
 - Required fields: inputs with the `required` attribute, checked by `missing()` on save (also: an interest rate whenever a loan amount is entered). Missing fields are outlined, the first is focused, and a collapsed mortgage section opens if needed. Optional fields say "(optional)" in their label
   - Reno project: address, suburb, purchase price, purchase date, reno budget
   - Rental: address, suburb, purchase price, purchase date, weekly rent, annual expenses

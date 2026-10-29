@@ -7,7 +7,7 @@ function loanCard(p){
   var d=rf?dd(iso(new Date()),rf):null;
   var when=fl?'Floating rate':d===null?'No re-fix date':(d<0?'Re-fix date passed':'Re-fix in '+d+' days');
   var dt=fl?'Can change anytime':rf?new Date(rf+'T00:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'}):'–';
-  return '<div class="card"><div class="row" style="cursor:default">'+hd('percent','Mortgage')+'<button class="edit" id="editloan">Edit mortgage</button></div><p class="sub">'+$$(p.loan)+' at '+p.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
+  return '<div class="card"><div class="row" style="cursor:default">'+hd('percent','Mortgage')+'<button class="edit" id="editloan">Edit mortgage</button></div><p class="sub">'+$$(p.loan)+' owing at '+p.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
    '<div class="grid">'+stat('Repayment / month now',$$(now))+stat(isIO?'If P&amp;I instead':'If interest-only',$$(alt))+stat(when,dt,d!==null&&d>=0&&d<=90?'neg':'')+stat(isIO?'Extra cash needed for P&amp;I':'Cash freed by interest-only',$$(Math.abs(pi-io)))+'</div>'+
    '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(p.term||30)+'-year term.</p></div>';
 }
@@ -41,6 +41,8 @@ function headline(p){
   if(p.intent==='rental')return {lab:'Gross yield on total cost',big:(d.cost?(d.ann/d.cost*100).toFixed(1):'0')+'%',short:'yield on cost',tag:'Buy to rent',sub:'Total cost in '+$$(d.cost)+' · '+$$(p.rent||0)+' a week rent'};
   return {lab:'Estimated profit, before tax',big:signed(d.prof),short:'est. profit',tag:'Reno to sell',sub:'Return on costs '+pct(d.roc)+' · asking '+$$(p.price)};
 }
+// What's owed and the equity in it, from the current loan balance.
+function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [['Current loan',l?$$(l):'Mortgage-free'],['Equity',$$(e),e<0?'neg':'pos'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
 function rows(r){return '<div class="card list">'+r.filter(Boolean).map(function(x){return '<div class="r"><span>'+x[0]+'</span><b class="'+(x[2]||'')+'">'+x[1]+'</b></div>'}).join('')+'</div>'}
 // A property's page: cover photo, headline number, then its sections.
 function current(){
@@ -63,12 +65,12 @@ function current(){
   if(body){$('p1').innerHTML=h+body(p);fillCur(p);return}
   if(pr){
     var left=p.budget-p.spent;
-    h+=rows([['Purchase price',$$(p.price)],['Est. value now',$$(p.value)],['Total cost in',$$(basis(p))],['Budget remaining',$$(left),left<0?'neg':''],['Days owned',dOwn(p)]]);
+    h+=rows([['Purchase price',$$(p.price)],['Est. value now',$$(p.value)]].concat(debtRows(p),[['Total cost in',$$(basis(p))],['Budget remaining',$$(left),left<0?'neg':''],['Owned for',dOwn(p)]]));
     if(p.done)h+='<div class="card">'+toRentBlock(p)+'</div>';
   }else{
     var ann=p.rent*52,net=ann-p.exp;
     h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%'],
-      ['Purchase price',$$(p.price)],['Est. value now',$$(p.value)],['Total cost in',$$(basis(p))],['Days owned',dOwn(p)]]);
+      ['Est. value now',$$(p.value)]].concat(debtRows(p),[['Purchase price',$$(p.price)],['Total cost in',$$(basis(p))],['Owned for',dOwn(p)]]));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
   $('p1').innerHTML=h+(p.plan?planCard(p):'');
