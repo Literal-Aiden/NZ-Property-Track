@@ -11,8 +11,9 @@ function drawHome(){
     // Equity, value, lending and LVR only count properties with a value, so one entered with just its loan doesn't skew them.
     var wv=own.filter(function(p){return p.value}),nv=own.length-wv.length;
     var val=sum(wv,function(p){return p.value}),debt=sum(wv,function(p){return p.loan}),cf=sum(own,cashFlow),hasProj=own.some(function(p){return p.type==='project'});
-    h+='<div class="card hero"><div class="lab">Equity across '+wv.length+' propert'+(wv.length===1?'y':'ies')+(nv?' (plus '+nv+' without a value yet)':'')+'</div><div class="big">'+$$(val-debt)+'</div>'+
-      '<div class="row3"><div><b>'+short(val)+'</b><span>Value</span></div><div><b>'+short(debt)+'</b><span>Lending</span></div><div><b>'+(val?Math.round(debt/val*100)+'%':'–')+'</b><span>LVR</span></div></div>'+
+    h+='<div class="card hero"><div class="lab">'+(wv.length?'Equity across '+wv.length+' propert'+(wv.length===1?'y':'ies')+(nv?' (plus '+nv+' without a value yet)':''):'Equity')+'</div>'+
+      (wv.length?'<div class="big">'+$$(val-debt)+'</div>':'<div class="big" style="font-size:22px">Add an estimated value</div><p style="margin:-6px 0 12px;opacity:.9">Use Update value on a property to see your equity and LVR.</p>')+
+      (wv.length?'<div class="row3"><div><b>'+short(val)+'</b><span>Value</span></div><div><b>'+short(debt)+'</b><span>Lending</span></div><div><b>'+(val?Math.round(debt/val*100)+'%':'–')+'</b><span>LVR</span></div></div>':'')+
       '<div class="chipline">'+ic('trend')+'<span><b>'+(cf<0?'−':'+')+$$(Math.abs(cf))+'</b> a month cash flow'+(cf<0&&hasProj?', including reno holding costs':'')+'</span></div></div>';
   }else h+='<div class="card hero"><div class="lab">Welcome</div><div class="big" style="font-size:26px">Add your first property</div><p style="margin:0 0 14px;opacity:.9">Track rentals, renovation projects and properties you’re thinking of buying.</p><button class="herobtn" data-x="hadd">Add a property</button></div>';
   h+='<h2 class="hh2">Quick actions</h2><div class="qa">'+

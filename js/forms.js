@@ -21,6 +21,8 @@ function lpForm(main){
     (lpN>1?'':'<p class="sub" style="margin-top:4px">If the loan is split into parts fixed for different terms or rates.</p>');
 }
 function fixPreview(i){
+  // No loan amount, no dates: the rate's start and re-fix date are cleared until an amount is entered.
+  if(!num('l_amt'+i)){$('l_fs'+i).value='';$('l_rf'+i).value='';$('l_out'+i).textContent='';return}
   var v=$('l_fix'+i).value,c=v==='custom',f=v==='float';
   $('l_fw'+i).style.display=c||f?'none':'';
   $('l_cw'+i).style.display=c?'':'none';
@@ -34,8 +36,14 @@ var fsPrev='';
 function syncFs(){
   var d=$('f_date');if(editIdx!==null||!d)return;
   var t=iso(new Date());if(!d.value)return;
-  for(var i=0;i<lpN;i++){var f=$('l_fs'+i);if(f&&(!f.value||f.value===fsPrev||f.value===t)&&f.value!==d.value){f.value=d.value;fixPreview(i)}}
+  for(var i=0;i<lpN;i++){var f=$('l_fs'+i);if(f&&num('l_amt'+i)&&(!f.value||f.value===fsPrev||f.value===t)&&f.value!==d.value){f.value=d.value;fixPreview(i)}}
   fsPrev=d.value;
+}
+// Typing a loan amount fills in "Rate fixed from" if it's empty: the purchase date when adding, else today.
+function loanAmt(i){
+  var f=$('l_fs'+i),d=$('f_date');
+  if(f&&num('l_amt'+i)&&!f.value)f.value=editIdx===null&&d&&d.value?d.value:iso(new Date());
+  fixPreview(i);
 }
 // The parts as typed (raw values), so removing one can shift the rest up.
 var LPF=['amt','rate','fix','fs','rf','term'];
@@ -126,7 +134,7 @@ function form(){
   if($('l_fix0')){
     var L=editIdx!==null?parts(props[editIdx]):[];
     for(var i=0;i<lpN;i++){var x=L[i]||{},m={};m['l_amt'+i]=x.loan;m['l_rate'+i]=x.rate;m['l_fs'+i]=x.fixStart;m['l_rf'+i]=x.refix;m['l_term'+i]=x.term;setv(m);
-      $('l_fix'+i).value=x.fixTerm||(x.refix?'custom':'12');if(!$('l_fs'+i).value)$('l_fs'+i).value=iso(new Date())}
+      $('l_fix'+i).value=x.fixTerm||(x.refix?'custom':'12');if(!$('l_fs'+i).value&&x.loan)$('l_fs'+i).value=iso(new Date())}
     fixAll();
   }
 }
@@ -213,6 +221,7 @@ $(id).addEventListener('input',function(e){
   if(e.target.classList.contains('bad'))unbad(e.target);
   if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
   if(e.target.id==='f_date')syncFs();
+  var la=/^l_amt(\d+)$/.exec(e.target.id);if(la)loanAmt(+la[1]);
   if(e.target.id==='f_sub'||e.target.id==='f_addr'){if(e.target.id==='f_sub'&&e.isTrusted)delete e.target.dataset.county;rateLink()}
 });
 $(id).addEventListener('click',function(e){

@@ -89,7 +89,7 @@ $('p1').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   var p=props[cur],x=b.dataset.x,k=+b.dataset.k;
   function edit(id){current();var c=$(id||'costs');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})}
-  if(x==='sec'){sec=b.dataset.sec;current()}
+  if(x==='sec'){sec=b.dataset.sec;valEdit=false;current()}
   else if(x==='cat'){var n=cats(p)[k].n;costOpen=costOpen===n?null:n;current()}
   else if(x==='add'){itemEdit='new';rcMsg='';edit()}
   else if(x==='item'){itemEdit=k;rcMsg='';edit()}
@@ -211,7 +211,7 @@ function swipeTo(d){
   var on=document.querySelector('.screen.on'),id=on&&on.id;
   if(id==='p1'){
     var B=[].slice.call(document.querySelectorAll('#p1 .secnav [data-sec]')),i=B.findIndex(function(b){return b.classList.contains('on')}),n=B[i+d];
-    if(!n||itemEdit!==null||moneyEdit!==null||tlAdd||tlEdit||tenEdit||catDraft)return;
+    if(!n||itemEdit!==null||moneyEdit!==null||tlAdd||tlEdit||tenEdit||catDraft||valEdit||rentOpen)return;
     n.click();
   }else{
     var j=TABS.indexOf(id);if(j<0||ovs.indexOf('tool')>=0)return;
