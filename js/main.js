@@ -86,9 +86,13 @@ $('p1').addEventListener('click',function(e){
   else if(x==='tknew'){tlAdd=true;current();$('k_t').focus()}
   else if(x==='tkadd'){if(missing($('k_t').closest('.card')))return;var t=$('k_t').value.trim();(p.tasks=p.tasks||[]).push({t:t,k:$('k_k').value,d:$('k_d').value,who:$('k_who').value.trim(),ok:false});tlAdd=false;isSample=false;render()}
   else if(x==='tkcancel'){tlAdd=false;current()}
-  else if(x==='tk'){p.tasks[k].ok=!p.tasks[k].ok;isSample=false;render()}
+  else if(x==='tk'){p.tasks[k].ok=!p.tasks[k].ok;delete p.tasks[k].auto;isSample=false;render()}
   else if(x==='tkdel'){p.tasks.splice(k,1);isSample=false;render()}
-  else if(x==='tldone'){if(p.done)delete p.done;else p.done=iso(new Date());isSample=false;render()}
+  // Finishing ticks any milestones left open, marked auto so "Not finished yet" can untick just those.
+  else if(x==='tldone'){
+    (p.tasks||[]).forEach(function(t){if(p.done){if(t.auto){t.ok=false;delete t.auto}}else if(!t.ok){t.ok=true;t.auto=true}});
+    if(p.done)delete p.done;else p.done=iso(new Date());isSample=false;render();
+  }
   else if(x==='conv'){convOpen=true;current()}
   else if(x==='convok')convert(cur);
   else if(x==='convno'){convOpen=false;current()}

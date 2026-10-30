@@ -99,7 +99,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 **Reno timeline (projects)**
 - Start, target finish, holding cost per month. The first target set is kept as the baseline (`target0`), so delays show as days behind and extra holding cost
-- Milestones (trade booked, consent, inspection, delivery, other) with tick-off and overdue highlighting; "Mark reno finished"
+- Milestones (trade booked, consent, inspection, delivery, other) with tick-off and overdue highlighting; "Mark reno finished" ticks any milestones still open (flagged `auto`) with a note saying how many, and "Not finished yet" unticks just those, in case it was pressed by accident. Ticking or unticking one by hand clears its flag, so it stays as set
 
 **Potential buy → project**
 - "Bought it? Track it as a reno project" converts a potential buy (purchase price, date and reno budget required), keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
