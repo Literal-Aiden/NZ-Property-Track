@@ -46,6 +46,8 @@ input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-ra
 .sample a{color:var(--acc)}
 .ac{position:relative}
 .sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.15);overflow:hidden}
+/* The list scrolls when there are more than about five (a common street name across the country). */
+.sugl{max-height:290px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .opt{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--line)}
 .opt b{display:block;font-size:15px}
 .opt span{font-size:13px;color:var(--mute)}
@@ -143,7 +145,7 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 .fsec{display:flex;align-items:center;gap:8px;margin:22px 0 2px;padding-top:14px;border-top:1px solid var(--line);font-size:14px;font-weight:700;color:var(--ink)}
 .fsec .ic{color:var(--acc)}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;align-items:end}
-.opt{font-style:normal;font-size:11px;color:var(--mute);background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:0 6px;margin-left:2px;white-space:nowrap}
+i.opt{font-style:normal;font-size:11px;color:var(--mute);background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:0 6px;margin-left:2px;white-space:nowrap}
 .hbtns{display:flex;gap:8px;flex:none}
 .sheetbox.tall{min-height:70vh}
 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}

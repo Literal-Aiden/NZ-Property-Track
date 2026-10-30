@@ -146,7 +146,8 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Results: distance filter (500 m / 1 / 2 / 5 km), optional similar bedrooms (±1), median, Leaflet map (loaded from cdnjs only when shown, OSM tiles), list with beds/floor/land/CV/days to sell and "Add as comp". "≈" marks street-level matches
 
 **Address search**
-- Typing 3+ characters in the Address field suggests NZ addresses; picking one fills Address and Suburb / city
+- Typing 3+ characters in the Address field suggests NZ addresses; picking one fills Address and Suburb / city. Up to 25 suggestions (Photon asked for 40, before removing non-NZ and duplicates) in a list about five rows tall that scrolls (`.sugl`), so a common street name found in many towns can be picked by scrolling; with more than five, a note says how many and suggests adding the suburb
+- Speed: Photon is in Germany, so a new connection takes about 0.9 s and each search about 0.3 s (measured from NZ, Oct 2026). The connection is opened when an address field is tapped (`acWarmUp()`, a preconnect); searches start 150 ms after typing pauses; earlier searches aren't cancelled; results are cached per query (`acCache`), so backspacing is instant; and while a search is on its way, the suggestions on screen are narrowed to what still matches (`acMatch()`: every typed word starts a word of the address) rather than cleared. An NZ-hosted service would answer in under 0.1 s
 - Uses the free Photon API (OpenStreetMap data, no key), so typed text goes to photon.komoot.io. For production, consider an NZ-specific source (LINZ / Addressfinder / NZ Post) and check its usage terms
 
 **Rates lookup (council links)**
