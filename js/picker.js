@@ -10,6 +10,8 @@ function pickTitle(s){
 }
 function openPick(s){
   pickSel=s;
+  // The tap doesn't move focus to the select, so the field typed in last keeps it: blur it to close the keyboard.
+  var a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur();
   // An empty first option is a prompt ("Fill in from a property…"), so it's the title, not a choice.
   var o=[].filter.call(s.options,function(x){return !x.disabled&&x.value!==''}),wide=o.some(function(x){return x.text.length>18});
   $('pickbody').innerHTML='<div class="pkhead"><b>'+esc(pickTitle(s))+'</b><button class="tskip" data-pk="close">Cancel</button></div>'+
