@@ -14,6 +14,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
   - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
+  - `councils.js` which council an address is in, and its rates search link
   - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
 - When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
@@ -140,6 +141,12 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 **Address search**
 - Typing 3+ characters in the Address field suggests NZ addresses; picking one fills Address and Suburb / city
 - Uses the free Photon API (OpenStreetMap data, no key), so typed text goes to photon.komoot.io. For production, consider an NZ-specific source (LINZ / Addressfinder / NZ Post) and check its usage terms
+
+**Rates lookup (council links)**
+- Under "Rates per year" (potential buys) and "Annual expenses" (rentals) there's a link to the property's council rates search (`rateLink()` in `forms.js`, `ratesLink()` / `councilOf()` in `councils.js`). The app doesn't fetch rates itself: there's no national rates source, each council runs its own database, and many council sites block automated requests (checked Oct 2026), so a relay server can't cover the country
+- `COUNCILS` lists all 67 city and district councils with their website and the words that identify them (council name, main towns). The council comes from the picked address suggestion (Photon's `county`, kept in `data-county` on the suburb field and cleared when the suburb is typed by hand), else from the suburb / city text, last comma part first
+- Councils with a known rates search page link straight to it (Gisborne's takes the address, so it opens the results); the rest link to a DuckDuckGo search of the council's own site for "rates search". With no council matched, it searches "<suburb> council rates search". To add a direct link, put the URL as the 4th item of that council's entry, with `{q}` where the address goes if the site supports it
+- Gisborne's database (rid.gdc.govt.nz) could be read by a relay server for full auto-fill (total rates, capital value, land area); not built
 
 **Editing**
 - "Edit details" and "Edit mortgage" are separate forms, so editing one never touches the other

@@ -79,7 +79,8 @@ function form(){
    '<label>Legal &amp; other purchase costs'+OPT+'</label><input id="f_legal" placeholder="Lawyer, LIM, builder’s report, valuation"'+N+
    // Holding costs are worked out per month from the yearly bills, the loan repayment and any other monthly costs.
    fsec('clock','Holding costs')+
-   '<div class="fgrid"><div><label>Rates per year</label><input id="f_rates"'+RQ+N+'</div><div><label>Insurance per year</label><input id="f_ins"'+RQ+N+'</div>'+
+   '<div class="fgrid"><div><label>Rates per year</label><input id="f_rates"'+RQ+N+'</div><div><label>Insurance per year</label><input id="f_ins"'+RQ+N+'</div></div>'+
+   '<p class="sub rlink" id="ratelink"></p><div class="fgrid">'+
    '<div><label>Power / month'+OPT+'</label><input id="f_power"'+N+'</div><div><label>Other / month'+OPT+'</label><input id="f_oth" placeholder="e.g. water'+(flip?'':', lawns')+'"'+N+'</div></div>'+
    '<details class="more" id="loanmore"'+(loanOpen||(ed&&props[editIdx].loan)?' open':'')+'><summary>Loan (optional)</summary>'+
    '<div class="fgrid"><div><label>Loan amount</label><input id="f_loan"'+N+'</div><div><label>Interest rate %</label><input id="f_rate"'+NUM+'</div></div>'+
@@ -102,7 +103,7 @@ function form(){
    (editIdx===null?(lpN===1?'<label>Current loan balance (optional)</label><input id="l_amt0" placeholder="Leave blank if mortgage-free"'+N+'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.</p>'
      :'<p class="sub" style="margin-top:14px">Loan split into '+lpN+' parts: enter each amount under Mortgage details below.</p>'):'')+
    (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+RQ+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (optional)</label><input id="f_spent"'+N)
-      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp"'+RQ+N)+'':'')+
+      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp" placeholder="Rates, insurance, maintenance etc."'+RQ+N+'<p class="sub rlink" id="ratelink"></p>')+'':'')+
    // When adding, the optional mortgage sits in a collapsed section so the form stays short.
    (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen||lpN>1?' open':'')+'><summary>Mortgage details (if there’s a loan)</summary>'+lpForm(true)+'</details>':lpForm(false)):'')+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
@@ -112,7 +113,7 @@ function form(){
   $('sheet').hidden=!ed;
   if(ed){$('p2').innerHTML='';$('sheetbody').innerHTML=h;$('sheetbody').scrollTop=0}else{$('sheetbody').innerHTML='';$('p2').innerHTML=ADDBAR+h}
   if(editIdx!==null)fill(props[editIdx]);
-  holdCalc();
+  holdCalc();rateLink();
   if($('l_fix0')){
     var L=editIdx!==null?parts(props[editIdx]):[];
     for(var i=0;i<lpN;i++){var x=L[i]||{},m={};m['l_amt'+i]=x.loan;m['l_rate'+i]=x.rate;m['l_fs'+i]=x.fixStart;m['l_rf'+i]=x.refix;m['l_term'+i]=x.term;setv(m);
@@ -152,7 +153,15 @@ function addProp(){
   isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','photo','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
-function keepForm(){var v={},lm=$('loanmore');loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}holdCalc();fixAll()}
+function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();rateLink()}
+// Rates lookup: a link to the property's council rates search, under the rates (potential buys) or annual expenses
+// (rentals) field. The council comes from the picked address suggestion (data-county on the suburb field) or the suburb / city.
+function rateLink(){
+  var el=$('ratelink');if(!el)return;
+  var s=$('f_sub'),r=ratesLink($('f_addr').value.trim(),s.value.trim(),s.dataset.county);
+  el.innerHTML=r?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+ic('search')+esc(r.label)+' ↗</a><span>'+(newType==='rental'?'Rates are part of annual expenses. ':'')+(r.direct?'Use the total rates for the year.':'Search your address there, then use the total rates for the year.')+'</span>'
+    :'Enter the suburb / city to get a link to the council’s rates search.';
+}
 function closeSheet(){ovClose('sheet')}
 function closeSheetNow(){editIdx=null;newType=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
@@ -162,6 +171,7 @@ $(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.
 $(id).addEventListener('input',function(e){
   if(e.target.classList.contains('bad')){e.target.classList.remove('bad');e.target.removeAttribute('aria-invalid')}
   if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
+  if(e.target.id==='f_sub'||e.target.id==='f_addr'){if(e.target.id==='f_sub'&&e.isTrusted)delete e.target.dataset.county;rateLink()}
 });
 $(id).addEventListener('click',function(e){
   var l=e.target.closest('[data-l]');

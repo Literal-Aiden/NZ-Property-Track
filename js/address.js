@@ -19,13 +19,13 @@ function acFind(el){
         var p=f.properties;if(p.countrycode!=='NZ')return;
         var a=p.housenumber&&p.street?p.housenumber+' '+p.street:(p.osm_key==='highway'?p.name:'');if(!a)return;
         var sb=p.district||p.locality||'',c=p.city||p.state||'',s=sb&&sb!==c?sb+(c?', '+c:''):c;
-        if(seen[a+s])return;seen[a+s]=1;acList.push({addr:a,sub:s});
+        if(seen[a+s])return;seen[a+s]=1;acList.push({addr:a,sub:s,county:p.county||''});
       });
       acList=acList.slice(0,5);acShow();
     }).catch(function(){});
   },300);
 }
-function acPick(i){var a=acList[i],el=acIn;if(!a||!el)return;el.value=a.addr;var s=$(el.dataset.sub),n=$(el.dataset.next);if(s)s.value=a.sub;acHide();if(n)n.focus()}
+function acPick(i){var a=acList[i],el=acIn;if(!a||!el)return;el.value=a.addr;var s=$(el.dataset.sub),n=$(el.dataset.next);if(s){s.value=a.sub;s.dataset.county=a.county}acHide();if(window.rateLink)rateLink();if(n)n.focus()}
 document.addEventListener('input',function(e){if(e.target.classList.contains('acin'))acFind(e.target)});
 document.addEventListener('keydown',function(e){
   if(e.target!==acIn||!acList.length)return;

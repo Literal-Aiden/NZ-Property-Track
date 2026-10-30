@@ -126,3 +126,9 @@ button.r{cursor:pointer}
 .psearch{position:relative;margin:12px 0 0}
 .psearch input{width:100%;padding:11px 12px 11px 38px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box}
 .psearch .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mute);width:18px;height:18px}
+
+/* Rates lookup link under the rates / annual expenses field */
+.rlink{margin-top:8px}
+.rlink a{display:inline-flex;align-items:center;gap:6px;color:var(--acc);font-weight:600;text-decoration:none}
+.rlink a .ic{width:16px;height:16px}
+.rlink span{display:block;margin-top:2px}
