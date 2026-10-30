@@ -225,3 +225,5 @@ label.rcadd .ic{width:20px;height:20px}
 label.ftile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:0;padding:12px 8px;border:1.5px dashed var(--acc);border-radius:12px;background:var(--acc2);color:var(--acc);font-size:14px;font-weight:600;cursor:pointer;text-align:center}
 label.ftile .ic{width:24px;height:24px}
 label.rcadd{background:var(--acc2);border-width:1.5px;font-weight:600}
+/* The value row's "Updated …" date sits under the amount. */
+.list .r b.noloan .sub{font-weight:400;font-size:12px}

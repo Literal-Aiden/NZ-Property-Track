@@ -55,7 +55,7 @@ function calBtn(p){
   }).join('')+'<button class="edit" data-x="refixcal" style="margin-top:8px">Or download a calendar file</button>';
 }
 function calIcsBtn(p){var n=refixDates(p).length;return n?'<button class="edit" data-x="refixcal" style="margin-top:12px">'+ic('clock')+' Add re-fix date'+(n>1?'s':'')+' to calendar</button>':''}
-function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null;picArm=null}
+function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null;picArm=null;valEdit=false}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
   if(itemEdit!==null&&itemEdit!=='new'){var x=p.items[itemEdit];setv({i_desc:x.desc,i_who:x.who,i_date:x.date,i_quote:x.quote,i_amt:x.amt})}
@@ -87,6 +87,28 @@ function headline(p){
   return {lab:'Estimated profit, before tax',big:signed(d.prof),short:'est. profit',tag:'Reno to sell',sub:'Return on costs '+pct(d.roc)+' · asking '+$$(p.price)};
 }
 // What's owed and the equity in it, from the current loan balance.
+// Estimated value: changed most often (to keep equity and LVR current), so it has its own Update button and form.
+// Each update is dated (p.valueAt) and kept in p.vals [{d,v}], one per day, for a value history later.
+var valEdit=false;
+function valRow(p){
+  return ['Est. value now',(p.value?$$(p.value):'Not entered')+(p.valueAt?'<span class="sub">Updated '+fmtD(p.valueAt)+'</span>':'')+'<button class="edit" data-x="valedit">Update value</button>','noloan'];
+}
+function valForm(p){
+  return '<div class="card" id="valf">'+hd('trend','Update estimated value')+
+    '<p class="sub" style="margin-top:4px">From a recent appraisal, valuation or online estimate. Equity and LVR update when you save.</p>'+
+    '<label>Estimated value now (NZD)</label><input id="v_val" required value="'+(p.value?fmtMoney(p.value):'')+'"'+MONEY+
+    '<p class="sub" id="v_prev" style="margin-top:6px"></p><p class="sub neg formerr" style="margin-top:8px" role="alert"></p>'+
+    '<div class="btns fbar"><button class="go" data-x="valsave">Save value</button><button class="go ghost" data-x="valcancel">Cancel</button></div></div>';
+}
+// Live preview of equity and LVR at the value being typed.
+function valPrev(p){var v=num('v_val'),l=p.loan||0,e=$('v_prev');if(e)e.textContent=v?'Equity '+$$(v-l)+(l?' · LVR '+Math.round(l/v*100)+'%':''):''}
+// Dates the property's current value and adds it to the history (replacing any earlier entry from today).
+function noteVal(p){var t=iso(new Date());p.valueAt=t;p.vals=(p.vals||[]).filter(function(x){return x.d!==t}).concat([{d:t,v:p.value}])}
+function saveVal(p){
+  if(missing($('valf')))return;
+  p.value=num('v_val');noteVal(p);
+  valEdit=false;isSample=false;render();
+}
 function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [l?['Current loan',$$(l)]:['Current loan','Mortgage-free or not added<button class="edit" id="editloan">+ Add a loan</button>','noloan'],p.value?['Equity',$$(e),e<0?'neg':'pos']:['Equity','Add the estimated value'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
 function rows(r){return '<div class="card list">'+r.filter(Boolean).map(function(x){return '<div class="r"><span>'+x[0]+'</span><b class="'+(x[2]||'')+'">'+x[1]+'</b></div>'}).join('')+'</div>'}
 // A property's page: cover photo, headline number, then its sections.
@@ -108,14 +130,15 @@ function current(){
   h+='<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
   var body={costs:costCard,tl:function(p){return timeCard(p)+picCard(p)},money:moneyCard,ten:tenCard,loan:loanCard}[sec];
   if(body){$('p1').innerHTML=h+body(p);fillCur(p);return}
+  if(valEdit)h+=valForm(p);
   if(pr){
     var left=p.budget-p.spent;
-    h+=rows([['Purchase price',$$(p.price)],['Est. value now',$$(p.value)]].concat(debtRows(p),[['Total cost in',$$(basis(p))],['Budget remaining',$$(left),left<0?'neg':''],['Owned for',dOwn(p)]]));
+    h+=rows([['Purchase price',$$(p.price)],valRow(p)].concat(debtRows(p),[['Total cost in',$$(basis(p))],['Budget remaining',$$(left),left<0?'neg':''],['Owned for',dOwn(p)]]));
     if(p.done)h+='<div class="card">'+toRentBlock(p)+'</div>';
   }else{
     var ann=p.rent*52,net=ann-p.exp;
     h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',p.value?(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%':'–'],
-      ['Est. value now',p.value?$$(p.value):'Not entered']].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
+      valRow(p)].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
   $('p1').innerHTML=h+(p.plan?planCard(p):'');

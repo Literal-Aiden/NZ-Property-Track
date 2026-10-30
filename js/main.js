@@ -116,6 +116,9 @@ $('p1').addEventListener('click',function(e){
   else if(x==='tkcancel'){tlAdd=false;current()}
   else if(x==='tk'){p.tasks[k].ok=!p.tasks[k].ok;delete p.tasks[k].auto;isSample=false;render()}
   else if(x==='tkdel'){var tg=p.tasks.splice(k,1)[0];isSample=false;render();undoable('Deleted milestone: '+tg.t,function(){p.tasks.splice(k,0,tg);render()})}
+  else if(x==='valedit'){valEdit=true;current();var vf=$('valf');if(vf){vf.scrollIntoView({block:'center',behavior:'smooth'});valPrev(p)}}
+  else if(x==='valsave')saveVal(p);
+  else if(x==='valcancel'){valEdit=false;current()}
   else if(x==='refixcal')refixIcs(p);
   // Finishing ticks any milestones left open, marked auto so "Not finished yet" can untick just those.
   else if(x==='tldone'){
@@ -161,6 +164,7 @@ $('p1').addEventListener('click',function(e){
 });
 $('p1').addEventListener('input',function(e){
   if(/^cb_\d/.test(e.target.id))cbTot(props[cur]);
+  if(e.target.id==='v_val')valPrev(props[cur]);
   if(e.target.classList.contains('bad'))unbad(e.target);
   // The offer target is kept on the property without re-rendering, so typing isn't interrupted.
   if(e.target.id==='o_tgt'){var p=props[cur];p.tgt=num('o_tgt')||undefined;offerCalc(p);if(!isSample)save()}
