@@ -78,7 +78,8 @@ function quick(k){
 }
 function quickGo(k,i){
   var q=QUICK[k];resetCur();cur=i;editIdx=null;q.go();render();go(1);
-  setTimeout(function(){var c=$(q.card);if(c){c.scrollIntoView({block:'start',behavior:'smooth'});if(c.tagName==='INPUT')c.focus()}},60);
+  // Scrolls to the form without focusing a field, so the keyboard doesn't jump up straight away.
+  setTimeout(function(){var c=$(q.card);if(c)c.scrollIntoView({block:c.tagName==='INPUT'?'center':'start',behavior:'smooth'})},60);
 }
 // Opens a calculator from outside the Tools tab.
 function openTool(id){

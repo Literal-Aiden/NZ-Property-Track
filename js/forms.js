@@ -8,7 +8,7 @@ function lpBlock(i,amt){
    (amt?'<label>'+(lpN>1?'Amount owing on this part':'Current loan balance (NZD)')+'</label><input id="l_amt'+i+'"'+(lpN>1?' required':'')+MONEY+(lpN>1?'':'<p class="sub" style="margin-top:4px">What you owe on it now. Leave blank if it’s mortgage-free.</p>'):'')+
    '<label>Interest rate %'+(i?'':' (enter your own, e.g. second-tier lender)')+'</label><input id="l_rate'+i+'"'+NUM+
    '<label>Fixed term</label><select id="l_fix'+i+'">'+FIXOPTS+'</select>'+
-   '<div id="l_fw'+i+'"><label>Rate fixed from</label><input id="l_fs'+i+'" type="date"></div>'+
+   '<div id="l_fw'+i+'"><label>Rate fixed from (or settlement date)</label><input id="l_fs'+i+'" type="date"></div>'+
    '<div id="l_cw'+i+'" style="display:none"><label>Re-fix date</label><input id="l_rf'+i+'" type="date"></div>'+
    '<p class="sub" id="l_out'+i+'" style="margin-top:8px;color:var(--acc);font-weight:600"></p>'+
    '<label>Loan type</label><div class="seg" data-p="'+i+'"><button data-l="pi" class="'+(lpT[i]==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(lpT[i]==='io'?'on':'')+'">Interest-only</button></div>'+
