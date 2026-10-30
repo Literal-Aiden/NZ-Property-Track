@@ -28,6 +28,15 @@ function fixPreview(i){
   $('l_out'+i).textContent=f?'Floating rate: no re-fix date':r?'Re-fix due '+fmtD(r):'';
 }
 function fixAll(){for(var i=0;i<lpN;i++)if($('l_fix'+i))fixPreview(i)}
+// When adding, "Rate fixed from" follows the purchase date: a part's date is filled in if it's blank, today's (the
+// default) or still the date copied last time, so one typed in by hand is left alone.
+var fsPrev='';
+function syncFs(){
+  var d=$('f_date');if(editIdx!==null||!d)return;
+  var t=iso(new Date());if(!d.value)return;
+  for(var i=0;i<lpN;i++){var f=$('l_fs'+i);if(f&&(!f.value||f.value===fsPrev||f.value===t)&&f.value!==d.value){f.value=d.value;fixPreview(i)}}
+  fsPrev=d.value;
+}
 // The parts as typed (raw values), so removing one can shift the rest up.
 var LPF=['amt','rate','fix','fs','rf','term'];
 function lpRead(){var a=[];for(var i=0;i<lpN;i++){var x={};LPF.forEach(function(k){var e=$('l_'+k+i);x[k]=e?e.value:''});a.push(x)}return a}
@@ -181,7 +190,7 @@ function addProp(){
   isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','photo','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
-function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();rateLink()}
+function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}
 // Rates lookup: a link to the property's council rates search, under the rates (potential buys) or annual expenses
 // (rentals) field. The council comes from the picked address suggestion (data-county on the suburb field) or the suburb / city.
 function rateLink(){
@@ -195,10 +204,11 @@ function closeSheetNow(){editIdx=null;newType=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){
-$(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2])});
+$(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2]);if(e.target.id==='f_date')syncFs()});
 $(id).addEventListener('input',function(e){
   if(e.target.classList.contains('bad'))unbad(e.target);
   if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
+  if(e.target.id==='f_date')syncFs();
   if(e.target.id==='f_sub'||e.target.id==='f_addr'){if(e.target.id==='f_sub'&&e.isTrusted)delete e.target.dataset.county;rateLink()}
 });
 $(id).addEventListener('click',function(e){
