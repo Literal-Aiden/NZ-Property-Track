@@ -62,7 +62,11 @@ function fillCur(p){
   // A new income entry starts at the weekly rent, so logging rent is usually just checking the date.
   if(moneyEdit!==null){var y=moneyEdit==='new'?{date:iso(new Date()),amt:moneyKind==='in'?p.rent:0}:p.money[moneyEdit];setv({m_date:y.date,m_amt:y.n?y.wk:y.amt,m_note:y.note,m_wks:y.n});if(y.n&&$('m_rep'))$('m_rep').value='wks';mRep()}
   if(tenEdit){var t=p.ten||{};setv({t_who:t.who,t_ls:t.ls||(p.ten?'':p.date),t_le:t.le,t_ri:t.ri,t_bond:t.bond})}
-  if(tlEdit)setv({t_start:p.start||p.date,t_target:p.target,t_hold:p.hold});
+  if(tlEdit){
+    // Older projects had one holding figure: what's left after the mortgage goes under Other until it's split up.
+    var leg=!hasBills(p)&&p.hold?Math.max(0,Math.round(p.hold-loanPay(p))):0;
+    setv({t_start:p.start||p.date,t_target:p.target,t_rates:p.rates,t_ins:p.ins,t_power:p.power,t_oth:leg||p.oth});tlHoldCalc(p);
+  }
   if(convOpen)setv({v_price:p.price,v_date:iso(new Date()),v_legal:(p.legal||0)+(p.extra||0),v_budget:p.reno});
   if(p.type==='potential'){setv({o_tgt:p.tgt});offerCalc(p)}
   if(catDraft)cbTot(p);

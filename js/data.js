@@ -13,7 +13,7 @@ var SAMPLE=[
   {id:'s7',cat:'Painting',desc:'Paint and supplies',who:'Paint shop',date:'2026-10-10',amt:3200,paid:true,rc:[]},
   {id:'s8',cat:'Flooring',desc:'Carpet and vinyl, supply and lay',who:'Demo Flooring',quote:7800,amt:0,paid:false,rc:[]},
   {id:'s9',cat:'Contingency',desc:'Rotten subfloor repairs',who:'Sample Builders',date:'2026-05-15',amt:5400,paid:true,rc:[]}],
-  start:'2026-03-20',target:'2026-12-18',target0:'2026-11-27',hold:3400,tasks:[
+  start:'2026-03-20',target:'2026-12-18',target0:'2026-11-27',rates:3600,ins:2600,power:180,oth:40,tasks:[
   {t:'Building consent issued',k:'Consent',d:'2026-04-10',ok:true},
   {t:'Strip-out',k:'Trade booked',d:'2026-04-20',who:'Sample Demolition Ltd',ok:true},
   {t:'Pre-line inspection',k:'Inspection',d:'2026-09-15',ok:true},

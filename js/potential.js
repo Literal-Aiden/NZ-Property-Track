@@ -93,6 +93,8 @@ function convert(i){
   var n={type:'project',addr:p.addr,sub:p.sub,price:num('v_price'),date:d,legal:num('v_legal'),extra:0,value:num('v_value')||num('v_price'),budget:num('v_budget'),spent:0,hold:p.hold||0,start:d,
     plan:{intent:p.intent||'flip',price:p.price,legal:p.legal,extra:p.extra,reno:p.reno,hold:p.hold,months:p.months,sell:p.sell,value:p.value,rent:p.rent,exp:p.exp,converted:iso(new Date())}};
   ['beds','land','comps'].forEach(function(k){if(p[k])n[k]=p[k]});
+  // Its rates, insurance, power and other monthly costs carry over, so the project's holding cost is ready (with the loan).
+  if(p.rates!==undefined)['rates','ins','power','oth'].forEach(function(k){n[k]=p[k]||0});
   if(p.loan){n.loan=p.loan;n.rate=p.rate;n.ltype=p.ltype||'pi';n.term=p.term||30}   // the estimated loan becomes the project's mortgage, to edit once it's fixed
   props[i]=n;convOpen=false;nearOpen=false;isSample=false;render();
 }

@@ -50,7 +50,7 @@ function navTab(t){
   }else{show(t);$(t).scrollTop=0}
 }
 function banner(){drawHome();drawSettings()}
-function render(){if(!isSample){save();persist()}list();current();form();banner()}
+function render(){props.forEach(syncHold);if(!isSample){save();persist()}list();current();form();banner()}
 $('nav').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(b)navTab(b.dataset.tab);else if(e.target.closest('#plusbtn'))openPlus()});
 document.addEventListener('click',function(e){if(e.target.closest('[data-back]')){if(ovs.length)history.back();else show(tab)}});
 // The phone keyboard covers the bottom of the screen, so the tab bar hides while typing.
@@ -110,7 +110,7 @@ $('p1').addEventListener('click',function(e){
   else if(x==='catcancel'){catDraft=null;current()}
   else if(x==='csv')exportCosts(p);
   else if(x==='tledit'){tlEdit=true;tlAdd=false;current()}
-  else if(x==='tlsave'){p.start=$('t_start').value;p.target=$('t_target').value;p.hold=num('t_hold');if(p.target&&(!p.target0||($('t_rebase')&&$('t_rebase').checked)))p.target0=p.target;tlEdit=false;isSample=false;render()}
+  else if(x==='tlsave'){p.start=$('t_start').value;p.target=$('t_target').value;p.rates=num('t_rates');p.ins=num('t_ins');p.power=num('t_power');p.oth=num('t_oth');syncHold(p);if(p.target&&(!p.target0||($('t_rebase')&&$('t_rebase').checked)))p.target0=p.target;tlEdit=false;isSample=false;render()}
   else if(x==='tlcancel'){tlEdit=false;current()}
   else if(x==='tknew'){tlAdd=true;current();$('k_t').focus()}
   else if(x==='tkadd'){if(missing($('k_t').closest('.card')))return;var t=$('k_t').value.trim();(p.tasks=p.tasks||[]).push({t:t,k:$('k_k').value,d:$('k_d').value,who:$('k_who').value.trim(),ok:false});tlAdd=false;isSample=false;render()}
@@ -166,6 +166,7 @@ $('p1').addEventListener('click',function(e){
 $('p1').addEventListener('input',function(e){
   if(/^cb_\d/.test(e.target.id))cbTot(props[cur]);
   if(e.target.id==='v_val')valPrev(props[cur]);
+  if(/^t_(rates|ins|power|oth)$/.test(e.target.id))tlHoldCalc(props[cur]);
   if(e.target.classList.contains('bad'))unbad(e.target);
   // The offer target is kept on the property without re-rendering, so typing isn't interrupted.
   if(e.target.id==='o_tgt'){var p=props[cur];p.tgt=num('o_tgt')||undefined;offerCalc(p);if(!isSample)save()}

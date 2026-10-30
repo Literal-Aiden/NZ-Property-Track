@@ -107,7 +107,9 @@ $('plusbody').addEventListener('click',function(e){
 // Rentals: rent less expenses and mortgage repayments. Projects: their holding cost (or repayments if none is set).
 function cfParts(p){
   if(p.type==='rental'){var r=(p.rent||0)*52/12,e=(p.exp||0)/12,m=loanPay(p);return {net:cashFlow(p),rows:[['Rent',r],['Expenses',-e],['Mortgage',-m]]}}
-  var h=cashFlow(p);return {net:h,rows:[[p.hold?'Reno holding costs':'Mortgage',h]]};
+  var h=cashFlow(p);
+  if(hasBills(p)){var x=holdParts(p);return {net:h,rows:[['Mortgage',-x.loan],['Rates & insurance',-x.bills],['Power & other',-x.other]]}}
+  return {net:h,rows:[[p.hold?'Reno holding costs':'Mortgage',h]]};
 }
 function sgn(n){return (n<0?'−':'+')+$$(Math.abs(n))}
 function drawCash(){
@@ -121,7 +123,7 @@ function drawCash(){
   h+=own.map(function(o){
     var p=o.p,n=o.c.net,w=Math.round(Math.abs(n)/top*100);
     return '<button class="card cfp" data-i="'+o.i+'"><div class="cfh">'+thumb(p)+'<span class="info"><b>'+esc(p.addr)+'</b><span class="sub">'+TYPE[p.type][0]+(p.type==='project'&&!p.done?' · until it’s sold or rented':'')+'</span></span>'+
-      (Math.abs(n)<0.5?'<span class="num"><b>$0</b><span>a month</span></span></div><p class="sub" style="margin-top:8px">No loan or holding cost entered. Add a holding cost in Timeline &amp; progress to include it.</p></button>':
+      (Math.abs(n)<0.5?'<span class="num"><b>$0</b><span>a month</span></span></div><p class="sub" style="margin-top:8px">No loan or holding costs entered. Add rates and insurance in Timeline &amp; progress → Edit dates &amp; costs.</p></button>':
       '<span class="num"><b class="'+(n<0?'neg':'pos')+'">'+sgn(n)+'</b><span>a month</span></span></div>'+
       '<div class="bar"><i class="'+(n<0?'over':'')+'" style="width:'+w+'%"></i></div>'+
       '<p class="sub">'+o.c.rows.filter(function(r){return r[1]}).map(function(r){return r[0]+' '+sgn(r[1])}).join(' · ')+'</p></button>');

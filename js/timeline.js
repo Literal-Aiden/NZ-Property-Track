@@ -4,11 +4,14 @@
 var KINDS=['Trade booked','Consent','Inspection','Delivery','Other'],tlEdit=false,tlAdd=false;
 function timeCard(p){
   var today=iso(new Date()),wk=(p.hold||0)*12/52,T=p.tasks||[];
-  var h='<div class="card" id="tl"><div class="row" style="cursor:default">'+hd('clock','Reno timeline')+''+(tlEdit?'':'<button class="edit" data-x="tledit">'+(p.target?'Edit dates':'Set dates')+'</button>')+'</div>';
+  var h='<div class="card" id="tl"><div class="row" style="cursor:default">'+hd('clock','Reno timeline')+''+(tlEdit?'':'<button class="edit" data-x="tledit">'+(p.target?'Edit dates &amp; costs':'Set dates &amp; costs')+'</button>')+'</div>';
   if(tlEdit)return h+'<label>Reno start</label><input id="t_start" type="date"><label>Target finish</label><input id="t_target" type="date">'+
     (p.target0&&p.target0!==p.target?'<label class="chk"><input type="checkbox" id="t_rebase">Make this the new baseline (original target '+fmtD(p.target0)+')</label>':'')+
-    '<label>Holding costs per month (interest, rates, insurance, power)</label><input id="t_hold"'+MONEY+
-    (p.loan?'<p class="sub" style="margin-top:6px">Mortgage interest alone is about '+$$(p.loan*p.rate/1200)+' a month.</p>':'')+
+    '<p class="grp" style="margin:16px 0 0">Holding costs</p>'+
+    '<div class="grid" style="margin-top:0"><div><label>Rates per year</label><input id="t_rates"'+MONEY+'</div><div><label>Insurance per year</label><input id="t_ins"'+MONEY+'</div>'+
+    '<div><label>Power / month (optional)</label><input id="t_power"'+MONEY+'</div><div><label>Other / month (optional)</label><input id="t_oth" placeholder="e.g. water"'+MONEY+'</div></div>'+
+    (p.rates===undefined&&p.hold?'<p class="sub" style="margin-top:6px">Your earlier holding cost was '+$$(p.hold)+' a month in one figure. It’s now worked out from these and the mortgage, so check the amounts above.</p>':'')+
+    '<p class="sub" id="t_holdout" style="margin-top:8px"></p>'+
     '<p class="sub" style="margin-top:8px">The first target finish you set is kept as the baseline, so if it moves out you can see what the delay costs.</p>'+
     '<div class="btns fbar"><button class="go" data-x="tlsave">Save</button><button class="go ghost" data-x="tlcancel">Cancel</button></div></div>';
   if(p.start&&p.target){
@@ -19,7 +22,7 @@ function timeCard(p){
     h+='<div class="grid">'+stat('Target finish',fmtD(p.target),late?'neg':'')+stat('Holding cost / week',p.hold?$$(wk):'Not set')+
       (slip>0?stat('Behind original target',slip+' days','neg')+stat('Extra holding from delays',p.hold?$$(slip*wk/7):'–','neg'):'')+'</div>';
     if(late&&p.hold)h+='<p class="sub neg" style="margin-top:8px">Every extra week costs about '+$$(wk)+' in holding.</p>';
-    if(!p.hold)h+='<p class="sub" style="margin-top:8px">Add a holding cost per month in Edit dates to see what delays cost.</p>';
+    if(!p.hold)h+='<p class="sub" style="margin-top:8px">Add rates and insurance in Edit dates &amp; costs to see what holding costs and delays cost.</p>';
   }else h+='<p class="sub" style="margin-top:6px">Set a start and target finish date to track progress, and a holding cost to see what delays cost.</p>';
   if(T.length)h+='<p class="grp" style="margin:16px 0 0">Milestones</p>'+T.map(function(x,i){return i}).sort(function(a,b){return (T[a].d||'9999').localeCompare(T[b].d||'9999')}).map(function(i){
     var x=T[i],od=!x.ok&&x.d&&x.d<today;
@@ -65,4 +68,18 @@ function addPics(p,files){
   Promise.all([].slice.call(files).map(function(f){
     return shrink(f).then(function(b){var r={id:uid(),name:f.name,type:b.type||f.type,added:iso(new Date()),room:picRoom,stage:picStage};return rcPut(Object.assign({blob:b},r)).then(function(){return r})});
   })).then(function(l){p.pics=(p.pics||[]).concat(l);isSample=false;render()}).catch(function(){rcMsg='Couldn’t save that photo in this browser. Private browsing can block it.';current()});
+}
+// A reno project's holding cost a month: its mortgage repayments (from the Mortgage section, so it follows any change
+// there) plus rates and insurance per year and power and other costs per month, as for potential buys. Projects saved
+// before these fields existed keep their single figure in p.hold. syncHold (on every render) keeps p.hold as the total,
+// so everything that reads p.hold (timeline, cash flow, plan vs actual) stays right.
+function hasBills(p){return p.rates!==undefined||p.ins!==undefined}
+function holdParts(p){return {loan:loanPay(p),bills:(p.rates||0)/12+(p.ins||0)/12,other:(p.power||0)+(p.oth||0)}}
+function syncHold(p){if(p.type==='project'&&hasBills(p)){var h=holdParts(p);p.hold=h.loan+h.bills+h.other}}
+// Live total in the Edit dates form.
+function tlHoldCalc(p){
+  var o=$('t_holdout');if(!o)return;
+  var m=loanPay(p),b=num('t_rates')/12+num('t_ins')/12,x=num('t_power')+num('t_oth'),t=m+b+x;
+  o.innerHTML=t?'<b>'+$$(t)+' a month</b> holding: '+[m?'mortgage '+$$(m):'',b?'rates and insurance '+$$(b):'',x?'power and other '+$$(x):''].filter(Boolean).join(' + ')+'.':
+    (p.loan?'':'No mortgage on this project. Add one in the Mortgage section to include the repayments.');
 }
