@@ -135,7 +135,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Mortgage repayments: monthly, fortnightly or weekly, P&I or interest-only, with the other loan type, monthly equivalent and total interest
 - Rental yield: gross and net yield, rent and net income per year
 - Holding costs: rates, insurance, power, other, and an optional loan (full repayment counted, as for potential buys), monthly and over a number of months
-- Break-even rent: weekly rent that covers repayments and costs, allowing for a management fee % and vacant weeks, compared with the current rent
+- Break-even rent: weekly rent that covers repayments and costs, allowing for a management fee % and vacant weeks, compared with the current rent. "Fill in from a property" works for any property with a loan or rent: the loan (total, average rate, first part's type and term), a rental's annual expenses under Other, a potential buy's rates, insurance and monthly costs, and the rent; fields it doesn't have are cleared
 - Usable equity: equity available at a max LVR the user enters, and the next purchase price that could support at a deposit % they enter. "Use my portfolio" fills in total value and lending. Notes that LVR rules change and that income servicing isn't checked
 - Selling costs: commission as tiered % (e.g. 3.95% on the first $400,000, 2% on the rest), flat %, or a flat $ fee (all defaults are examples, user-editable), plus GST or no GST (GST fixed at 15% in `GST` in `tools.js`, the owner's choice; update it there if the rate changes), one combined "Marketing, legal & other" amount, and what the seller receives
 

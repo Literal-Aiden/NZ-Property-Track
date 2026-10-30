@@ -72,7 +72,15 @@ var TOOLS=[
       'Counts the full loan repayment, so it’s close to what actually goes out each month. Estimates only.');
   }},
  {id:'even',icon:'chart',name:'Break-even rent',desc:'The weekly rent that covers the mortgage and costs',
-  from:function(p){var L=parts(p),x=L[0]||{};return p.type==='rental'&&{loan:p.loan,rate:p.rate,type:x.ltype||'pi',term:x.term||30,oth:p.exp,cur:p.rent}},
+  // Any property with a loan or rent: its loan (total, average rate, first part's type and term), plus its costs and rent.
+  // Rentals' annual expenses go under Other; a potential buy's rates, insurance and monthly costs go in their own fields.
+  // Fields it doesn't have are cleared, so switching property doesn't leave the last one's figures behind.
+  from:function(p){
+    var L=parts(p),x=L[0]||{},pt=p.type==='potential';if(!p.loan&&!p.rent)return null;
+    return {loan:p.loan||0,rate:p.rate||'',type:x.ltype||p.ltype||'pi',term:x.term||p.term||30,
+      rates:pt?p.rates||0:0,ins:pt?p.ins||0:0,maint:0,oth:pt?((p.power||0)+(p.oth!==undefined?p.oth:0))*12:p.type==='rental'?p.exp||0:0,
+      cur:p.type==='rental'||pt&&p.intent==='rent'?p.rent||0:0};
+  },
   f:[{i:'loan',l:'Loan amount',k:'m'},{i:'rate',l:'Interest rate %',k:'n'},
      {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT},{i:'term',l:'Term in years',k:'n',d:'30'},
      {i:'rates',l:'Rates per year',k:'m',opt:1},{i:'ins',l:'Insurance per year',k:'m',opt:1},
