@@ -10,17 +10,18 @@ function backupCard(){
 }
 function installCard(){
   var t=standalone?'Installed: you’re using the app version.'
-    :installEvt?'Add it to your home screen so it opens full screen and works offline.'
+    :installEvt?(DESK?'Install it on this computer so it opens in its own window and works offline.':'Add it to your home screen so it opens full screen and works offline.')
+    :DESK?'To install it on this computer, open it in Chrome or Edge. To use it on your phone, open this page there and add it to your home screen.'
     :IOS?'In Safari, tap the Share button, then “Add to Home Screen”. It then opens full screen and works offline.'
-    :'Open this page on your phone and use the browser menu to add it to your home screen.';
+    :'Use your browser’s menu to add it to your home screen, so it opens full screen and works offline.';
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
-// Appearance: follow the phone (blank), or always light or dark. Saved in nzpt.theme and applied in index.html.
+// Appearance: follow the device (blank), or always light or dark. Saved in nzpt.theme and applied in index.html.
 function themeCard(){
   var t=document.documentElement.dataset.theme||'';
   return '<div class="card">'+hd('sun','Appearance')+'<div class="seg" style="margin-top:12px">'+[['','Automatic'],['light','Light'],['dark','Dark']].map(function(o){
     return '<button data-th="'+o[0]+'" class="'+(o[0]===t?'on':'')+'">'+o[1]+'</button>'}).join('')+'</div>'+
-    '<p class="sub" style="margin-top:8px">Automatic follows your phone’s light or dark setting.</p></div>';
+    '<p class="sub" style="margin-top:8px">Automatic follows your '+dev()+'’s light or dark setting.</p></div>';
 }
 function setTheme(t){
   if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme;
@@ -81,7 +82,7 @@ function shareBackup(){
   if(!shareFile){bkMsg='Getting the backup ready. Tap Share backup again in a moment.';drawSettings();prepShare();return}
   navigator.share({files:[shareFile],title:'NZ Property Tracker backup'}).then(function(){backedUp(shareT)},function(e){
     if(e&&e.name==='AbortError')return;
-    bkMsg='Sharing didn’t work on this phone'+(e&&e.name?' ('+e.name+')':'')+'. Use Download backup instead.';drawSettings();
+    bkMsg='Sharing didn’t work on this '+dev()+''+(e&&e.name?' ('+e.name+')':'')+'. Use Download backup instead.';drawSettings();
   });
 }
 // Whether this browser can share files (most phones can; many desktop browsers can't).

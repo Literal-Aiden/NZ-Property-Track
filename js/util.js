@@ -45,6 +45,9 @@ function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" ari
 function hd(n,t){return '<span class="hd">'+ic(n)+'<b>'+t+'</b></span>'}
 // A friendly empty section: icon, what's missing, why it's worth adding, and optionally the button to start.
 function empty(i,t,x,btn){return '<div class="empty">'+ic(i)+'<b>'+t+'</b><p class="sub">'+x+'</p>'+(btn||'')+'</div>'}
+// On a computer (mouse and hover) the wording says "computer" rather than "phone".
+var DESK=!!(window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches);
+function dev(){return DESK?'computer':'phone'}
 function stat(l,v,c){return '<div class="stat"><b class="'+(c||'')+'">'+v+'</b><span>'+l+'</span></div>'}
 
 function days(d){return d?Math.max(0,Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5)):null}

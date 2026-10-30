@@ -7,7 +7,7 @@ var TOUR=[
   {nav:'home',t:'Home',x:'Your portfolio at a glance: equity, lending, LVR and monthly cash flow.',l:['Needs attention flags re-fixes coming up, overdue milestones, unpaid invoices, leases ending and Healthy Homes','Recent activity shows the latest rent, expenses and reno costs']},
   {nav:'p0',t:'Properties',x:'Each property has its own page.',l:['Reno projects: budget, costs with receipts, and a timeline with milestones','Rentals: rent and expenses for the tax year, tenancy, Healthy Homes','Potential buys: the numbers on a deal and the most you could offer','Mortgage: rate, re-fix date and repayments, including split loans']},
   {nav:'toolbody',t:'Tools',x:'Calculators for a quick deal check, mortgage repayments, rental yield, holding costs, break-even rent, usable equity and selling costs. Most can fill in from one of your properties.'},
-  {nav:'setbody',t:'Your data stays on this phone',x:'Nothing is sent to a server, so download a backup from Settings now and then. You can also install the app on your home screen from there.'}];
+  {nav:'setbody',t:'Your data stays on this '+dev(),x:'Nothing is sent to a server, so download a backup from Settings now and then. You can also install the app '+(DESK?'on this computer':'on your home screen')+' from there.'}];
 function tourSeen(){try{return !!localStorage.getItem(TOUR_KEY)}catch(e){return true}}
 function openTour(){tourAt=0;drawTour();$('tour').hidden=false;ovOpen('tour')}
 function closeTourNow(){$('tour').hidden=true;try{localStorage.setItem(TOUR_KEY,'1')}catch(e){}}
