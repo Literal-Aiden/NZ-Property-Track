@@ -40,25 +40,37 @@ function testRun(x){
 }
 function b2d(b){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=no;r.readAsDataURL(b)})}
 function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]})}
-// share: send the file through the phone's share sheet (Google Drive, iCloud, email…) instead of downloading it.
-function exportBackup(share){
-  var want={},t=iso(new Date()),name='nz-property-tracker-backup-'+t+'.json';props.forEach(function(p){rcIds(p).forEach(function(id){want[id]=1})});
-  function done(){try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner()}
-  rcTx('readonly',function(s){return s.getAll()}).catch(function(){return []}).then(function(all){
+// The backup: every property and the receipt files and photos they use, as JSON.
+function buildBackup(){
+  var want={},t=iso(new Date());props.forEach(function(p){rcIds(p).forEach(function(id){want[id]=1})});
+  return rcTx('readonly',function(s){return s.getAll()}).catch(function(){return []}).then(function(all){
     return Promise.all((all||[]).filter(function(r){return want[r.id]}).map(function(r){return b2d(r.blob).then(function(u){return {id:r.id,name:r.name,type:r.type,added:r.added,data:u}})}));
-  }).then(function(rc){
-    var data=JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc});
-    if(!share){download(name,data,'application/json');done();return}
-    // Chrome on Android only shares some file types, and .json isn't one, so it falls back to a .txt file (Restore
-    // accepts either: the contents are the same).
-    var f=new File([data],name,{type:'application/json'});
-    if(!navigator.canShare({files:[f]}))f=new File([data],name.replace(/\.json$/,'.txt'),{type:'text/plain'});
-    if(!navigator.canShare({files:[f]})){bkMsg='This phone can’t share the backup file. Use Download backup instead.';drawSettings();return}
-    return navigator.share({files:[f],title:'NZ Property Tracker backup'}).then(done,function(e){
-      if(e&&e.name==='AbortError')return;
-      bkMsg='Sharing didn’t work on this phone'+(e&&e.name?' ('+e.name+')':'')+'. Use Download backup instead.';drawSettings();
-    });
-  }).catch(function(){bkMsg='Couldn’t make the backup file.';drawSettings()});
+  }).then(function(rc){return {t:t,name:'nz-property-tracker-backup-'+t+'.json',data:JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc})}});
+}
+function backedUp(t){try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner()}
+function exportBackup(){
+  buildBackup().then(function(b){download(b.name,b.data,'application/json');backedUp(b.t)}).catch(function(){bkMsg='Couldn’t make the backup file.';drawSettings()});
+}
+// Sharing has to start straight from the tap, and building the backup (photos especially) can take too long for the
+// phone to still count it as the tap, so the file is made ready as soon as Settings opens (prepShare, from show()).
+// Chrome on Android won't share .json files, so it falls back to a .txt with the same contents (Restore takes either).
+var shareFile=null,shareT=null,sharePrep=0;
+function prepShare(){
+  if(!canShareFiles())return;
+  var n=++sharePrep;shareFile=null;
+  buildBackup().then(function(b){
+    if(n!==sharePrep)return;
+    var f=new File([b.data],b.name,{type:'application/json'});
+    if(!navigator.canShare({files:[f]}))f=new File([b.data],b.name.replace(/\.json$/,'.txt'),{type:'text/plain'});
+    if(navigator.canShare({files:[f]})){shareFile=f;shareT=b.t}
+  }).catch(function(){});
+}
+function shareBackup(){
+  if(!shareFile){bkMsg='Getting the backup ready. Tap Share backup again in a moment.';drawSettings();prepShare();return}
+  navigator.share({files:[shareFile],title:'NZ Property Tracker backup'}).then(function(){backedUp(shareT)},function(e){
+    if(e&&e.name==='AbortError')return;
+    bkMsg='Sharing didn’t work on this phone'+(e&&e.name?' ('+e.name+')':'')+'. Use Download backup instead.';drawSettings();
+  });
 }
 // Whether this browser can share files (most phones can; many desktop browsers can't).
 function canShareFiles(){try{return !!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.txt',{type:'text/plain'})]}))}catch(e){return false}}
@@ -89,7 +101,7 @@ function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.sto
 $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='bkdl')exportBackup();
-  if(b.dataset.x==='bksh')exportBackup(true);
+  if(b.dataset.x==='bksh')shareBackup();
   if(b.dataset.x==='tsample'||b.dataset.x==='tclear')testRun(b.dataset.x);
   if(b.dataset.x==='bkok')restore();
   if(b.dataset.x==='tour')openTour();

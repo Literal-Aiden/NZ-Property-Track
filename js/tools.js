@@ -131,7 +131,7 @@ function drawTools(){
     return;
   }
   var srcs=t.from?props.map(function(p,i){return t.from(p)?'<option value="'+i+'">'+esc(p.addr)+'</option>':''}).join(''):'';
-  $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b>'+t.name+'</b></div>'+
+  $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b>'+t.name+'</b><button class="edit" data-x="tclear" style="margin-left:auto">Clear</button></div>'+
     '<div class="card enter"><p class="sub">'+t.desc+'</p>'+
     (srcs?'<select id="q_from" style="margin-top:12px"><option value="">Fill in from a property…</option>'+srcs+'</select>':'')+
     (t.all&&props.some(function(p){return p.type!=='potential'})?'<button class="edit" data-x="tport" style="margin-top:12px">Use my portfolio</button>':'')+
@@ -162,6 +162,8 @@ $('toolbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='thome')ovClose('tool');
   if(b.dataset.x==='tsave')dealToProp();
+  // Clear: every number back to blank (or its starting value, e.g. a 30-year term); choices like the plan stay as set.
+  if(b.dataset.x==='tclear'){var t=toolById(toolCur);t.f.forEach(function(f){if(f.k!=='s')$('q_'+f.i).value=f.d?(f.k==='m'?fmtMoney(f.d):f.d):''});if($('q_from'))$('q_from').value='';tcalc();$('toolbody').scrollTop=0}
   if(b.dataset.x==='tport'){var own=props.filter(function(p){return p.type!=='potential'});tfill({val:sum(own,function(p){return p.value}),debt:sum(own,function(p){return p.loan})})}
 });
 $('toolbody').addEventListener('input',function(){if(toolCur)tcalc()});

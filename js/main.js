@@ -13,6 +13,8 @@ function ovShut(id){if(id==='tool'){toolCur=null;drawTools()}else if(id==='sheet
 window.addEventListener('popstate',function(e){var l=(e.state&&e.state.nz)||0;while(ovs.length>l)ovShut(ovs.pop())});
 function reshow(){var pg=ovs.filter(function(x){return x==='p1'||x==='p2'}).pop();show(pg||tab)}
 function show(id){
+  // Opening Settings gets a backup ready to share (see prepShare).
+  if(id==='setbody'&&!$('setbody').classList.contains('on'))prepShare();
   document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)});
   document.querySelectorAll('#nav [data-tab]').forEach(function(b){b.classList.toggle('on',b.dataset.tab===tab)});
 }
