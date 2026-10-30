@@ -16,7 +16,8 @@ function installCard(){
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
 function drawSettings(){
-  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+installCard()+testCard();
+  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+installCard()+
+    '<div class="card">'+hd('list','Welcome tour')+'<p class="sub" style="margin-top:4px">A quick look at what the app does and where things are.</p><button class="go ghost" data-x="tour">Show the tour</button></div>'+testCard();
 }
 // TEMPORARY, for testers: wipe this device's properties, or swap them for the example ones. Both need a second tap.
 // Remove this card (and its handlers below) before a real launch.
@@ -78,6 +79,7 @@ $('setbody').addEventListener('click',function(e){
   if(b.dataset.x==='bkdl')exportBackup();
   if(b.dataset.x==='tsample'||b.dataset.x==='tclear')testRun(b.dataset.x);
   if(b.dataset.x==='bkok')restore();
+  if(b.dataset.x==='tour')openTour();
   if(b.dataset.x==='bkno'){bkPend=null;drawSettings()}
   if(b.dataset.x==='inst'&&installEvt){installEvt.prompt();installEvt=null;banner();drawSettings()}
 });

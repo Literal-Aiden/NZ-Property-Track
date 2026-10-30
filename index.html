@@ -40,6 +40,10 @@
   <div class="sheetbg" id="sheetbg"></div>
   <div class="sheetbox" id="sheetbody" role="dialog" aria-modal="true"></div>
 </div>
+<div class="sheet tour" id="tour" hidden>
+  <div class="sheetbg"></div>
+  <div class="tourbox" id="tourbody" role="dialog" aria-modal="true" aria-labelledby="tourt"></div>
+</div>
 <div class="toast" id="toast" role="status" hidden><span id="toastmsg"></span><button id="undo">Undo</button></div>
 <!-- Plain scripts sharing one global scope, no build step. main.js must load last. -->
 <script src="js/data.js"></script>
@@ -57,6 +61,7 @@
 <script src="js/home.js"></script>
 <script src="js/forms.js"></script>
 <script src="js/tools.js"></script>
+<script src="js/tour.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

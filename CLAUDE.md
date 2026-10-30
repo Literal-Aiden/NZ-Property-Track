@@ -14,7 +14,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
   - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
-  - `councils.js` which council an address is in, and its rates search link
+  - `councils.js` which council an address is in, and its rates search link · `tour.js` the welcome tour
   - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
 - When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
@@ -32,7 +32,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - **Property page (opens full screen on top, with a back button):** a cover (photo with "Add photo"/"Change photo", or a coloured placeholder), the address, a headline card with the key number and "Edit details", then section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). Overview figures are a simple list. Potential buys show their deal estimates and maximum offer below the headline (comparable sales are hidden for now)
 - **+ menu (slide-up):** Rent or expense, Reno cost, Milestone, Property, and Quick deal check. Rent/cost/milestone ask which property (skipped when there's only one) and open its page with the form ready. Property opens the add page (choose type, then the form)
 - **Tools:** the calculators; a calculator opens with a back button to the list
-- **Settings:** Backup/restore and Install the app. A dot on the Settings tab means a backup is due
+- **Settings:** Backup/restore, Install the app, and Welcome tour. A dot on the Settings tab means a backup is due
 - Deleting is in a property's Edit details panel and happens straight away with an Undo message for 7 seconds; its receipt files are only removed once the message goes
 
 ## Features built so far
@@ -109,6 +109,11 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - "Edit details" and "Edit mortgage" open in a slide-up panel over the property page (closes on Cancel, tapping outside, or Escape)
 - Navigation (`main.js`): tabs are `home`, `p0` (Properties), `toolbody` (Tools), `setbody` (Settings); pages opened on top are `p1` (property) and `p2` (add a property). `navTab()` switches tab, `openPage()` / `go(1|2)` opens a page, `openProp(i, section)` opens a property
 - Phone Back button: pages (`p1`, `p2`) and panels (the + menu, the edit panel, a calculator) add a history entry when opened (`ovOpen`), so Back closes the top one instead of leaving the app. Their own close buttons go through `ovClose`, which steps back through history, so entries don't pile up. `ovSwap` replaces the top entry (e.g. the + menu turning into the property page it opened). Switching tabs steps back past everything open. A new panel needs an `ovOpen` call, an `ovClose` for its close button, and a case in `ovShut`
+
+**Welcome tour** (`tour.js`)
+- Shown over Home the first time the app opens (until `nzpt.tour` is set in localStorage), and again from Settings → "Show the tour". Six slides in `TOUR`: welcome, the + button, Home, Properties, Tools, and data staying on this phone (backups). Each slide after the first shows a small copy of the tab bar with its button lit up
+- Next/Back buttons, swiping, arrow keys; Skip, Escape or the phone's Back button close it (it's an `ovOpen('tour')` panel). Closing it any way marks it seen
+- The last slide offers "Add my first property" when showing sample data (clears the examples, like Start fresh) or when there are no properties; otherwise "Get started"
 
 **Needs attention**
 - Home shows a "Needs attention" list (and the Properties list an amber dot on each affected property): re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, and no backup in 30 days. Tapping one opens that property at the right section

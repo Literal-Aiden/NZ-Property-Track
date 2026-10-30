@@ -132,3 +132,25 @@ button.r{cursor:pointer}
 .rlink a{display:inline-flex;align-items:center;gap:6px;color:var(--acc);font-weight:600;text-decoration:none}
 .rlink a .ic{width:16px;height:16px}
 .rlink span{display:block;margin-top:2px}
+/* Welcome tour (tour.js): a centred card over the app, with a small copy of the tab bar showing where things are. */
+.tour{justify-content:center;align-items:center;padding:16px}
+.tourbox{position:relative;width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow-y:auto;background:var(--bg);border-radius:20px;padding:22px 18px 18px;animation:up .2s ease-out}
+.tourbox h2{font-size:22px;margin:16px 0 6px;letter-spacing:-.01em}
+.tourbox p{margin:0 0 8px;font-size:15px}
+.tourbox ul{margin:4px 0 8px;padding-left:20px;font-size:14px}
+.tourbox li{margin:4px 0}
+.tourbox .sub{margin-top:8px}
+.tskip{position:absolute;top:12px;right:12px;border:0;background:none;color:var(--mute);font:inherit;font-size:14px;padding:6px 8px;cursor:pointer}
+.tlogo{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin-top:6px;color:#fff;background:linear-gradient(135deg,#c2412d,#8f2a1c)}
+.tlogo .ic{width:32px;height:32px}
+.tnav{display:flex;margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 2px}
+.tnav .tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--mute);opacity:.45}
+.tnav .tb.on{opacity:1;color:var(--acc);font-weight:600}
+.tnav .tb .ic{width:20px;height:20px}
+.tnav .ndot{display:none}
+.tnav .plus{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--onacc)}
+.tdots{display:flex;justify-content:center;gap:6px;margin:14px 0 2px}
+.tdots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.tdots i.on{background:var(--acc);width:18px;border-radius:4px}
+.tourbox .btns{margin-top:12px}
+@media (prefers-reduced-motion:reduce){.tourbox{animation:none}}
