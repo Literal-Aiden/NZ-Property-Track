@@ -45,7 +45,10 @@ function gcalUrl(p,r){
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE&dates='+d+'/'+e+'&text='+encodeURIComponent('Mortgage re-fix: '+p.addr+(r.n>1?' ('+short(r.x.loan)+' part)':''))+
     '&details='+encodeURIComponent('The fixed rate on '+$$(r.x.loan)+' at '+r.x.rate+'% ends. Talk to your bank or broker about re-fixing before then. Tip: add a notification a month before.');
 }
+// Shelved for now (clunky on Android): set SHOW_CAL to true to bring the calendar links back.
+var SHOW_CAL=false;
 function calBtn(p){
+  if(!SHOW_CAL)return '';
   var R=refixDates(p);if(!R.length||IOS)return calIcsBtn(p);
   return '<p class="grp" style="margin:14px 0 0">Add to your calendar</p>'+R.map(function(r){
     return '<a class="edit calnk" href="'+esc(gcalUrl(p,r))+'" target="_blank" rel="noopener">'+ic('clock')+' Google Calendar: '+fmtD(r.d)+(r.n>1?' ('+short(r.x.loan)+' part)':'')+'</a>';

@@ -74,7 +74,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - The re-fix date is highlighted when it's within 90 days
 - P&I vs interest-only: shows the repayment now and on the other loan type. The difference is framed as cash flow, not money saved, because it is mostly principal.
 - Remaining loan term, default 30 years
-- "Add to your calendar" in the Mortgage section, shown when there's a future re-fix date (`calBtn()` in `views.js`). Android saves .ics files to Downloads without adding them, so there each part's re-fix gets a Google Calendar link (`gcalUrl()`) that opens the all-day event ready to save; Google's link can't set alerts, so the description suggests one a month before. "Or download a calendar file" (and the only option on iPhone, where Safari adds .ics files to Calendar) gives an .ics (`refixIcs()`) with alerts a month and a week before
+- HIDDEN FOR NOW (`SHOW_CAL = false` in `views.js`; shelved as clunky, likely replaced by notifications if this becomes a proper app; the code is kept): "Add to your calendar" in the Mortgage section, shown when there's a future re-fix date (`calBtn()` in `views.js`). Android saves .ics files to Downloads without adding them, so there each part's re-fix gets a Google Calendar link (`gcalUrl()`) that opens the all-day event ready to save; Google's link can't set alerts, so the description suggests one a month before. "Or download a calendar file" (and the only option on iPhone, where Safari adds .ics files to Calendar) gives an .ics (`refixIcs()`) with alerts a month and a week before
 
 **Potential buys** (third type, listed under "Potential buys" in the Properties pane; no mortgage section)
 - Plan: "Reno to sell" or "Buy to rent"
@@ -177,3 +177,4 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 - Sync data across devices and add user accounts (needs a backend)
 - Current bank rates shown as a reference
+- Re-fix reminders as real notifications (e.g. if this becomes a native app); the calendar links are built but hidden
