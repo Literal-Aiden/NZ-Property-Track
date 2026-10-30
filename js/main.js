@@ -208,15 +208,12 @@ function swipeTo(d){
   if(id==='p1'){
     var B=[].slice.call(document.querySelectorAll('#p1 .secnav [data-sec]')),i=B.findIndex(function(b){return b.classList.contains('on')}),n=B[i+d];
     if(!n||itemEdit!==null||moneyEdit!==null||tlAdd||tlEdit||tenEdit||catDraft)return;
-    n.click();slideIn(d);
+    n.click();
   }else{
     var j=TABS.indexOf(id);if(j<0||ovs.indexOf('tool')>=0)return;
-    var t=TABS[j+d];if(t){navTab(t);slideIn(d)}
+    var t=TABS[j+d];if(t)navTab(t)
   }
 }
-// A short slide in from the side the swipe came from, so it's clear the page moved.
-function slideIn(d){var s=document.querySelector('.screen.on');if(!s)return;s.classList.remove('swl','swr');void s.offsetWidth;s.classList.add(d>0?'swl':'swr')}
-document.addEventListener('animationend',function(e){e.target.classList.remove('swl','swr')});
 document.addEventListener('touchstart',function(e){
   var x=e.touches[0].clientX;swX=null;
   if(e.touches.length!==1||x<24||x>innerWidth-24||!swipeable(e.target))return;

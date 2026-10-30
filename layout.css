@@ -225,10 +225,3 @@ label.rcadd .ic{width:20px;height:20px}
 label.ftile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:0;padding:12px 8px;border:1.5px dashed var(--acc);border-radius:12px;background:var(--acc2);color:var(--acc);font-size:14px;font-weight:600;cursor:pointer;text-align:center}
 label.ftile .ic{width:24px;height:24px}
 label.rcadd{background:var(--acc2);border-width:1.5px;font-weight:600}
-/* Swipe between pages (main.js): the new page slides in from the side the swipe came from. Slide only, no fade:
-   fading let the dark background show through for a moment, which looked like a black flash. */
-.screen.on.swl{animation:swl .2s ease-out}
-.screen.on.swr{animation:swr .2s ease-out}
-@keyframes swl{from{transform:translateX(28px)}}
-@keyframes swr{from{transform:translateX(-28px)}}
-@media (prefers-reduced-motion:reduce){.screen.on.swl,.screen.on.swr{animation:none}}
