@@ -157,8 +157,11 @@ button.r{cursor:pointer}
 .tourbox .btns{margin-top:12px}
 @media (prefers-reduced-motion:reduce){.tourbox{animation:none}}
 /* Dropdown picker (picker.js): a short panel at the bottom with the choices as buttons, in thumb reach. */
-.pick{z-index:2200}
-.pick .sheetbox{max-height:55vh;padding-top:12px}
+.ddpick{z-index:2200}
+/* A light shade, so the form behind stays readable (the other panels use .45). */
+.ddpick .sheetbg{background:rgba(0,0,0,.18)}
+.ddpick .sheetbox{box-shadow:0 -6px 24px rgba(0,0,0,.25);border-top:1px solid var(--line)}
+.ddpick .sheetbox{max-height:55vh;padding-top:12px}
 .pkhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .pkhead b{font-size:15px}
 .pkhead .tskip{position:static}
