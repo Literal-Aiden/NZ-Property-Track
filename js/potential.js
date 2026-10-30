@@ -68,7 +68,7 @@ function convBlock(){
    '<div><label>Reno budget</label><input id="v_budget" required'+N+'</div><div><label>Value now (optional)</label><input id="v_value" placeholder="Purchase price"'+N+'</div></div>'+
    '<label>Legal fees and other purchase costs (optional)</label><input id="v_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
-   '<div class="btns"><button class="go" data-x="convok">Convert</button><button class="go ghost" data-x="convno">Cancel</button></div></div>';
+   '<div class="btns fbar"><button class="go" data-x="convok">Convert</button><button class="go ghost" data-x="convno">Cancel</button></div></div>';
 }
 // Maximum offer: works back from a target profit (reno to sell) or yield on total cost (buy to rent),
 // keeping every other estimate as entered. The target is saved on the property as p.tgt (and p.tgtT: gross or net).

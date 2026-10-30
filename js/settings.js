@@ -15,8 +15,20 @@ function installCard(){
     :'Open this page on your phone and use the browser menu to add it to your home screen.';
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
+// Appearance: follow the phone (blank), or always light or dark. Saved in nzpt.theme and applied in index.html.
+function themeCard(){
+  var t=document.documentElement.dataset.theme||'';
+  return '<div class="card">'+hd('sun','Appearance')+'<div class="seg" style="margin-top:12px">'+[['','Automatic'],['light','Light'],['dark','Dark']].map(function(o){
+    return '<button data-th="'+o[0]+'" class="'+(o[0]===t?'on':'')+'">'+o[1]+'</button>'}).join('')+'</div>'+
+    '<p class="sub" style="margin-top:8px">Automatic follows your phone’s light or dark setting.</p></div>';
+}
+function setTheme(t){
+  if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme;
+  try{if(t)localStorage.setItem('nzpt.theme',t);else localStorage.removeItem('nzpt.theme')}catch(e){}
+  drawSettings();
+}
 function drawSettings(){
-  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+taxCard()+installCard()+
+  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+taxCard()+themeCard()+installCard()+
     '<div class="card">'+hd('list','Welcome tour')+'<p class="sub" style="margin-top:4px">A quick look at what the app does and where things are.</p><button class="go ghost" data-x="tour">Show the tour</button></div>'+testCard();
 }
 // TEMPORARY, for testers: wipe this device's properties, or swap them for the example ones. Both need a second tap.
@@ -99,6 +111,7 @@ var persistAsked=false;
 function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.storage.persist)return;persistAsked=true;navigator.storage.persisted().then(function(y){if(!y)return navigator.storage.persist()}).catch(function(){})}
 // Settings tab: backup, restore and installing the app.
 $('setbody').addEventListener('click',function(e){
+  var th=e.target.closest('[data-th]');if(th){setTheme(th.dataset.th);return}
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='bkdl')exportBackup();
   if(b.dataset.x==='bksh')shareBackup();

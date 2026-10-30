@@ -103,10 +103,10 @@ function form(){
    // Rentals may have been owned for decades, so their purchase details are optional (then the value is needed instead).
    (sd&&!pt?'<label>Purchase price (NZD)'+(pr?'':' (optional)')+'</label><input id="f_price"'+(pr?RQ:'')+N+
    '<label>Purchase date'+(pr?'':' (optional)')+'</label><input id="f_date" type="date"'+(pr?' required':'')+'>'+
-   (pr?'':'<p class="sub" style="margin-top:4px">Leave these blank if you don’t have them to hand.</p>')+
+   (pr?'':'<p class="sub" style="margin-top:4px">Leave these blank if you don’t have them to hand, and add the current loan balance or estimated value below.</p>')+
    (pr?'<label>Legal fees and other purchase costs (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
       :'<label>Legal fees (optional)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (optional)</label><input id="f_extra"'+N)+
-   '<label>Estimated value now'+(pr?' (optional)':' (needed if no purchase price)')+'</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
+   '<label>Estimated value now (optional)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
    // When adding, what's owed now sits in the main form (it matters more than the purchase details for a long-held
    // property); the rate, term and re-fix details stay in the collapsed mortgage section below.
    (editIdx===null?(lpN===1?'<label>Current loan balance (optional)</label><input id="l_amt0" placeholder="Leave blank if mortgage-free"'+N+'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.</p>'
@@ -116,7 +116,7 @@ function form(){
    // When adding, the optional mortgage sits in a collapsed section so the form stays short.
    (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen||lpN>1?' open':'')+'><summary>Mortgage details (if there’s a loan)</summary>'+lpForm(true)+'</details>':lpForm(false)):'')+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
-   '<button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go ghost" id="cancel">Cancel</button>')+
+   '<div class="btns fbar"><button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go ghost" id="cancel">Cancel</button>')+'</div>'+
    (ed&&sd?'<button class="edit del" id="delprop" style="margin-top:16px">Delete this property</button>':'')+'</div>';
   // Adding happens in the Add new pane; editing slides up over the current property so you stay where you are.
   $('sheet').hidden=!ed;
@@ -137,15 +137,19 @@ function missing(box){
   var bad=[].filter.call(box.querySelectorAll('[required]'),function(e){return !e.value.trim()});
   var r=$('f_rate');if(r&&box.contains(r)&&num('f_loan')&&!r.value.trim())bad.push(r);
   for(var i=0;i<lpN;i++){r=$('l_rate'+i);if(r&&box.contains(r)&&num('l_amt'+i)&&!r.value.trim())bad.push(r)}
-  // A rental's purchase details are optional (it may have been owned for decades), but then it needs a value.
-  var fv=$('f_value');if(newType==='rental'&&fv&&box.contains(fv)&&!num('f_price')&&!num('f_value'))bad.push(fv);
+  // A rental's purchase details are optional (it may have been owned for decades), but it needs something to go on:
+  // the purchase price, or else the current loan balance (an estimated value also does).
+  var fp=$('f_price');if(newType==='rental'&&fp&&box.contains(fp)&&!num('f_price')&&!num('f_value')){
+    var ln=editIdx!==null?props[editIdx].loan:[].reduce.call(box.querySelectorAll('[id^=l_amt]'),function(t,e){return t+pnum(e.value)},0);
+    if(!ln)bad.push(fp);
+  }
   box.querySelectorAll('.bad').forEach(unbad);
   bad.forEach(function(e){
     var d=e.closest('details');if(d)d.open=true;
     void e.offsetWidth;e.classList.add('bad');e.setAttribute('aria-invalid','true');
     var l=fieldLabel(e);if(l)l.classList.add('badl');
     var m=document.createElement('p');m.className='ferr';
-    m.textContent=/rate/.test(e.id)?'Needed when there’s a loan amount':e.id==='f_value'&&newType==='rental'?'Needed when there’s no purchase price':'Required';
+    m.textContent=/rate/.test(e.id)?'Needed when there’s a loan amount':e.id==='f_price'&&newType==='rental'?'Add the purchase price, or the current loan balance below':'Required';
     fieldBox(e).insertAdjacentElement('afterend',m);
   });
   errSum(box);
@@ -163,7 +167,7 @@ function errSum(box){
 function fieldBox(e){return e.parentElement.classList.contains('ac')?e.parentElement:e}
 // The label for a field: the one just before it, or one pointing at it with for="".
 function fieldLabel(e){var l=fieldBox(e).previousElementSibling;if(l&&l.tagName==='LABEL')return l;return e.id?document.querySelector('label[for="'+e.id+'"]'):null}
-// A field's name for the summary, without notes like "(NZD)" or "(needed if no purchase price)".
+// A field's name for the summary, without notes like "(NZD)" or "(optional)".
 function fieldName(e){var l=fieldLabel(e),t=l?l.childNodes[0].textContent:'this field';return t.replace(/\s*\(.*$/,'').trim()}
 // Clears a field's error and updates the summary.
 function unbad(e){
@@ -187,7 +191,7 @@ function addProp(){
   if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}else{p.rent=num('f_rent');p.exp=num('f_exp')}
   if(newType!=='potential')setLoan(p,readParts());
-  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','photo','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
+  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','pics','photo','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
 function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}

@@ -8,8 +8,10 @@ function drawHome(){
   var own=props.filter(function(p){return p.type!=='potential'}),h='<p class="sub">'+hello()+'</p><h1 class="ptitle">Your portfolio</h1>';
   if(isSample)h+='<div class="note">You’re looking at sample properties. <a href="#" id="fresh">Start fresh</a> when you’re ready to add your own.</div>';
   if(own.length){
-    var val=sum(own,function(p){return p.value}),debt=sum(own,function(p){return p.loan}),cf=sum(own,cashFlow),hasProj=own.some(function(p){return p.type==='project'});
-    h+='<div class="card hero"><div class="lab">Equity across '+own.length+' propert'+(own.length===1?'y':'ies')+'</div><div class="big">'+$$(val-debt)+'</div>'+
+    // Equity, value, lending and LVR only count properties with a value, so one entered with just its loan doesn't skew them.
+    var wv=own.filter(function(p){return p.value}),nv=own.length-wv.length;
+    var val=sum(wv,function(p){return p.value}),debt=sum(wv,function(p){return p.loan}),cf=sum(own,cashFlow),hasProj=own.some(function(p){return p.type==='project'});
+    h+='<div class="card hero"><div class="lab">Equity across '+wv.length+' propert'+(wv.length===1?'y':'ies')+(nv?' (plus '+nv+' without a value yet)':'')+'</div><div class="big">'+$$(val-debt)+'</div>'+
       '<div class="row3"><div><b>'+short(val)+'</b><span>Value</span></div><div><b>'+short(debt)+'</b><span>Lending</span></div><div><b>'+(val?Math.round(debt/val*100)+'%':'–')+'</b><span>LVR</span></div></div>'+
       '<div class="chipline">'+ic('trend')+'<span><b>'+(cf<0?'−':'+')+$$(Math.abs(cf))+'</b> a month cash flow'+(cf<0&&hasProj?', including reno holding costs':'')+'</span></div></div>';
   }else h+='<div class="card hero"><div class="lab">Welcome</div><div class="big" style="font-size:26px">Add your first property</div><p style="margin:0 0 14px;opacity:.9">Track rentals, renovation projects and properties you’re thinking of buying.</p><button class="herobtn" data-x="hadd">Add a property</button></div>';
@@ -51,7 +53,8 @@ $('home').addEventListener('click',function(e){
 var QUICK={
   rent:{t:'Which rental?',none:'You don’t have a rental yet.',f:function(p){return p.type==='rental'},go:function(){sec='money';moneyEdit='new';moneyKind='in'},card:'money'},
   cost:{t:'Which reno project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='costs';itemEdit='new'},card:'costs'},
-  ms:{t:'Milestone for which project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='tl';tlAdd=true},card:'k_t'}};
+  ms:{t:'Milestone for which project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='tl';tlAdd=true},card:'k_t'},
+  pics:{t:'Photos for which project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='tl'},card:'pics'}};
 function openPlus(){drawPlus();$('plus').hidden=false;$('plusbody').scrollTop=0;ovOpen('plus')}
 function closePlusNow(){$('plus').hidden=true}
 function drawPlus(k){
@@ -60,7 +63,8 @@ function drawPlus(k){
     '<button data-q="rent"><span class="ib">'+ic('dollar')+'</span><b>Rent or expense</b><span class="sub">For a rental</span></button>'+
     '<button data-q="cost"><span class="ib">'+ic('tool')+'</span><b>Reno cost</b><span class="sub">With receipt photos</span></button>'+
     '<button data-q="ms"><span class="ib">'+ic('clock')+'</span><b>Milestone</b><span class="sub">Trades, inspections</span></button>'+
-    '<button data-x="pprop"><span class="ib">'+ic('home')+'</span><b>Property</b><span class="sub">Owned or potential</span></button></div>'+
+    '<button data-q="pics"><span class="ib">'+ic('camera')+'</span><b>Progress photos</b><span class="sub">Before, during, after</span></button>'+
+    '<button data-x="pprop" style="grid-column:1/-1"><span class="ib">'+ic('home')+'</span><b>Property</b><span class="sub">Owned or potential</span></button></div>'+
     '<button class="edit" data-x="pdeal" style="margin-top:12px">'+ic('check')+' Quick deal check</button>';
   else{
     var q=QUICK[k],ids=props.map(function(p,i){return i}).filter(function(i){return q.f(props[i])});

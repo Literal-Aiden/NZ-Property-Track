@@ -1,11 +1,11 @@
 // Itemised reno costs, category budgets and CSV export.
 // Itemised reno costs. Each cost has an optional quote for the whole job and the amount invoiced so far, both incl. GST.
 // Once anything is itemised, p.spent is kept as the total invoiced so the rest of the app reads it as before.
-var costOpen=null,itemEdit=null,delItem=false,catDraft=null,pendRc=[],dropRc=[],rcMsg='';
+var costOpen=null,itemEdit=null,catDraft=null,pendRc=[],dropRc=[],rcMsg='';
 function cmt(x){return Math.max(x.amt||0,x.quote||0)}
 function cats(p){return p.cats||(p.cats=catList([]))}
 function syncSpent(p){if(p.items&&p.items.length)p.spent=sum(p.items,function(x){return x.amt})}
-function rcIds(p){return (p.items||[]).concat(p.money||[],[{rc:p.hhDocs},{rc:p.photo?[p.photo]:[]}]).reduce(function(a,x){return a.concat((x.rc||[]).map(function(r){return r.id}))},[])}
+function rcIds(p){return (p.items||[]).concat(p.money||[],[{rc:p.hhDocs},{rc:p.pics},{rc:p.photo?[p.photo]:[]}]).reduce(function(a,x){return a.concat((x.rc||[]).map(function(r){return r.id}))},[])}
 function costCard(p){
   var it=p.items||[],C=cats(p),busy=itemEdit!==null||catDraft;
   var h='<div class="card" id="costs"><div class="row" style="cursor:default">'+hd('dollar','Reno costs')+''+(it.length&&!busy?'<button class="edit" data-x="csv">Export CSV</button>':'')+'</div>';
@@ -14,7 +14,8 @@ function costCard(p){
   if(it.length){
     var cm=sum(it,cmt),unpaid=sum(it,function(x){return x.paid?0:x.amt}),ov=sum(it,function(x){return x.quote&&x.amt>x.quote?x.amt-x.quote:0});
     h+='<div class="grid">'+stat('Spent (invoiced)',$$(p.spent))+stat('Committed incl. quotes',$$(cm),p.budget&&cm>p.budget?'neg':'')+stat('Unpaid invoices',$$(unpaid),unpaid?'neg':'')+stat('Over quotes',$$(ov),ov?'neg':'')+'</div>';
-  }else h+='<p class="sub" style="margin-top:6px">Itemise what you spend to see which parts of the reno are on track, and attach receipt photos to each cost.'+(p.spent?' Your '+$$(p.spent)+' spent so far becomes one cost under Other, which you can split up later.':'')+'</p>';
+  }else return h+empty('dollar','No costs logged yet','Itemise what you spend to see which parts of the reno are on track, and attach receipt photos to each cost.'+(p.spent?' Your '+$$(p.spent)+' spent so far becomes one cost under Other, which you can split up later.':''),
+    '<div class="btns"><button class="go" data-x="add">Add your first cost</button><button class="go ghost" data-x="cats">Category budgets</button></div>')+'<p class="sub" style="margin-top:10px">Amounts include GST.</p></div>';
   var shown=C.map(function(c,i){return {c:c,i:i,xs:it.map(function(x,j){return {x:x,j:j}}).filter(function(o){return o.x.cat===c.n})}}).filter(function(o){return o.c.b||o.xs.length});
   if(shown.length)h+='<div class="cats">'+shown.map(function(o){
     var s=sum(o.xs,function(y){return y.x.amt}),m=sum(o.xs,function(y){return cmt(y.x)}),b=o.c.b,open=costOpen===o.c.n,over=b&&m>b;
@@ -34,7 +35,9 @@ function itemRow(x,j){
    '<div class="cr"><b>'+$$(x.amt||0)+'</b>'+(x.quote?'<span class="sub'+(x.amt>x.quote?' neg':'')+'">of '+$$(x.quote)+' quote</span>':'')+'</div></div>';
 }
 function itemForm(p){
-  var x=itemEdit==='new'?{cat:costOpen||'Other',paid:true}:p.items[itemEdit],N=MONEY;
+  // A new cost starts in the open category, or else the one used last.
+  var last=(p.items||[]).filter(function(i){return i.desc!=='Spent before itemising'}).pop();
+  var x=itemEdit==='new'?{cat:costOpen||(last&&last.cat)||'Other',paid:true}:p.items[itemEdit],N=MONEY;
   var rc=(x.rc||[]).filter(function(r){return dropRc.indexOf(r.id)<0}).concat(pendRc);
   return '<p class="grp" style="margin:14px 0 0">'+(itemEdit==='new'?'Add a cost':'Edit cost')+'</p>'+
    '<label>Category</label><select id="i_cat">'+cats(p).map(function(c){return '<option'+(c.n===x.cat?' selected':'')+'>'+esc(c.n)+'</option>'}).join('')+'</select>'+
@@ -46,8 +49,8 @@ function itemForm(p){
    '<label>Receipts and invoices</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
    '<div class="rcs">'+rc.map(rcThumb).join('')+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
-   '<div class="btns"><button class="go" data-x="isave">'+(itemEdit==='new'?'Add cost':'Save')+'</button><button class="go ghost" data-x="icancel">Cancel</button></div>'+
-   (itemEdit==='new'?'':'<button class="edit del" data-x="idel" style="margin-top:12px">'+(delItem?'Tap to confirm delete':'Delete this cost')+'</button>');
+   '<div class="btns fbar"><button class="go" data-x="isave">'+(itemEdit==='new'?'Add cost':'Save')+'</button><button class="go ghost" data-x="icancel">Cancel</button></div>'+
+   (itemEdit==='new'?'':'<button class="edit del" data-x="idel" style="margin-top:12px">Delete this cost</button>');
 }
 function saveItem(p){
   if(missing($('i_desc').closest('.card')))return;var d=$('i_desc').value.trim();
@@ -60,7 +63,7 @@ function saveItem(p){
   syncSpent(p);pendRc=[];dropRc=[];itemEdit=null;costOpen=x.cat;isSample=false;render();
 }
 // Closes whichever cost or money form is open, discarding receipts added to it but not saved.
-function closeItem(){rcDel(pendRc.map(function(r){return r.id}));pendRc=[];dropRc=[];itemEdit=null;moneyEdit=null;delItem=false;rcMsg=''}
+function closeItem(){rcDel(pendRc.map(function(r){return r.id}));pendRc=[];dropRc=[];itemEdit=null;moneyEdit=null;rcMsg=''}
 function rcCard(){return moneyEdit!==null?'money':'costs'}
 function catForm(p){
   var used={};(p.items||[]).forEach(function(x){used[x.cat]=1});
@@ -69,7 +72,7 @@ function catForm(p){
   }).join('')+
   '<div class="cbnew"><input id="cb_new" placeholder="New category, e.g. Deck"><button class="edit" data-x="catadd">Add</button></div>'+
   '<p class="sub" id="cbtot" style="margin-top:10px"></p>'+
-  '<div class="btns"><button class="go" data-x="catsave">Save budgets</button><button class="go ghost" data-x="catcancel">Cancel</button></div>';
+  '<div class="btns fbar"><button class="go" data-x="catsave">Save budgets</button><button class="go ghost" data-x="catcancel">Cancel</button></div>';
 }
 function readDraft(){catDraft.forEach(function(c,i){var e=$('cb_'+i);if(e)c.b=pnum(e.value)})}
 function cbTot(p){var e=$('cbtot');if(!e)return;readDraft();var t=sum(catDraft,function(c){return c.b});e.textContent='Allocated '+$$(t)+(p.budget?' of your '+$$(p.budget)+' reno budget'+(t>p.budget?', which is over':''):'');e.className='sub'+(p.budget&&t>p.budget?' neg':'')}

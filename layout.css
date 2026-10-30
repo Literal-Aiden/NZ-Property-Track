@@ -193,3 +193,26 @@ input.bad,select.bad{animation:shake .35s}
 /* Re-fix "Add to your calendar" links (calBtn in views.js), one per line. */
 .calnk{display:flex;align-items:center;gap:6px;width:fit-content;margin-top:8px;text-decoration:none}
 .calnk .ic{width:15px;height:15px}
+/* Form Save / Cancel rows (.fbar) stay at the bottom of the screen while the form is in view, above the tab bar,
+   so a long form can be saved one-handed without scrolling to its end. */
+.fbar{position:sticky;bottom:-35px;z-index:4;margin:14px -16px -16px;padding:12px 16px;background:var(--card);border-top:1px solid var(--line);border-radius:0 0 16px 16px}
+/* Screens leave 100px at the bottom for the tab bar (about 65px tall), so the bar sits 35px into that space;
+   while typing the tab bar hides, and in the edit panel there's no tab bar, so it goes to the very bottom. */
+body.typing .screen .fbar{bottom:calc(-100px - env(safe-area-inset-bottom,0px))}
+.sheetbox .fbar{bottom:calc(-16px - env(safe-area-inset-bottom,0px))}
+/* Empty sections (empty() in util.js): what's missing and why to add it, with the button to start. */
+.empty{margin-top:12px;padding:18px 14px;border:1px dashed var(--line);border-radius:14px;text-align:center}
+.empty>.ic{width:28px;height:28px;color:var(--acc);display:block;margin:0 auto 6px}
+.empty>b{display:block;font-size:16px;margin-bottom:4px}
+.empty .btns{margin-top:12px}
+/* Progress photos (picCard in timeline.js): before/after side by side, then every photo with its stage and date. */
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ba .th{position:relative;aspect-ratio:4/3;border:1px solid var(--line);border-radius:12px;overflow:hidden;padding:0;background:var(--bg);cursor:pointer}
+.ba img{width:100%;height:100%;object-fit:cover;display:block}
+.ba span{position:absolute;left:6px;bottom:6px;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:600}
+.pic{display:flex;flex-direction:column;gap:3px;width:72px}
+.pic .sub{font-size:11px;line-height:1.2}
+#pics .filebtn .ic{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+/* A small "?" next to a heading that opens the official guidance (e.g. Healthy Homes on tenancy.govt.nz). */
+.hdq{display:inline-flex;align-items:center;gap:8px}
+.qmark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;text-decoration:none;flex:none}

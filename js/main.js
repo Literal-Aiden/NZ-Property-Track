@@ -36,20 +36,27 @@ document.addEventListener('click',function(e){if(e.target.closest('[data-back]')
 // The phone keyboard covers the bottom of the screen, so the tab bar hides while typing.
 document.addEventListener('focusin',function(e){if(e.target.matches('input:not([type=checkbox]):not([type=file]),select,textarea'))document.body.classList.add('typing')});
 document.addEventListener('focusout',function(){setTimeout(function(){if(!document.activeElement||!document.activeElement.matches('input,select,textarea'))document.body.classList.remove('typing')},50)});
-// Deleting happens straight away with an Undo message. Receipt files are only removed once the message goes.
+// Deleting (a property, cost, money entry or milestone) happens straight away with an Undo message for 7 seconds.
+// Receipt files are only removed once the message goes. restore puts the deleted thing back.
 var undoT=null,undoData=null;
-function delProp(i){
+function undoable(msg,restore,files){
   if(undoData)finishDel();
-  undoData={p:props.splice(i,1)[0],i:i};
-  if(cur>=props.length)cur=Math.max(0,props.length-1);
-  editIdx=null;newType=null;resetCur();isSample=false;render();navTab('p0');
-  $('toastmsg').textContent='Deleted '+undoData.p.addr;$('toast').hidden=false;
+  undoData={restore:restore,files:files||[]};
+  $('toastmsg').textContent=msg;$('toast').hidden=false;
   undoT=setTimeout(finishDel,7000);
 }
-function finishDel(){clearTimeout(undoT);$('toast').hidden=true;if(undoData){rcDel(rcIds(undoData.p));undoData=null}}
+function finishDel(){clearTimeout(undoT);$('toast').hidden=true;if(undoData){rcDel(undoData.files);undoData=null}}
 $('undo').addEventListener('click',function(){
-  if(!undoData)return;clearTimeout(undoT);props.splice(undoData.i,0,undoData.p);cur=undoData.i;undoData=null;$('toast').hidden=true;resetCur();render();
+  var d=undoData;if(!d)return;clearTimeout(undoT);undoData=null;$('toast').hidden=true;isSample=false;d.restore();
 });
+function delProp(i){
+  if(undoData)finishDel();
+  var p=props.splice(i,1)[0];
+  if(cur>=props.length)cur=Math.max(0,props.length-1);
+  editIdx=null;newType=null;resetCur();isSample=false;render();navTab('p0');
+  undoable('Deleted '+p.addr,function(){props.splice(i,0,p);cur=i;resetCur();render()},rcIds(p));
+}
+function rcOf(x){return (x.rc||[]).map(function(r){return r.id})}
 $('p0').addEventListener('click',function(e){
   var r=e.target.closest('.prop');if(r){openProp(+r.dataset.i);return}
   var f=e.target.closest('[data-f]');if(f){propFilter=f.dataset.f;list()}
@@ -65,14 +72,14 @@ $('p1').addEventListener('click',function(e){
   function edit(id){current();var c=$(id||'costs');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})}
   if(x==='sec'){sec=b.dataset.sec;current()}
   else if(x==='cat'){var n=cats(p)[k].n;costOpen=costOpen===n?null:n;current()}
-  else if(x==='add'){itemEdit='new';delItem=false;rcMsg='';edit()}
-  else if(x==='item'){itemEdit=k;delItem=false;rcMsg='';edit()}
+  else if(x==='add'){itemEdit='new';rcMsg='';edit()}
+  else if(x==='item'){itemEdit=k;rcMsg='';edit()}
   else if(x==='isave')saveItem(p);
   else if(x==='icancel'){closeItem();current()}
   else if(x==='idel'){
-    if(!delItem){delItem=true;b.textContent='Tap to confirm delete';return}
-    var gone=p.items.splice(itemEdit,1)[0];rcDel((gone.rc||[]).map(function(r){return r.id}));closeItem();
+    var ix=itemEdit,gone=p.items.splice(ix,1)[0];closeItem();
     if(p.items.length)syncSpent(p);else p.spent=0;isSample=false;render();
+    undoable('Deleted '+(gone.desc||'cost'),function(){p.items.splice(ix,0,gone);syncSpent(p);render()},rcOf(gone));
   }
   else if(x==='rcopen')openRc(b.dataset.id);
   else if(x==='rcdrop'){var id=b.dataset.id,pi=pendRc.filter(function(r){return r.id===id}).length;if(pi){pendRc=pendRc.filter(function(r){return r.id!==id});rcDel([id])}else dropRc.push(id);keepIn(rcCard())}
@@ -89,7 +96,7 @@ $('p1').addEventListener('click',function(e){
   else if(x==='tkadd'){if(missing($('k_t').closest('.card')))return;var t=$('k_t').value.trim();(p.tasks=p.tasks||[]).push({t:t,k:$('k_k').value,d:$('k_d').value,who:$('k_who').value.trim(),ok:false});tlAdd=false;isSample=false;render()}
   else if(x==='tkcancel'){tlAdd=false;current()}
   else if(x==='tk'){p.tasks[k].ok=!p.tasks[k].ok;delete p.tasks[k].auto;isSample=false;render()}
-  else if(x==='tkdel'){p.tasks.splice(k,1);isSample=false;render()}
+  else if(x==='tkdel'){var tg=p.tasks.splice(k,1)[0];isSample=false;render();undoable('Deleted milestone: '+tg.t,function(){p.tasks.splice(k,0,tg);render()})}
   else if(x==='refixcal')refixIcs(p);
   // Finishing ticks any milestones left open, marked auto so "Not finished yet" can untick just those.
   else if(x==='tldone'){
@@ -101,12 +108,16 @@ $('p1').addEventListener('click',function(e){
   else if(x==='convno'){convOpen=false;current()}
   else if(x==='madd'){closeItem();moneyEdit='new';moneyKind=b.dataset.kind;edit('money')}
   else if(x==='mitem'){closeItem();moneyEdit=k;moneyKind=p.money[k].kind;edit('money')}
-  else if(x==='mkind'){moneyKind=b.dataset.kind;keepIn('money');if(!$('m_cat').value)$('m_cat').selectedIndex=0}
+  // Switching a new entry between income and expense swaps the starting amount (the weekly rent) if it wasn't changed.
+  else if(x==='mkind'){
+    var was=moneyEdit==='new'&&num('m_amt')===(moneyKind==='in'?p.rent:0);moneyKind=b.dataset.kind;keepIn('money');if(!$('m_cat').value)$('m_cat').selectedIndex=0;
+    if(was)$('m_amt').value=moneyKind==='in'&&p.rent?fmtMoney(p.rent):'';
+  }
   else if(x==='msave')saveMoney(p);
   else if(x==='mcancel'){closeItem();current()}
   else if(x==='mdel'){
-    if(!delItem){delItem=true;b.textContent='Tap to confirm delete';return}
-    var g=p.money.splice(moneyEdit,1)[0];rcDel((g.rc||[]).map(function(r){return r.id}));closeItem();isSample=false;render();
+    var mx=moneyEdit,g=p.money.splice(mx,1)[0];closeItem();isSample=false;render();
+    undoable('Deleted '+(g.kind==='in'?'income':'expense')+': '+g.cat,function(){p.money.splice(mx,0,g);render()},rcOf(g));
   }
   else if(x==='mall'){moneyAll=!moneyAll;current()}
   else if(x==='mcsv')exportMoney(p);
@@ -114,6 +125,11 @@ $('p1').addEventListener('click',function(e){
   else if(x==='tensave')saveTen(p);
   else if(x==='tencancel'){tenEdit=false;current()}
   else if(x==='hhall'){p.hh=p.hh||{};HH.forEach(function(s){if(!p.hh[s[0]])p.hh[s[0]]=iso(new Date())});isSample=false;render()}
+  else if(x==='picst'){picStage=b.dataset.v;current()}
+  else if(x==='picdel'){
+    var pid=b.dataset.id;if(picArm!==pid){picArm=pid;current();return}
+    picArm=null;p.pics=(p.pics||[]).filter(function(r){return r.id!==pid});rcDel([pid]);isSample=false;render();
+  }
   else if(x==='hhdrop'){
     var did=b.dataset.id;if(hhArm!==did){hhArm=did;current();return}
     hhArm=null;p.hhDocs=(p.hhDocs||[]).filter(function(r){return r.id!==did});rcDel([did]);isSample=false;render();
@@ -154,6 +170,8 @@ $('p1').addEventListener('change',function(e){
   if(e.target.id==='nearbeds'){nearBeds=e.target.checked;drawNear()}
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
   if(e.target.classList.contains('hhin')&&e.target.files.length)addHhDocs(props[cur],e.target.files);
+  if(e.target.classList.contains('picin')&&e.target.files.length)addPics(props[cur],e.target.files);
+  if(e.target.id==='pic_room'){picRoom=e.target.value;current()}
   if(e.target.classList.contains('phin')&&e.target.files[0])addPhoto(props[cur],e.target.files[0]);
 });
 document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2)}});

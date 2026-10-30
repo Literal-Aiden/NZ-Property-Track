@@ -13,6 +13,8 @@ function moneyCard(p){
   var M=p.money||[],ty=taxYearStart(),today=iso(new Date()),busy=moneyEdit!==null;
   var h='<div class="card" id="money"><div class="row" style="cursor:default">'+hd('dollar','Money in and out')+''+(M.length&&!busy?'<button class="edit" data-x="mcsv">Export CSV</button>':'')+'</div>';
   if(busy)return h+moneyForm(p)+'</div>';
+  if(!M.length)return h+empty('dollar','No rent or bills logged yet','Record rent received and bills paid, with receipt photos, to see how the property is really doing and to make tax time easier.',
+    '<div class="btns"><button class="go" data-x="madd" data-kind="in">Log rent</button><button class="go ghost" data-x="madd" data-kind="out">Add expense</button></div>')+'</div>';
   var inc=sum(M,function(x){return x.kind==='in'?mIn(x,ty,today):0}),out=sum(M,function(x){return x.kind==='out'?mIn(x,ty,today):0});
   var rentIn=sum(M,function(x){return x.kind==='in'&&x.cat==='Rent'?mIn(x,ty,today):0}),from=p.date&&p.date>ty?p.date:ty,exp=p.rent*Math.max(0,dd(from,today))/7;
   h+='<div class="grid">'+stat('Income this tax year',$$(inc))+stat('Expenses this tax year',$$(out))+stat('Net this tax year',$$(inc-out),inc-out<0?'neg':'pos')+
@@ -27,7 +29,7 @@ function moneyCard(p){
         '<div class="cr"><b class="'+(inn?'pos':'')+'">'+(inn?'+':'−')+$$(x.amt)+'</b></div></div>';
     }).join('')+'</div>';
     if(order.length>10)h+='<button class="edit" data-x="mall" style="margin-top:10px">'+(moneyAll?'Show recent only':'Show all '+order.length)+'</button>';
-  }else h+='<p class="sub" style="margin-top:10px">Record rent received and bills paid, with receipt photos, to see how the property is really doing and to make tax time easier.</p>';
+  }
   return h+'<div class="btns"><button class="go" data-x="madd" data-kind="in">Add income</button><button class="go ghost" data-x="madd" data-kind="out">Add expense</button></div></div>';
 }
 function moneyForm(p){
@@ -43,8 +45,8 @@ function moneyForm(p){
    '<label>Receipts and invoices (optional)</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
    '<div class="rcs">'+rc.map(rcThumb).join('')+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
-   '<div class="btns"><button class="go" data-x="msave">'+(moneyEdit==='new'?'Add':'Save')+'</button><button class="go ghost" data-x="mcancel">Cancel</button></div>'+
-   (moneyEdit==='new'?'':'<button class="edit del" data-x="mdel" style="margin-top:12px">'+(delItem?'Tap to confirm delete':'Delete this entry')+'</button>');
+   '<div class="btns fbar"><button class="go" data-x="msave">'+(moneyEdit==='new'?'Add':'Save')+'</button><button class="go ghost" data-x="mcancel">Cancel</button></div>'+
+   (moneyEdit==='new'?'':'<button class="edit del" data-x="mdel" style="margin-top:12px">Delete this entry</button>');
 }
 // Weekly income: how many weekly payments the form describes (0 for one payment). "Until" counts each week starting on or before that date.
 function mWeeks(){
@@ -86,14 +88,14 @@ var HH=[['heat','Heating'],['ins','Insulation'],['vent','Ventilation'],['moist',
 function hhLeft(p){var h=p.hh||{};return HH.filter(function(s){return !h[s[0]]}).length}
 function tenCard(p){
   var t=p.ten||{},today=iso(new Date());
-  var h='<div class="card" id="ten"><div class="row" style="cursor:default">'+hd('users','Tenancy')+''+(tenEdit?'':'<button class="edit" data-x="tenedit">'+(p.ten?'Edit':'Add details')+'</button>')+'</div>';
+  var h='<div class="card" id="ten"><div class="row" style="cursor:default">'+hd('users','Tenancy')+''+(tenEdit||!p.ten?'':'<button class="edit" data-x="tenedit">Edit</button>')+'</div>';
   if(tenEdit)h+='<label>Tenant name(s) (optional)</label><input id="t_who">'+
     '<div class="grid" style="margin-top:0"><div><label>Lease start (optional)</label><input id="t_ls" type="date"></div><div><label>Fixed term ends (optional)</label><input id="t_le" type="date"></div></div>'+
     '<p class="sub" style="margin-top:4px">Leave the end blank for a periodic tenancy.</p>'+
     '<label>Last rent increase (optional)</label><input id="t_ri" type="date">'+
     '<div class="grid" style="margin-top:0"><div><label>Bond (optional)</label><input id="t_bond"'+MONEY+'</div><div><label>&nbsp;</label><label class="chk" style="margin:10px 0 0"><input type="checkbox" id="t_lodged"'+(t.lodged?' checked':'')+'>Bond lodged</label></div></div>'+
-    '<div class="btns"><button class="go" data-x="tensave">Save</button><button class="go ghost" data-x="tencancel">Cancel</button></div>';
-  else if(!p.ten)h+='<p class="sub" style="margin-top:6px">Add lease dates and bond details to get reminders before the lease ends.</p>';
+    '<div class="btns fbar"><button class="go" data-x="tensave">Save</button><button class="go ghost" data-x="tencancel">Cancel</button></div>';
+  else if(!p.ten)h+=empty('users','No tenancy details yet','Add the lease dates and bond to get reminders before the lease ends or the bond needs lodging.','<button class="go" data-x="tenedit">Add tenancy details</button>');
   else{
     var left=t.le?dd(today,t.le):null,next=t.ri?addMonths(t.ri,12):null;
     h+='<div class="grid">'+stat('Tenant',t.who?esc(t.who):'–')+stat(t.le?(left<0?'Fixed term ended':'Fixed term ends in '+left+' days'):'Tenancy',t.le?fmtD(t.le):'Periodic',left!==null&&left<=60?'neg':'')+
@@ -102,7 +104,7 @@ function tenCard(p){
   }
   h+='</div>';
   var hh=p.hh||{},left2=hhLeft(p),docs=p.hhDocs||[];
-  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default">'+hd('thermo','Healthy Homes standards')+'<span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
+  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default">'+'<span class="hdq">'+hd('thermo','Healthy Homes standards')+'<a class="qmark" href="https://www.tenancy.govt.nz/healthy-homes/healthy-homes-standards-what-a-landlord-needs-to-know/" target="_blank" rel="noopener" aria-label="What the Healthy Homes standards need (tenancy.govt.nz)">?</a></span>'+'<span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
     '<p class="sub" style="margin-top:4px">Tick each standard once the property meets it. Check the current requirements and deadlines at tenancy.govt.nz.</p>'+
     (left2?'<button class="edit" data-x="hhall" style="margin-top:10px">Mark all '+HH.length+' as done</button>':'')+
     HH.map(function(s){var d=hh[s[0]];return '<div class="task'+(d?' ok':'')+'"><input type="checkbox" data-x="hh" data-k="'+s[0]+'"'+(d?' checked':'')+' aria-label="'+s[1]+'"><div><b>'+s[1]+'</b><p class="sub">'+(d?'Done '+fmtD(d):'Not done yet')+'</p></div></div>'}).join('')+
@@ -133,7 +135,7 @@ function toRentBlock(p){
    '<label>Annual expenses (NZD)</label><input id="r_exp" required'+MONEY+
    '<label>Estimated value now (optional)</label><input id="r_value" placeholder="'+$$(p.value)+'"'+MONEY+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
-   '<div class="btns"><button class="go" data-x="rentok">Turn into a rental</button><button class="go ghost" data-x="rentno">Cancel</button></div></div>';
+   '<div class="btns fbar"><button class="go" data-x="rentok">Turn into a rental</button><button class="go ghost" data-x="rentno">Cancel</button></div></div>';
 }
 function toRental(p){
   if(missing($('torent')))return;

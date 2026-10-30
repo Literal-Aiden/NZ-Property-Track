@@ -164,7 +164,7 @@ $('toolbody').addEventListener('click',function(e){
   if(b.dataset.x==='tsave')dealToProp();
   // Clear: every number back to blank (or its starting value, e.g. a 30-year term); choices like the plan stay as set.
   if(b.dataset.x==='tclear'){var t=toolById(toolCur);t.f.forEach(function(f){if(f.k!=='s')$('q_'+f.i).value=f.d?(f.k==='m'?fmtMoney(f.d):f.d):''});if($('q_from'))$('q_from').value='';tcalc();$('toolbody').scrollTop=0}
-  if(b.dataset.x==='tport'){var own=props.filter(function(p){return p.type!=='potential'});tfill({val:sum(own,function(p){return p.value}),debt:sum(own,function(p){return p.loan})})}
+  if(b.dataset.x==='tport'){var own=props.filter(function(p){return p.type!=='potential'});own=own.filter(function(p){return p.value});tfill({val:sum(own,function(p){return p.value}),debt:sum(own,function(p){return p.loan})})}
 });
 $('toolbody').addEventListener('input',function(){if(toolCur)tcalc()});
 $('toolbody').addEventListener('change',function(e){

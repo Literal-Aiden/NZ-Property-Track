@@ -55,11 +55,12 @@ function calBtn(p){
   }).join('')+'<button class="edit" data-x="refixcal" style="margin-top:8px">Or download a calendar file</button>';
 }
 function calIcsBtn(p){var n=refixDates(p).length;return n?'<button class="edit" data-x="refixcal" style="margin-top:12px">'+ic('clock')+' Add re-fix date'+(n>1?'s':'')+' to calendar</button>':''}
-function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null}
+function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null;picArm=null}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
   if(itemEdit!==null&&itemEdit!=='new'){var x=p.items[itemEdit];setv({i_desc:x.desc,i_who:x.who,i_date:x.date,i_quote:x.quote,i_amt:x.amt})}
-  if(moneyEdit!==null){var y=moneyEdit==='new'?{date:iso(new Date())}:p.money[moneyEdit];setv({m_date:y.date,m_amt:y.n?y.wk:y.amt,m_note:y.note,m_wks:y.n});if(y.n&&$('m_rep'))$('m_rep').value='wks';mRep()}
+  // A new income entry starts at the weekly rent, so logging rent is usually just checking the date.
+  if(moneyEdit!==null){var y=moneyEdit==='new'?{date:iso(new Date()),amt:moneyKind==='in'?p.rent:0}:p.money[moneyEdit];setv({m_date:y.date,m_amt:y.n?y.wk:y.amt,m_note:y.note,m_wks:y.n});if(y.n&&$('m_rep'))$('m_rep').value='wks';mRep()}
   if(tenEdit){var t=p.ten||{};setv({t_who:t.who,t_ls:t.ls||(p.ten?'':p.date),t_le:t.le,t_ri:t.ri,t_bond:t.bond})}
   if(tlEdit)setv({t_start:p.start||p.date,t_target:p.target,t_hold:p.hold});
   if(convOpen)setv({v_price:p.price,v_date:iso(new Date()),v_legal:(p.legal||0)+(p.extra||0),v_budget:p.reno});
@@ -80,13 +81,13 @@ function headline(p){
       sub:$$(p.spent)+' of '+$$(p.budget)+' budget spent'+(p.items&&p.items.length?' · '+$$(sum(p.items,cmt))+' committed':'')}}
   if(p.type==='rental'){var cf=cashFlow(p);
     return {lab:'Cash flow after mortgage',big:signed(cf,' a month'),short:'a month',num:signed(cf),tag:'Rental · '+$$(p.rent)+'/wk',
-      sub:$$(p.rent)+' a week rent · '+(p.value?(p.rent*52/p.value*100).toFixed(1):'0')+'% gross yield'}}
+      sub:$$(p.rent)+' a week rent'+(p.value?' · '+(p.rent*52/p.value*100).toFixed(1)+'% gross yield':'')}}
   var d=deal(p);
   if(p.intent==='rental')return {lab:'Gross yield on total cost',big:(d.cost?(d.ann/d.cost*100).toFixed(1):'0')+'%',short:'yield on cost',tag:'Buy to rent',sub:'Total cost in '+$$(d.cost)+' · '+$$(p.rent||0)+' a week rent'};
   return {lab:'Estimated profit, before tax',big:signed(d.prof),short:'est. profit',tag:'Reno to sell',sub:'Return on costs '+pct(d.roc)+' · asking '+$$(p.price)};
 }
 // What's owed and the equity in it, from the current loan balance.
-function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [l?['Current loan',$$(l)]:['Current loan','Mortgage-free or not added<button class="edit" id="editloan">+ Add a loan</button>','noloan'],['Equity',$$(e),e<0?'neg':'pos'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
+function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [l?['Current loan',$$(l)]:['Current loan','Mortgage-free or not added<button class="edit" id="editloan">+ Add a loan</button>','noloan'],p.value?['Equity',$$(e),e<0?'neg':'pos']:['Equity','Add the estimated value'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
 function rows(r){return '<div class="card list">'+r.filter(Boolean).map(function(x){return '<div class="r"><span>'+x[0]+'</span><b class="'+(x[2]||'')+'">'+x[1]+'</b></div>'}).join('')+'</div>'}
 // A property's page: cover photo, headline number, then its sections.
 function current(){
@@ -105,7 +106,7 @@ function current(){
   // Owned properties are split into sections so the page stays short on a phone. A dot marks a section with something to deal with.
   var flag={};alerts(p).forEach(function(a){flag[a.sec]=1});
   h+='<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
-  var body={costs:costCard,tl:timeCard,money:moneyCard,ten:tenCard,loan:loanCard}[sec];
+  var body={costs:costCard,tl:function(p){return timeCard(p)+picCard(p)},money:moneyCard,ten:tenCard,loan:loanCard}[sec];
   if(body){$('p1').innerHTML=h+body(p);fillCur(p);return}
   if(pr){
     var left=p.budget-p.spent;
@@ -113,14 +114,14 @@ function current(){
     if(p.done)h+='<div class="card">'+toRentBlock(p)+'</div>';
   }else{
     var ann=p.rent*52,net=ann-p.exp;
-    h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%'],
-      ['Est. value now',$$(p.value)]].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
+    h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',p.value?(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%':'–'],
+      ['Est. value now',p.value?$$(p.value):'Not entered']].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
   $('p1').innerHTML=h+(p.plan?planCard(p):'');
   fillCur(p);
 }
-var SECS=[['ov','Overview'],['costs','Costs'],['tl','Timeline'],['loan','Mortgage']],SECS_R=[['ov','Overview'],['money','Money'],['ten','Tenancy'],['loan','Mortgage']],sec='ov';
+var SECS=[['ov','Overview'],['costs','Costs'],['tl','Timeline &amp; progress'],['loan','Mortgage']],SECS_R=[['ov','Overview'],['money','Money'],['ten','Tenancy'],['loan','Mortgage']],sec='ov';
 // Cover photo: one image per property, stored with the receipt files and included in backups.
 function addPhoto(p,f){
   shrink(f).then(function(b){var r={id:uid(),name:f.name,type:b.type||f.type,added:iso(new Date())};return rcPut(Object.assign({blob:b},r)).then(function(){return r})})
