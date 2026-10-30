@@ -55,7 +55,7 @@ function calBtn(p){
   }).join('')+'<button class="edit" data-x="refixcal" style="margin-top:8px">Or download a calendar file</button>';
 }
 function calIcsBtn(p){var n=refixDates(p).length;return n?'<button class="edit" data-x="refixcal" style="margin-top:12px">'+ic('clock')+' Add re-fix date'+(n>1?'s':'')+' to calendar</button>':''}
-function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null;picArm=null;valEdit=false}
+function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null;picArm=null;valEdit=false;rentChg=false}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
   if(itemEdit!==null&&itemEdit!=='new'){var x=p.items[itemEdit];setv({i_desc:x.desc,i_who:x.who,i_date:x.date,i_quote:x.quote,i_amt:x.amt})}

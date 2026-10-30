@@ -86,9 +86,42 @@ function exportMoney(p){
 // Tenancy details. Rent increase timing is a legal rule, so it's shown with a pointer to check it.
 var HH=[['heat','Heating'],['ins','Insulation'],['vent','Ventilation'],['moist','Moisture ingress and drainage'],['draught','Draught stopping']];
 function hhLeft(p){var h=p.hh||{};return HH.filter(function(s){return !h[s[0]]}).length}
+// Rent box at the top of Tenancy, where people tend to look for the rent: the weekly rent, "Change rent" (a rise also
+// becomes the tenancy's last rent increase, which sets the next one) and "Log rent received" (opens the Money form).
+// Each change is kept in p.rents as {d, v}.
+var rentChg=false;
+function rentCard(p){
+  var t=p.ten||{},h='<div class="card" id="rentc">'+hd('dollar','Rent');
+  if(rentChg)return h+'<div class="grid" style="margin-top:0"><div><label>New weekly rent</label><input id="r2_amt" required value="'+(p.rent?fmtMoney(p.rent):'')+'"'+MONEY+'</div>'+
+    '<div><label>From</label><input id="r2_date" type="date" required value="'+iso(new Date())+'"></div></div>'+
+    // Only shown when the new rent is higher (rentNote): a drop never changes the increase date.
+    '<div id="r2_incw" hidden><label class="chk"><input type="checkbox" id="r2_inc" checked>This is a rent increase</label>'+
+    '<p class="sub" style="margin:2px 0 0 28px">The next increase is then allowed 12 months after the From date. Untick it if you’re correcting the rent or a new tenancy is starting.</p></div>'+
+    '<p class="sub" id="r2_note" style="margin-top:6px"></p><p class="sub neg formerr" style="margin-top:8px" role="alert"></p>'+
+    '<div class="btns fbar"><button class="go" data-x="rentsave">Save rent</button><button class="go ghost" data-x="rentcancel">Cancel</button></div></div>';
+  return h+'<div class="big2" style="margin-top:6px">'+$$(p.rent||0)+' <span class="sub" style="font-size:15px">a week</span></div>'+
+    (t.ri?'<p class="sub">Last increase '+fmtD(t.ri)+'</p>':'')+
+    '<div class="btns"><button class="go" data-x="rentlog">Log rent received</button><button class="go ghost" data-x="rentchg">Change rent</button></div></div>';
+}
+// Live note while changing the rent: the size of the change, and a warning if a rise comes within 12 months of the last.
+function rentNote(p){
+  var o=$('r2_note');if(!o)return;
+  var v=num('r2_amt'),d=$('r2_date').value,ri=p.ten&&p.ten.ri,up=v>(p.rent||0),n='';
+  $('r2_incw').hidden=!up;
+  if(v&&p.rent&&v!==p.rent)n=(up?'Up ':'Down ')+$$(Math.abs(v-p.rent))+' a week ('+(up?'+':'−')+(Math.abs(v-p.rent)/p.rent*100).toFixed(1)+'%).';
+  if(up&&$('r2_inc').checked&&ri&&d&&d<addMonths(ri,12))n+=' The last increase was '+fmtD(ri)+', less than 12 months before. Rent can usually only go up once every 12 months: check the current rules at tenancy.govt.nz.';
+  o.textContent=n;o.className='sub'+(/12 months/.test(n)?' neg':'');
+}
+function saveRent(p){
+  if(missing($('rentc')))return;
+  var v=num('r2_amt'),d=$('r2_date').value;
+  if(v>(p.rent||0)&&$('r2_inc').checked)(p.ten=p.ten||{}).ri=d;
+  p.rent=v;p.rents=(p.rents||[]).filter(function(x){return x.d!==d}).concat([{d:d,v:v}]);
+  rentChg=false;isSample=false;render();
+}
 function tenCard(p){
   var t=p.ten||{},today=iso(new Date());
-  var h='<div class="card" id="ten"><div class="row" style="cursor:default">'+hd('users','Tenancy')+''+(tenEdit||!p.ten?'':'<button class="edit" data-x="tenedit">Edit</button>')+'</div>';
+  var h=rentCard(p)+'<div class="card" id="ten"><div class="row" style="cursor:default">'+hd('users','Tenancy')+''+(tenEdit||!p.ten?'':'<button class="edit" data-x="tenedit">Edit</button>')+'</div>';
   if(tenEdit)h+='<label>Tenant name(s) (optional)</label><input id="t_who">'+
     '<div class="grid" style="margin-top:0"><div><label>Lease start (optional)</label><input id="t_ls" type="date"></div><div><label>Fixed term ends (optional)</label><input id="t_le" type="date"></div></div>'+
     '<p class="sub" style="margin-top:4px">Leave the end blank for a periodic tenancy.</p>'+

@@ -90,7 +90,7 @@ $('p1').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   var p=props[cur],x=b.dataset.x,k=+b.dataset.k;
   function edit(id){current();var c=$(id||'costs');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})}
-  if(x==='sec'){sec=b.dataset.sec;valEdit=false;current()}
+  if(x==='sec'){sec=b.dataset.sec;valEdit=false;rentChg=false;current()}
   else if(x==='cat'){var n=cats(p)[k].n;costOpen=costOpen===n?null:n;current()}
   else if(x==='add'){itemEdit='new';rcMsg='';edit()}
   else if(x==='item'){itemEdit=k;rcMsg='';edit()}
@@ -130,6 +130,10 @@ $('p1').addEventListener('click',function(e){
   else if(x==='convok')convert(cur);
   else if(x==='convno'){convOpen=false;current()}
   else if(x==='madd'){closeItem();moneyEdit='new';moneyKind=b.dataset.kind;edit('money')}
+  else if(x==='rentlog'){closeItem();sec='money';moneyEdit='new';moneyKind='in';edit('money')}
+  else if(x==='rentchg'){rentChg=true;current();var rc=$('rentc');if(rc){rc.scrollIntoView({block:'start',behavior:'smooth'});rentNote(p)}}
+  else if(x==='rentsave')saveRent(p);
+  else if(x==='rentcancel'){rentChg=false;current()}
   else if(x==='mitem'){closeItem();moneyEdit=k;moneyKind=p.money[k].kind;edit('money')}
   // Switching a new entry between income and expense swaps the starting amount (the weekly rent) if it wasn't changed.
   else if(x==='mkind'){
@@ -166,6 +170,7 @@ $('p1').addEventListener('click',function(e){
 $('p1').addEventListener('input',function(e){
   if(/^cb_\d/.test(e.target.id))cbTot(props[cur]);
   if(e.target.id==='v_val')valPrev(props[cur]);
+  if(/^r2_(amt|date|inc)$/.test(e.target.id))rentNote(props[cur]);
   if(/^t_(rates|ins|power|oth)$/.test(e.target.id))tlHoldCalc(props[cur]);
   if(e.target.classList.contains('bad'))unbad(e.target);
   // The offer target is kept on the property without re-rendering, so typing isn't interrupted.
@@ -213,7 +218,7 @@ function swipeTo(d){
   var on=document.querySelector('.screen.on'),id=on&&on.id;
   if(id==='p1'){
     var B=[].slice.call(document.querySelectorAll('#p1 .secnav [data-sec]')),i=B.findIndex(function(b){return b.classList.contains('on')}),n=B[i+d];
-    if(!n||itemEdit!==null||moneyEdit!==null||tlAdd||tlEdit||tenEdit||catDraft||valEdit||rentOpen)return;
+    if(!n||itemEdit!==null||moneyEdit!==null||tlAdd||tlEdit||tenEdit||catDraft||valEdit||rentOpen||rentChg)return;
     n.click();
   }else{
     var j=TABS.indexOf(id);if(j<0||ovs.indexOf('tool')>=0)return;
