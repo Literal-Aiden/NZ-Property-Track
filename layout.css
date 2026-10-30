@@ -190,3 +190,6 @@ input.bad,select.bad{animation:shake .35s}
   #printout .sub,#printout .list .r span{color:#333}
   #printout .pos,#printout .neg{color:#000}
 }
+/* Re-fix "Add to your calendar" links (calBtn in views.js), one per line. */
+.calnk{display:flex;align-items:center;gap:6px;width:fit-content;margin-top:8px;text-decoration:none}
+.calnk .ic{width:15px;height:15px}

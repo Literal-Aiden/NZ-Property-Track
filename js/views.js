@@ -37,7 +37,21 @@ function refixIcs(p){
   });
   download('refix-'+slug(p.addr)+'.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//NZ Property Tracker//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'].concat(ev,['END:VCALENDAR']).join('\r\n')+'\r\n','text/calendar');
 }
-function calBtn(p){var n=refixDates(p).length;return n?'<button class="edit" data-x="refixcal" style="margin-top:12px">'+ic('clock')+' Add re-fix date'+(n>1?'s':'')+' to calendar</button>':''}
+// Android saves an .ics to Downloads without adding it, so there each re-fix gets a Google Calendar link that opens
+// the event ready to save (Google's link can't set alerts, so the description suggests one). iPhones open .ics files
+// straight into Calendar, so they keep the file; other phones get it as a second option.
+function gcalUrl(p,r){
+  var d=r.d.replace(/-/g,''),e=addDays(r.d,1).replace(/-/g,'');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&dates='+d+'/'+e+'&text='+encodeURIComponent('Mortgage re-fix: '+p.addr+(r.n>1?' ('+short(r.x.loan)+' part)':''))+
+    '&details='+encodeURIComponent('The fixed rate on '+$$(r.x.loan)+' at '+r.x.rate+'% ends. Talk to your bank or broker about re-fixing before then. Tip: add a notification a month before.');
+}
+function calBtn(p){
+  var R=refixDates(p);if(!R.length||IOS)return calIcsBtn(p);
+  return '<p class="grp" style="margin:14px 0 0">Add to your calendar</p>'+R.map(function(r){
+    return '<a class="edit calnk" href="'+esc(gcalUrl(p,r))+'" target="_blank" rel="noopener">'+ic('clock')+' Google Calendar: '+fmtD(r.d)+(r.n>1?' ('+short(r.x.loan)+' part)':'')+'</a>';
+  }).join('')+'<button class="edit" data-x="refixcal" style="margin-top:8px">Or download a calendar file</button>';
+}
+function calIcsBtn(p){var n=refixDates(p).length;return n?'<button class="edit" data-x="refixcal" style="margin-top:12px">'+ic('clock')+' Add re-fix date'+(n>1?'s':'')+' to calendar</button>':''}
 function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
