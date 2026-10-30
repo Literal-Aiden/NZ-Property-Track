@@ -4,13 +4,23 @@
 // the edit panel, a calculator) add a history entry when opened, so the phone's Back button closes the top one
 // instead of leaving the app. Their own close buttons go back through history too, so entries never pile up.
 // ovs is that stack.
-var tab='home',ovs=[];
-function ovOpen(id){ovs.push(id);try{history.pushState({nz:ovs.length},'')}catch(e){}}
+// A reload (or the phone restoring the app) keeps the browser's history but starts ovs empty, so each entry is tagged
+// with this page load's id (sid): entries from an earlier load count as the bottom of the stack, not as open pages.
+var tab='home',ovs=[],sid=Date.now().toString(36),navBusy=false;
+function hstate(){return {nz:ovs.length,s:sid}}
+try{history.replaceState(hstate(),'')}catch(e){}
+function ovOpen(id){ovs.push(id);try{history.pushState(hstate(),'')}catch(e){}}
 function ovClose(id){var i=ovs.lastIndexOf(id);if(i<0)ovShut(id);else history.go(i-ovs.length)}
 // Replaces the top entry without adding history, e.g. the + menu turning into the property page it opened.
-function ovSwap(id){ovs[ovs.length-1]=id;try{history.replaceState({nz:ovs.length},'')}catch(e){}}
+function ovSwap(id){ovs[ovs.length-1]=id;try{history.replaceState(hstate(),'')}catch(e){}}
 function ovShut(id){if(id==='tool'){toolCur=null;drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();else if(id==='pick')closePickNow();reshow()}
-window.addEventListener('popstate',function(e){var l=(e.state&&e.state.nz)||0;while(ovs.length>l)ovShut(ovs.pop())});
+window.addEventListener('popstate',function(e){
+  navBusy=false;
+  var s=e.state,l=s&&s.s===sid?s.nz:0;
+  while(ovs.length>l)ovShut(ovs.pop());
+  // Landed on an entry from an earlier load, or moved forward: make it match what's showing.
+  if(!s||s.s!==sid||l>ovs.length){try{history.replaceState(hstate(),'')}catch(err){}reshow()}
+});
 function reshow(){var pg=ovs.filter(function(x){return x==='p1'||x==='p2'}).pop();show(pg||tab)}
 function show(id){
   // Opening Settings gets a backup ready to share (see prepShare).
@@ -27,8 +37,17 @@ function openPage(id){
   show(id);$(id).scrollTop=0;
 }
 function go(i){if(i===0)navTab('p0');else openPage(i===1?'p1':'p2')}
-// Switching tabs closes any pages and panels on top first.
-function navTab(t){tab=t;if(t==='toolbody'&&ovs.indexOf('tool')<0){toolCur=null;drawTools()}if(ovs.length)history.go(-ovs.length);else{show(t);$(t).scrollTop=0}}
+// Switching tabs closes any pages and panels on top first. A second tap while that's under way just changes which
+// tab shows when it finishes, instead of going back again (which could step out of the app).
+function navTab(t){
+  tab=t;if(t==='toolbody'&&ovs.indexOf('tool')<0){toolCur=null;drawTools()}
+  if(navBusy)return;
+  if(ovs.length){
+    navBusy=true;history.go(-ovs.length);
+    // If the browser doesn't step back (it should within a moment), close everything here so the tab still switches.
+    setTimeout(function(){if(!navBusy)return;navBusy=false;while(ovs.length)ovShut(ovs.pop());try{history.replaceState(hstate(),'')}catch(e){}reshow()},800);
+  }else{show(t);$(t).scrollTop=0}
+}
 function banner(){drawHome();drawSettings()}
 function render(){if(!isSample){save();persist()}list();current();form();banner()}
 $('nav').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(b)navTab(b.dataset.tab);else if(e.target.closest('#plusbtn'))openPlus()});
