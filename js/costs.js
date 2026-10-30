@@ -38,18 +38,19 @@ function itemForm(p){
   var rc=(x.rc||[]).filter(function(r){return dropRc.indexOf(r.id)<0}).concat(pendRc);
   return '<p class="grp" style="margin:14px 0 0">'+(itemEdit==='new'?'Add a cost':'Edit cost')+'</p>'+
    '<label>Category</label><select id="i_cat">'+cats(p).map(function(c){return '<option'+(c.n===x.cat?' selected':'')+'>'+esc(c.n)+'</option>'}).join('')+'</select>'+
-   '<label>Description</label><input id="i_desc" placeholder="e.g. Kitchen benchtop">'+
+   '<label>Description</label><input id="i_desc" placeholder="e.g. Kitchen benchtop" required>'+
    '<label>Supplier / tradie</label><input id="i_who">'+
    '<label>Date</label><input id="i_date" type="date">'+
    '<div class="grid" style="margin-top:0"><div><label>Quote for the job</label><input id="i_quote"'+N+'</div><div><label>Invoiced so far</label><input id="i_amt"'+N+'</div></div>'+
    '<label class="chk"><input type="checkbox" id="i_paid"'+(x.paid?' checked':'')+'>Paid</label>'+
    '<label>Receipts and invoices</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
    '<div class="rcs">'+rc.map(rcThumb).join('')+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
+   '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
    '<div class="btns"><button class="go" data-x="isave">'+(itemEdit==='new'?'Add cost':'Save')+'</button><button class="go ghost" data-x="icancel">Cancel</button></div>'+
    (itemEdit==='new'?'':'<button class="edit del" data-x="idel" style="margin-top:12px">'+(delItem?'Tap to confirm delete':'Delete this cost')+'</button>');
 }
 function saveItem(p){
-  var d=$('i_desc').value.trim();if(!d){$('i_desc').focus();return}
+  if(missing($('i_desc').closest('.card')))return;var d=$('i_desc').value.trim();
   if(!p.items||!p.items.length){p.items=[];if(p.spent)p.items.push({id:uid(),cat:'Other',desc:'Spent before itemising',amt:p.spent,paid:true,rc:[]})}
   var x=itemEdit==='new'?{id:uid()}:p.items[itemEdit];
   x.cat=$('i_cat').value;x.desc=d;x.who=$('i_who').value.trim();x.date=$('i_date').value;x.quote=num('i_quote');x.amt=num('i_amt');x.paid=$('i_paid').checked;

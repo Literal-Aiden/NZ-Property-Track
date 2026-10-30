@@ -64,7 +64,7 @@ function mRep(){
 function saveMoney(p){
   if(missing($('money')))return;
   var wk=$('m_rep')&&$('m_rep').value!=='once',n=mWeeks();
-  if(wk&&n<1){var bad=$('m_rep').value==='wks'?$('m_wks'):$('m_until');bad.classList.add('bad');bad.focus();$('money').querySelector('.formerr').textContent=$('m_rep').value==='wks'?'Enter at least 1 week.':'The “until” date needs to be on or after the first week.';return}
+  if(wk&&n<1){var bad=$('m_rep').value==='wks'?$('m_wks'):$('m_until');bad.classList.add('bad');bad.focus();$('money').querySelector('.formerr').classList.add('on');$('money').querySelector('.formerr').textContent=$('m_rep').value==='wks'?'Enter at least 1 week.':'The “until” date needs to be on or after the first week.';return}
   var x=moneyEdit==='new'?{id:uid()}:p.money[moneyEdit];
   x.kind=moneyKind;x.cat=$('m_cat').value;x.date=$('m_date').value;x.amt=num('m_amt');x.note=$('m_note').value.trim();
   delete x.wk;delete x.n;if(wk&&x.kind==='in'){x.wk=x.amt;x.n=n;x.amt=x.wk*n}

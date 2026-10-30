@@ -25,8 +25,8 @@ function timeCard(p){
     var x=T[i],od=!x.ok&&x.d&&x.d<today;
     return '<div class="task'+(x.ok?' ok':'')+'"><input type="checkbox" data-x="tk" data-k="'+i+'"'+(x.ok?' checked':'')+' aria-label="Done"><div><b>'+esc(x.t)+'</b><p class="sub'+(od?' neg':'')+'">'+[esc(x.k||''),x.d?fmtD(x.d):'',esc(x.who||''),od?'Overdue':''].filter(Boolean).join(' · ')+'</p></div><button class="edit del" data-x="tkdel" data-k="'+i+'" aria-label="Delete milestone">×</button></div>';
   }).join('');
-  if(tlAdd)return h+'<p class="grp" style="margin:16px 0 0">Add a milestone</p><label>Milestone</label><input id="k_t" placeholder="e.g. Plumber booked, final inspection">'+
+  if(tlAdd)return h+'<p class="grp" style="margin:16px 0 0">Add a milestone</p><label>Milestone</label><input id="k_t" placeholder="e.g. Plumber booked, final inspection" required>'+
     '<div class="grid" style="margin-top:0"><div><label>Type</label><select id="k_k">'+KINDS.map(function(k){return '<option>'+k+'</option>'}).join('')+'</select></div><div><label>Date</label><input id="k_d" type="date"></div></div>'+
-    '<label>Who (optional)</label><input id="k_who"><div class="btns"><button class="go" data-x="tkadd">Add milestone</button><button class="go ghost" data-x="tkcancel">Cancel</button></div></div>';
+    '<label>Who (optional)</label><input id="k_who"><p class="sub neg formerr" style="margin-top:12px" role="alert"></p><div class="btns"><button class="go" data-x="tkadd">Add milestone</button><button class="go ghost" data-x="tkcancel">Cancel</button></div></div>';
   return h+'<div class="btns"><button class="go" data-x="tknew">Add milestone</button>'+(p.start&&p.target?'<button class="go ghost" data-x="tldone">'+(p.done?'Not finished yet':'Mark reno finished')+'</button>':'')+'</div></div>';
 }

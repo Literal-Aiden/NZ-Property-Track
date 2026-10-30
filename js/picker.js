@@ -21,7 +21,7 @@ function closePickNow(){$('pick').hidden=true;pickSel=null}
 function pickSet(v){
   var s=pickSel;ovClose('pick');if(!s)return;
   if(s.value!==v){s.value=v;s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}))}
-  s.classList.remove('bad');
+  if(s.classList.contains('bad'))unbad(s);
 }
 $('pick').addEventListener('click',function(e){
   var b=e.target.closest('[data-pv]');if(b){pickSet(b.dataset.pv);return}

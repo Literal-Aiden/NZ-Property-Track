@@ -169,3 +169,13 @@ button.r{cursor:pointer}
 .pkopts.one{grid-template-columns:1fr}
 .pkopts button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;text-align:left;cursor:pointer;min-height:42px}
 .pkopts button.on{border-color:var(--acc);background:var(--acc2);color:var(--acc);font-weight:600}
+/* Required fields left empty on save (missing() in forms.js): amber outline and label, a short note under the field,
+   a quick shake, and a summary by the Save button naming what's missing. */
+label.badl{color:var(--warn);font-weight:600}
+.ferr{margin:4px 0 0;font-size:13px;color:var(--warn);font-weight:600}
+.ferr::before{content:"! ";}
+input.bad,select.bad{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.formerr.on{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid var(--warn);color:var(--ink);font-size:14px;font-weight:600}
+.formerr.on::before{content:"!";flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--warn);color:var(--bg);font-size:13px;font-weight:800}
+@media (prefers-reduced-motion:reduce){input.bad,select.bad{animation:none}}

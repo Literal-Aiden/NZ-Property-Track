@@ -130,11 +130,39 @@ function missing(box){
   for(var i=0;i<lpN;i++){r=$('l_rate'+i);if(r&&box.contains(r)&&num('l_amt'+i)&&!r.value.trim())bad.push(r)}
   // A rental's purchase details are optional (it may have been owned for decades), but then it needs a value.
   var fv=$('f_value');if(newType==='rental'&&fv&&box.contains(fv)&&!num('f_price')&&!num('f_value'))bad.push(fv);
-  box.querySelectorAll('.bad').forEach(function(e){e.classList.remove('bad')});
-  bad.forEach(function(e){var d=e.closest('details');if(d)d.open=true;e.classList.add('bad');e.setAttribute('aria-invalid','true')});
-  box.querySelector('.formerr').textContent=bad.length?'Fill in the '+(bad.length>1?bad.length+' highlighted fields':'highlighted field')+' to save.':'';
+  box.querySelectorAll('.bad').forEach(unbad);
+  bad.forEach(function(e){
+    var d=e.closest('details');if(d)d.open=true;
+    void e.offsetWidth;e.classList.add('bad');e.setAttribute('aria-invalid','true');
+    var l=fieldLabel(e);if(l)l.classList.add('badl');
+    var m=document.createElement('p');m.className='ferr';
+    m.textContent=/rate/.test(e.id)?'Needed when there’s a loan amount':e.id==='f_value'&&newType==='rental'?'Needed when there’s no purchase price':'Required';
+    fieldBox(e).insertAdjacentElement('afterend',m);
+  });
+  errSum(box);
   if(bad.length){bad[0].focus();bad[0].scrollIntoView({block:'center',behavior:'smooth'})}
   return bad.length;
+}
+// The summary by the Save button names every field still flagged, and goes once they're all filled in.
+function errSum(box){
+  var f=box.querySelector('.formerr');if(!f)return;
+  var n=[].map.call(box.querySelectorAll('.bad'),fieldName);
+  f.classList.toggle('on',!!n.length);
+  f.textContent=n.length?'To save, fill in '+(n.length>1?n.slice(0,-1).join(', ')+' and '+n[n.length-1]:n[0])+'.':'';
+}
+// A field, or its wrapper when it has one (the address field sits in a box with its suggestions).
+function fieldBox(e){return e.parentElement.classList.contains('ac')?e.parentElement:e}
+// The label for a field: the one just before it, or one pointing at it with for="".
+function fieldLabel(e){var l=fieldBox(e).previousElementSibling;if(l&&l.tagName==='LABEL')return l;return e.id?document.querySelector('label[for="'+e.id+'"]'):null}
+// A field's name for the summary, without notes like "(NZD)" or "(needed if no purchase price)".
+function fieldName(e){var l=fieldLabel(e),t=l?l.childNodes[0].textContent:'this field';return t.replace(/\s*\(.*$/,'').trim()}
+// Clears a field's error and updates the summary.
+function unbad(e){
+  e.classList.remove('bad');e.removeAttribute('aria-invalid');
+  var l=fieldLabel(e);if(l)l.classList.remove('badl');
+  var m=fieldBox(e).nextElementSibling;if(m&&m.classList.contains('ferr'))m.remove();
+  var b=e.parentElement;while(b&&!b.querySelector('.formerr'))b=b.parentElement;
+  if(b&&b.querySelector('.formerr.on'))errSum(b);
 }
 var loanOpen=false;
 function saveLoan(){
@@ -169,7 +197,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet')
 ['p2','sheetbody'].forEach(function(id){
 $(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2])});
 $(id).addEventListener('input',function(e){
-  if(e.target.classList.contains('bad')){e.target.classList.remove('bad');e.target.removeAttribute('aria-invalid')}
+  if(e.target.classList.contains('bad'))unbad(e.target);
   if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
   if(e.target.id==='f_sub'||e.target.id==='f_addr'){if(e.target.id==='f_sub'&&e.isTrusted)delete e.target.dataset.county;rateLink()}
 });
