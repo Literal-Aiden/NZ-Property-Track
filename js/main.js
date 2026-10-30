@@ -196,6 +196,37 @@ $('p1').addEventListener('change',function(e){
 document.addEventListener('click',function(e){var o=e.target.closest('[data-s]');if(o)acPick(+o.dataset.s);else if(!e.target.closest('.ac'))acHide();if(e.target.id==='fresh'){e.preventDefault();props=[];cur=0;editIdx=null;save();render();go(2)}});
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;banner()});
 window.addEventListener('appinstalled',function(){installEvt=null;banner()});
+// Swiping left or right: on a property page it moves between its sections (Overview, Costs…); on the main tabs it moves
+// between Home, Properties, Tools and Settings. It has to be a clear sideways swipe, not starting at the screen edge
+// (the phone's own back gesture) or on something that scrolls sideways or takes typing, and only with no panel open.
+var TABS=['home','p0','toolbody','setbody'],swX=null,swY=0,swT=0;
+function swipeable(t){
+  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&!document.body.classList.contains('typing');
+}
+function swipeTo(d){
+  var on=document.querySelector('.screen.on'),id=on&&on.id;
+  if(id==='p1'){
+    var B=[].slice.call(document.querySelectorAll('#p1 .secnav [data-sec]')),i=B.findIndex(function(b){return b.classList.contains('on')}),n=B[i+d];
+    if(!n||itemEdit!==null||moneyEdit!==null||tlAdd||tlEdit||tenEdit||catDraft)return;
+    n.click();slideIn(d);
+  }else{
+    var j=TABS.indexOf(id);if(j<0||ovs.indexOf('tool')>=0)return;
+    var t=TABS[j+d];if(t){navTab(t);slideIn(d)}
+  }
+}
+// A short slide in from the side the swipe came from, so it's clear the page moved.
+function slideIn(d){var s=document.querySelector('.screen.on');if(!s)return;s.classList.remove('swl','swr');void s.offsetWidth;s.classList.add(d>0?'swl':'swr')}
+document.addEventListener('animationend',function(e){e.target.classList.remove('swl','swr')});
+document.addEventListener('touchstart',function(e){
+  var x=e.touches[0].clientX;swX=null;
+  if(e.touches.length!==1||x<24||x>innerWidth-24||!swipeable(e.target))return;
+  swX=x;swY=e.touches[0].clientY;swT=Date.now();
+},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(swX===null)return;
+  var dx=e.changedTouches[0].clientX-swX,dy=e.changedTouches[0].clientY-swY;swX=null;
+  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*2&&Date.now()-swT<700)swipeTo(dx<0?1:-1);
+});
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){});
 render();drawTools();show('home');
 if(!tourSeen())openTour();
