@@ -100,12 +100,12 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Shows spent, committed (larger of quote or invoiced), unpaid invoices, over quotes, contingency used, and unallocated budget. Export CSV for an accountant
 
 **Receipts**
-- Photos or PDFs attached to a reno cost or a rental money entry, stored in IndexedDB (`nzpt` database, `rc` store), not localStorage. Items hold only `{id,name,type}`. Photos are scaled to 1600px JPEG
+- Photos or PDFs attached to a reno cost or a rental money entry ("Camera" opens the phone camera straight away via `capture="environment"`, `rcCam()`; "+ Photo or PDF" picks files), stored in IndexedDB (`nzpt` database, `rc` store), not localStorage. Items hold only `{id,name,type}`. Photos are scaled to 1600px JPEG
 
 **Reno timeline (projects)**
 - Start, target finish, holding cost per month. The first target set is kept as the baseline (`target0`), so delays show as days behind and extra holding cost
 - Milestones (trade booked, consent, inspection, delivery, other) with tick-off and overdue highlighting; "Mark reno finished" ticks any milestones still open (flagged `auto`) with a note saying how many, and "Not finished yet" unticks just those, in case it was pressed by accident. Ticking or unticking one by hand clears its flag, so it stays as set
-- Progress photos (card under the timeline, `picCard()` in `timeline.js`): pick a room or area (`ROOMS`) and a stage (Before, During, After), then add photos. Stored like receipts in IndexedDB (`p.pics`: `{id,name,type,added,room,stage}`, scaled to 1600px), included in backups via `rcIds()` and removed with the property. Each room lists its photos with stage and date; a room with both shows the earliest Before next to the latest After. Removing a photo needs a second tap
+- Progress photos (card under the timeline, `picCard()` in `timeline.js`): pick a room or area (`ROOMS`) and a stage (Before, During, After), then "Take photo" (opens the camera) or "From gallery". Stored like receipts in IndexedDB (`p.pics`: `{id,name,type,added,room,stage}`, scaled to 1600px), included in backups via `rcIds()` and removed with the property. Each room lists its photos with stage and date; a room with both shows the earliest Before next to the latest After. Removing a photo needs a second tap
 
 **Potential buy → project**
 - "Bought it? Track it as a reno project" converts a potential buy (purchase price, date and reno budget required), keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit

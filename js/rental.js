@@ -43,7 +43,7 @@ function moneyForm(p){
    (moneyKind==='in'?'<p class="sub" id="m_repout" style="margin-top:6px;color:var(--ink);font-weight:600"></p>':'')+
    '<label>Note (optional)</label><input id="m_note" placeholder="'+(moneyKind==='in'?'e.g. 4 weeks to 30 Oct':'e.g. Q2 rates instalment')+'">'+
    '<label>Receipts and invoices (optional)</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
-   '<div class="rcs">'+rc.map(rcThumb).join('')+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
+   '<div class="rcs">'+rc.map(rcThumb).join('')+rcCam()+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
    '<div class="btns fbar"><button class="go" data-x="msave">'+(moneyEdit==='new'?'Add':'Save')+'</button><button class="go ghost" data-x="mcancel">Cancel</button></div>'+
    (moneyEdit==='new'?'':'<button class="edit del" data-x="mdel" style="margin-top:12px">Delete this entry</button>');

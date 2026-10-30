@@ -47,7 +47,7 @@ function itemForm(p){
    '<div class="grid" style="margin-top:0"><div><label>Quote for the job</label><input id="i_quote"'+N+'</div><div><label>Invoiced so far</label><input id="i_amt"'+N+'</div></div>'+
    '<label class="chk"><input type="checkbox" id="i_paid"'+(x.paid?' checked':'')+'>Paid</label>'+
    '<label>Receipts and invoices</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
-   '<div class="rcs">'+rc.map(rcThumb).join('')+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
+   '<div class="rcs">'+rc.map(rcThumb).join('')+rcCam()+'<label class="rcadd">+ Photo or PDF<input type="file" class="rcin" accept="image/*,application/pdf" multiple hidden></label></div>'+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
    '<div class="btns fbar"><button class="go" data-x="isave">'+(itemEdit==='new'?'Add cost':'Save')+'</button><button class="go ghost" data-x="icancel">Cancel</button></div>'+
    (itemEdit==='new'?'':'<button class="edit del" data-x="idel" style="margin-top:12px">Delete this cost</button>');

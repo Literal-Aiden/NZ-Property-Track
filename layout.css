@@ -216,3 +216,6 @@ body.typing .screen .fbar{bottom:calc(-100px - env(safe-area-inset-bottom,0px))}
 /* A small "?" next to a heading that opens the official guidance (e.g. Healthy Homes on tenancy.govt.nz). */
 .hdq{display:inline-flex;align-items:center;gap:8px}
 .qmark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;text-decoration:none;flex:none}
+/* Receipt "Camera" tile (rcCam in receipts.js): icon above the word, like the other add tile. */
+label.rcadd{flex-direction:column;gap:2px}
+label.rcadd .ic{width:20px;height:20px}

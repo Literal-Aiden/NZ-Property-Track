@@ -26,5 +26,7 @@ function rcThumb(r,drop,armed){
   var img=/^image\//.test(r.type);drop=typeof drop==='string'?drop:'rcdrop';
   return '<div class="rc"><button class="th" data-x="rcopen" data-id="'+esc(r.id)+'" title="'+esc(r.name)+'">'+(img?'<img data-rc="'+esc(r.id)+'" alt="'+esc(r.name)+'">':/pdf/.test(r.type)?'PDF':'File')+'</button><button class="x'+(armed===true?' armed':'')+'" data-x="'+drop+'" data-id="'+esc(r.id)+'" aria-label="Remove file">×</button></div>';
 }
+// Opens the camera straight away to photograph a receipt or invoice.
+function rcCam(){return '<label class="rcadd">'+ic('camera')+'Camera<input type="file" class="rcin" accept="image/*" capture="environment" hidden></label>'}
 function fillThumbs(){document.querySelectorAll('img[data-rc]').forEach(function(im){im.onerror=function(){im.replaceWith('Photo')};rcUrl(im.dataset.rc).then(function(u){if(u)im.src=u})})}
 function openRc(id){if(RCU[id]){window.open(RCU[id]);return}var w=window.open('');rcUrl(id).then(function(u){if(w&&u)w.location=u})}
