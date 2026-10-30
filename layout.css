@@ -51,6 +51,8 @@ body.typing .toast{bottom:16px}
 .list .r:last-child{padding-bottom:0}
 .list .r span{color:var(--mute);min-width:0}
 .list .r b{white-space:nowrap}
+.list .r b.noloan{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right}
+.list .r b.noloan .edit{font-weight:600;color:var(--acc)}
 button.r{cursor:pointer}
 
 /* Properties */

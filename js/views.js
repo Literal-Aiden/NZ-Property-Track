@@ -1,7 +1,7 @@
 // Current property view, alerts and the property list.
 function loanCard(p){
   var L=parts(p);
-  if(!L.length)return '<div class="card row" style="cursor:default"><span class="sub">No mortgage added</span><button class="edit" id="editloan">Add mortgage</button></div>';
+  if(!L.length)return '<div class="card row" style="cursor:default"><span class="sub">Mortgage-free or not added</span><button class="edit" id="editloan">+ Add a loan</button></div>';
   var top='<div class="card"><div class="row" style="cursor:default">'+hd('percent','Mortgage')+'<button class="edit" id="editloan">Edit mortgage</button></div>';
   if(L.length>1){
     // Split loan: the total, the next re-fix, then each part with its own repayment and re-fix date.
@@ -54,7 +54,7 @@ function headline(p){
   return {lab:'Estimated profit, before tax',big:signed(d.prof),short:'est. profit',tag:'Reno to sell',sub:'Return on costs '+pct(d.roc)+' · asking '+$$(p.price)};
 }
 // What's owed and the equity in it, from the current loan balance.
-function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [['Current loan',l?$$(l):'Mortgage-free'],['Equity',$$(e),e<0?'neg':'pos'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
+function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [l?['Current loan',$$(l)]:['Current loan','Mortgage-free or not added<button class="edit" id="editloan">+ Add a loan</button>','noloan'],['Equity',$$(e),e<0?'neg':'pos'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
 function rows(r){return '<div class="card list">'+r.filter(Boolean).map(function(x){return '<div class="r"><span>'+x[0]+'</span><b class="'+(x[2]||'')+'">'+x[1]+'</b></div>'}).join('')+'</div>'}
 // A property's page: cover photo, headline number, then its sections.
 function current(){
