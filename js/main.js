@@ -88,6 +88,7 @@ $('p1').addEventListener('click',function(e){
   else if(x==='tkcancel'){tlAdd=false;current()}
   else if(x==='tk'){p.tasks[k].ok=!p.tasks[k].ok;delete p.tasks[k].auto;isSample=false;render()}
   else if(x==='tkdel'){p.tasks.splice(k,1);isSample=false;render()}
+  else if(x==='refixcal')refixIcs(p);
   // Finishing ticks any milestones left open, marked auto so "Not finished yet" can untick just those.
   else if(x==='tldone'){
     (p.tasks||[]).forEach(function(t){if(p.done){if(t.auto){t.ok=false;delete t.auto}}else if(!t.ok){t.ok=true;t.auto=true}});

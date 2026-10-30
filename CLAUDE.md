@@ -13,7 +13,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
 - `js/` – all logic and rendering, as plain scripts sharing one global scope (no modules, no build). `index.html` loads them in order and `main.js` must stay last:
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
-  - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
+  - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `tax.js` tax year summary · `address.js` address suggestions
   - `councils.js` which council an address is in, and its rates search link · `tour.js` the welcome tour · `picker.js` the dropdown picker
   - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
 - When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
@@ -32,7 +32,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - **Property page (opens full screen on top, with a back button):** a cover (photo with "Add photo"/"Change photo", or a coloured placeholder), the address, a headline card with the key number and "Edit details", then section tabs (projects: Overview · Costs · Timeline · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). Overview figures are a simple list. Potential buys show their deal estimates and maximum offer below the headline (comparable sales are hidden for now)
 - **+ menu (slide-up):** Rent or expense, Reno cost, Milestone, Property, and Quick deal check. Rent/cost/milestone ask which property (skipped when there's only one) and open its page with the form ready. Property opens the add page (choose type, then the form)
 - **Tools:** the calculators; a calculator opens with a back button to the list
-- **Settings:** Backup/restore, Install the app, and Welcome tour. A dot on the Settings tab means a backup is due
+- **Settings:** Backup/restore, Tax year summary, Install the app, and Welcome tour. A dot on the Settings tab means a backup is due
 - Deleting is in a property's Edit details panel and happens straight away with an Undo message for 7 seconds; its receipt files are only removed once the message goes
 
 ## Features built so far
@@ -74,6 +74,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - The re-fix date is highlighted when it's within 90 days
 - P&I vs interest-only: shows the repayment now and on the other loan type. The difference is framed as cash flow, not money saved, because it is mostly principal.
 - Remaining loan term, default 30 years
+- "Add re-fix date(s) to calendar" in the Mortgage section downloads an .ics file (`refixIcs()` in `views.js`) with an all-day event on each part's coming re-fix date and alerts a month and a week before, so reminders arrive outside the app. Only shown when there's a future re-fix date
 
 **Potential buys** (third type, listed under "Potential buys" in the Properties pane; no mortgage section)
 - Plan: "Reno to sell" or "Buy to rent"
@@ -131,7 +132,12 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Selling costs: commission as tiered % (e.g. 3.95% on the first $400,000, 2% on the rest), flat %, or a flat $ fee (all defaults are examples, user-editable), plus GST or no GST (GST fixed at 15% in `GST` in `tools.js`, the owner's choice; update it there if the rate changes), one combined "Marketing, legal & other" amount, and what the seller receives
 
 **Backup**
-- In the Settings tab (also reached from the "Needs attention" backup item on Home): download a JSON backup of all properties plus their receipt files and cover photos, or restore one (replaces everything, after confirming). REINZ sales data is never included. A dot on the Settings tab shows when a backup is due (none yet, or over 30 days)
+- In the Settings tab (also reached from the "Needs attention" backup item on Home): "Share backup" (phones that can share files, via `navigator.share`; the file goes as text/plain so more apps accept it) sends it to Google Drive, iCloud, email or a chat in one step; "Download backup" saves a JSON backup of all properties plus their receipt files and cover photos, or restore one (replaces everything, after confirming). REINZ sales data is never included. A dot on the Settings tab shows when a backup is due (none yet, or over 30 days)
+
+**Tax year summary** (Settings, `tax.js`)
+- For one NZ tax year (1 April to 31 March; the current one up to today), chosen from the last three: per owned property, rental income and expenses by category (weekly rent counted per week, via `mIn()`), net, reno costs invoiced (by cost date, incl. GST), and mortgage interest estimated from the current loan parts and rates over the days owned in the period; then totals
+- "Download CSV" has every entry in the year, one row each (weekly rent one row per week), with property, receipt file names and the interest estimate. "Print or save as PDF" prints only the summary (`#printout`, print styles in `layout.css`)
+- Notes that it's only what's been entered, that interest is an estimate (use the bank's statement), and that deductibility (interest, repairs vs capital) should be checked with an accountant or IRD. No tax rules are applied
 
 **Testing card (TEMPORARY, remove before a real launch)**
 - Settings has a "Testing" card (`testCard()` / `testRun()` in `settings.js`): "Load example properties" swaps everything for the sample properties, and "Clear all data" leaves no properties. Both clear receipts and photos, need a second tap within 4 seconds, and go to Home
@@ -170,5 +176,4 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 ## Ideas not yet built
 
 - Sync data across devices and add user accounts (needs a backend)
-- Re-fix reminders that reach the user outside the app (e.g. add to calendar as an .ics file)
 - Current bank rates shown as a reference

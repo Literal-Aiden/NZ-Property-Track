@@ -179,3 +179,14 @@ input.bad,select.bad{animation:shake .35s}
 .formerr.on{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid var(--warn);color:var(--ink);font-size:14px;font-weight:600}
 .formerr.on::before{content:"!";flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--warn);color:var(--bg);font-size:13px;font-weight:800}
 @media (prefers-reduced-motion:reduce){input.bad,select.bad{animation:none}}
+/* Tax year summary print (tax.js): only the summary is printed, in plain black on white. */
+#printout{display:none}
+@media print{
+  body.printing>*:not(#printout){display:none!important}
+  body.printing #printout{display:block;color:#000;background:#fff;font-size:12pt}
+  #printout h1{font-size:18pt;margin:0 0 4pt}
+  #printout .grp{font-weight:700;margin:12pt 0 2pt}
+  #printout .list .r{display:flex;justify-content:space-between;border-top:1px solid #ccc;padding:3pt 0}
+  #printout .sub,#printout .list .r span{color:#333}
+  #printout .pos,#printout .neg{color:#000}
+}

@@ -6,7 +6,7 @@ function backupCard(){
   var l=lastBackup(),h='<div class="card" id="bk">'+hd('save','Backup')+'<p class="sub" style="margin-top:4px">Your properties and receipts are saved only in this browser. Download a backup now and then and keep it somewhere safe, like cloud storage or an email to yourself. Imported sales data isn’t included.</p>'+
     '<p class="sub" style="margin-top:6px"><b>'+(l?'Last backup '+fmtD(l):'Not backed up yet')+'</b></p>'+(bkMsg?'<p class="sub neg" style="margin-top:6px">'+esc(bkMsg)+'</p>':'');
   if(bkPend){var n=bkPend.props.length,r=bkPend.receipts.length;return h+'<p style="margin:12px 0 0;font-size:14px">Backup from '+(bkPend.exported?fmtD(bkPend.exported):'an unknown date')+': '+n+' propert'+(n===1?'y':'ies')+', '+r+' receipt'+(r===1?'':'s')+'. Restoring replaces everything on this device.</p><div class="btns"><button class="go" data-x="bkok">Replace with backup</button><button class="go ghost" data-x="bkno">Cancel</button></div></div>'}
-  return h+'<div class="btns"><button class="go" data-x="bkdl">Download backup</button><label class="go ghost filebtn">Restore<input type="file" accept=".json,application/json" class="bkin" hidden></label></div></div>';
+  return h+(canShareFiles()?'<p class="sub" style="margin-top:6px">Share backup sends it straight to Google Drive, iCloud, email or a chat.</p>':'')+'<div class="btns">'+(canShareFiles()?'<button class="go" data-x="bksh">Share backup</button>':'')+'<button class="go'+(canShareFiles()?' ghost':'')+'" data-x="bkdl">Download backup</button><label class="go ghost filebtn">Restore<input type="file" accept=".json,application/json" class="bkin" hidden></label></div></div>';
 }
 function installCard(){
   var t=standalone?'Installed: you’re using the app version.'
@@ -16,7 +16,7 @@ function installCard(){
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
 function drawSettings(){
-  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+installCard()+
+  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+taxCard()+installCard()+
     '<div class="card">'+hd('list','Welcome tour')+'<p class="sub" style="margin-top:4px">A quick look at what the app does and where things are.</p><button class="go ghost" data-x="tour">Show the tour</button></div>'+testCard();
 }
 // TEMPORARY, for testers: wipe this device's properties, or swap them for the example ones. Both need a second tap.
@@ -40,16 +40,25 @@ function testRun(x){
 }
 function b2d(b){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=no;r.readAsDataURL(b)})}
 function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]})}
-function exportBackup(){
-  var want={};props.forEach(function(p){rcIds(p).forEach(function(id){want[id]=1})});
+// share: send the file through the phone's share sheet (Google Drive, iCloud, email…) instead of downloading it.
+function exportBackup(share){
+  var want={},t=iso(new Date()),name='nz-property-tracker-backup-'+t+'.json';props.forEach(function(p){rcIds(p).forEach(function(id){want[id]=1})});
+  function done(){try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner()}
   rcTx('readonly',function(s){return s.getAll()}).catch(function(){return []}).then(function(all){
     return Promise.all((all||[]).filter(function(r){return want[r.id]}).map(function(r){return b2d(r.blob).then(function(u){return {id:r.id,name:r.name,type:r.type,added:r.added,data:u}})}));
   }).then(function(rc){
-    var t=iso(new Date());
-    download('nz-property-tracker-backup-'+t+'.json',JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc}),'application/json');
-    try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner();
+    var data=JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc});
+    if(!share){download(name,data,'application/json');done();return}
+    // Some phones won't share a .json file as JSON, so it's offered as plain text with the same name.
+    var f=new File([data],name,{type:'text/plain'});
+    return navigator.share({files:[f],title:'NZ Property Tracker backup'}).then(done,function(e){
+      if(e&&e.name==='AbortError')return;
+      bkMsg='Sharing didn’t work on this phone. Use Download backup instead.';drawSettings();
+    });
   }).catch(function(){bkMsg='Couldn’t make the backup file.';drawSettings()});
 }
+// Whether this browser can share files (most phones can; many desktop browsers can't).
+function canShareFiles(){try{return !!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.txt',{type:'text/plain'})]}))}catch(e){return false}}
 function readBackup(f){
   var rd=new FileReader();
   rd.onload=function(){bkMsg='';try{var d=JSON.parse(rd.result);if(d.app!=='nzpt'||!Array.isArray(d.props))throw 0;d.receipts=d.receipts||[];bkPend=d}catch(e){bkMsg='That file isn’t an NZ Property Tracker backup.'}drawSettings()};
@@ -77,6 +86,7 @@ function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.sto
 $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='bkdl')exportBackup();
+  if(b.dataset.x==='bksh')exportBackup(true);
   if(b.dataset.x==='tsample'||b.dataset.x==='tclear')testRun(b.dataset.x);
   if(b.dataset.x==='bkok')restore();
   if(b.dataset.x==='tour')openTour();

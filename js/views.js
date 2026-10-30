@@ -11,7 +11,7 @@ function loanCard(p){
      '<div class="lparts">'+L.map(function(x,i){var r=refixOf(x),fl=x.fixTerm==='float',d=r?dd(iso(new Date()),r):null;
        return '<div><span><b>Part '+(i+1)+': '+$$(x.loan)+' at '+x.rate+'%</b><span class="sub">'+(x.ltype==='io'?'Interest-only':'P&amp;I')+' · '+$$(partPay(x))+' a month</span></span>'+
          '<span class="cr'+(d!==null&&d<=90?' neg':'')+'">'+(fl?'Floating':r?(d<0?'Re-fix passed':'Re-fix')+'<br>'+fmtD(r):'No re-fix date')+'</span></div>'}).join('')+'</div>'+
-     '<p class="sub" style="margin-top:10px">Repayments are estimates, based on each part’s loan type and remaining term.</p></div>';
+     '<p class="sub" style="margin-top:10px">Repayments are estimates, based on each part’s loan type and remaining term.</p>'+calBtn(p)+'</div>';
   }
   var x=L[0],io=x.loan*x.rate/1200,pi=pmt(x.loan,x.rate,x.term||30),isIO=x.ltype==='io';
   var now=isIO?io:pi,alt=isIO?pi:io;
@@ -21,8 +21,23 @@ function loanCard(p){
   var dt=fl?'Can change anytime':rf?fmtD(rf):'–';
   return top+'<p class="sub">'+$$(x.loan)+' owing at '+x.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
    '<div class="grid">'+stat('Repayment / month now',$$(now))+stat(isIO?'If P&amp;I instead':'If interest-only',$$(alt))+stat(when,dt,d!==null&&d>=0&&d<=90?'neg':'')+stat(isIO?'Extra cash needed for P&amp;I':'Cash freed by interest-only',$$(Math.abs(pi-io)))+'</div>'+
-   '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(x.term||30)+'-year term. Split the loan in Edit mortgage if parts are fixed for different terms.</p></div>';
+   '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(x.term||30)+'-year term. Split the loan in Edit mortgage if parts are fixed for different terms.</p>'+calBtn(p)+'</div>';
 }
+// Re-fix reminders in the phone's own calendar: an .ics file with an all-day event on each part's coming re-fix date,
+// with alerts a month and a week before, so they arrive even when the app isn't opened.
+function refixDates(p){var t=iso(new Date()),L=parts(p);return L.map(function(x,i){var r=refixOf(x);return r&&r>=t?{d:r,x:x,i:i,n:L.length}:null}).filter(Boolean)}
+function icsText(s){return String(s).replace(/\\/g,'\\\\').replace(/([,;])/g,'\\$1').replace(/\n/g,'\\n')}
+function refixIcs(p){
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''),ev=refixDates(p).map(function(r){
+    var d=r.d.replace(/-/g,''),end=addDays(r.d,1).replace(/-/g,''),what='Mortgage re-fix: '+p.addr+(r.n>1?' ('+short(r.x.loan)+' part)':'');
+    return ['BEGIN:VEVENT','UID:nzpt-'+slug(p.addr)+'-'+r.i+'-'+d+'@nz-property-tracker','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+d,'DTEND;VALUE=DATE:'+end,
+      'SUMMARY:'+icsText(what),'DESCRIPTION:'+icsText('The fixed rate on '+$$(r.x.loan)+' at '+r.x.rate+'% ends. Talk to your bank or broker about re-fixing before then.'),
+      'BEGIN:VALARM','TRIGGER:-P30D','ACTION:DISPLAY','DESCRIPTION:'+icsText(what+' in a month'),'END:VALARM',
+      'BEGIN:VALARM','TRIGGER:-P7D','ACTION:DISPLAY','DESCRIPTION:'+icsText(what+' in a week'),'END:VALARM','END:VEVENT'].join('\r\n');
+  });
+  download('refix-'+slug(p.addr)+'.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//NZ Property Tracker//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'].concat(ev,['END:VCALENDAR']).join('\r\n')+'\r\n','text/calendar');
+}
+function calBtn(p){var n=refixDates(p).length;return n?'<button class="edit" data-x="refixcal" style="margin-top:12px">'+ic('clock')+' Add re-fix date'+(n>1?'s':'')+' to calendar</button>':''}
 function resetCur(){closeItem();sec='ov';catDraft=null;costOpen=null;tlEdit=false;tlAdd=false;convOpen=false;tenEdit=false;rentOpen=false;moneyAll=false;hhArm=null}
 function setv(m){for(var k in m){var e=$(k);if(e&&m[k])e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}}
 function fillCur(p){
