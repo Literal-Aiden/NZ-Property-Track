@@ -269,7 +269,7 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   #home,#p0{padding-left:calc(24px + max(0px,(100% - 1180px)/2));padding-right:calc(24px + max(0px,(100% - 1180px)/2))}
   #plist{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
   .tgrid{grid-template-columns:repeat(3,1fr)}
-  .card.prop:hover,.cfp:hover,.att2:hover{border-color:var(--acc)}
+  .card.prop:hover,.cfp:hover{border-color:var(--acc)}
   /* Panels and pickers as centred dialogs instead of sliding up from the bottom. */
   .sheet{justify-content:center;align-items:center;padding:24px}
   .sheetbox{width:min(620px,100%);max-height:86vh;border-radius:18px}
@@ -303,4 +303,42 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   .ptable tbody tr{cursor:pointer}
   .ptable tbody tr:hover td{background:var(--acc2)}
   .ptable tfoot td{background:var(--bg);border-top:1px solid var(--line)}
+}
+/* Desktop property page (pgrid in views.js): cover, headline and sections in a column that stays put, content beside it.
+   On a phone the side column isn't a box of its own, so the section tabs still stick to the top while scrolling. */
+.pside{display:contents}
+@media (min-width:900px){
+  #p1{padding-left:calc(24px + max(0px,(100% - 1180px)/2));padding-right:calc(24px + max(0px,(100% - 1180px)/2))}
+  .pgrid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px;align-items:start;padding-top:20px}
+  .pside{display:block;position:sticky;top:20px}
+  .pside .cover{margin:0;border-radius:16px;height:200px}
+  .pside .cback{top:12px}
+  .pside .secnav{position:static;flex-direction:column;gap:4px;margin:12px 0 0;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:none}
+  .pside .secnav button{flex-direction:row;justify-content:flex-start;padding:10px 12px;font-size:14px;border:0;border-radius:10px;background:none;text-align:left}
+  .pside .secnav button:hover{background:var(--acc2);color:var(--acc)}
+  .pside .secnav button.on{background:var(--acc);color:var(--onacc)}
+  .pside .secnav button.dot::after{top:50%;right:12px;margin-top:-4px}
+}
+/* Desktop calculators (drawTools in tools.js): inputs on the left, the result beside them, so it updates in view. */
+@media (min-width:900px){
+  #toolbody{padding-left:calc(24px + max(0px,(100% - 1080px)/2));padding-right:calc(24px + max(0px,(100% - 1080px)/2))}
+  .tcalc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+  .tcalc .tout{position:sticky;top:76px;margin-top:0}
+  .tcalc .tout:empty{display:none}
+}
+/* Desktop forms (pairUp in forms.js): label-and-field boxes two to a row; everything else spans the row. */
+@media (min-width:900px){
+  .f2{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;align-content:start}
+  .f2>*:not(.fld){grid-column:1/-1}
+  .f2 .fld>label{margin-top:12px}
+  .sheetbox{width:min(760px,100%)}
+}
+/* Desktop Home lists (Needs attention, Recent activity, Cash flow by property): rows run edge to edge of their card
+   and fill pale red on hover, like the properties table. */
+@media (min-width:900px){
+  .datt .card,.dact .card{padding:0;overflow:hidden}
+  .datt .att2,.dact .r,.datt .att2:first-child,.dact .r:first-child,.datt .att2:last-child,.dact .r:last-child{padding:12px 16px}
+  .dcf .r{width:calc(100% + 32px);margin:0 -16px;padding:11px 16px}
+  .dact .r,.dcf .r{cursor:pointer}
+  .datt .att2:hover,.dact .r:hover,.dcf .r:hover{background:var(--acc2)}
 }

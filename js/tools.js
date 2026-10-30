@@ -19,7 +19,7 @@ var GST=0.15;   // NZ standard GST rate; fixed here at the owner's request rathe
 
 var TOOLS=[
  {id:'deal',icon:'check',name:'Quick deal check',desc:'Profit or yield in seconds, then save it as a potential buy',
-  from:function(p){return p.type==='potential'&&{plan:p.intent||'flip',price:p.price,reno:p.reno,legal:(p.legal||0)+(p.extra||0),rates:p.rates,ins:p.ins,othm:p.oth!==undefined?(p.oth||0)+(p.power||0)+repay(p):p.hold,months:p.months,value:p.value,value2:p.value,sell:p.sell,rent:p.rent,exp:p.exp}},
+  from:function(p){return p.type==='potential'&&{plan:p.intent||'flip',price:p.price,reno:p.reno,legal:(p.legal||0)+(p.extra||0),rates:p.rates,ins:p.ins,othm:p.oth!==undefined||p.rates!==undefined?(p.oth||0)+(p.power||0)+repay(p):p.hold,months:p.months,value:p.value,value2:p.value,sell:p.sell,rent:p.rent,exp:p.exp}},
   f:[{i:'plan',l:'Plan',k:'s',d:'flip',o:[['flip','Reno to sell'],['rental','Buy to rent']],wide:1},
      {i:'price',l:'Asking / offer price',k:'m'},{i:'reno',l:'Reno estimate',k:'m'},
      {i:'legal',l:'Legal & purchase costs',k:'m',opt:1,wide:1},
@@ -140,10 +140,10 @@ function drawTools(){
   }
   var srcs=t.from?props.map(function(p,i){return t.from(p)?'<option value="'+i+'">'+esc(p.addr)+'</option>':''}).join(''):'';
   $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b>'+t.name+'</b><button class="edit" data-x="tclear" style="margin-left:auto">Clear</button></div>'+
-    '<div class="card enter"><p class="sub">'+t.desc+'</p>'+
+    '<div class="card enter tcalc"><div class="tin"><p class="sub">'+t.desc+'</p>'+
     (srcs?'<select id="q_from" style="margin-top:12px"><option value="">Fill in from a property…</option>'+srcs+'</select>':'')+
     (t.all&&props.some(function(p){return p.type!=='potential'})?'<button class="edit" data-x="tport" style="margin-top:12px">Use my portfolio</button>':'')+
-    '<div class="fgrid">'+t.f.map(tfield).join('')+'</div><div class="tout" id="q_out"></div></div>';
+    '<div class="fgrid">'+t.f.map(tfield).join('')+'</div></div><div class="tout" id="q_out"></div></div>';
   var mem=toolMem()[t.id]||{};
   t.f.forEach(function(f){var e=$('q_'+f.i),v=mem[f.i]!==undefined?mem[f.i]:(f.d||'');e.value=f.k==='m'&&v!==''?fmtMoney(v):v});
   tcalc();

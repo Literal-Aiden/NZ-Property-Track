@@ -137,6 +137,7 @@ function form(){
       $('l_fix'+i).value=x.fixTerm||(x.refix?'custom':'12');if(!$('l_fs'+i).value&&x.loan)$('l_fs'+i).value=iso(new Date())}
     fixAll();
   }
+  if(wide())pairUp((ed?$('sheetbody'):$('p2')).querySelector('.card'));
 }
 // Required fields are checked on save, in the given form (default: the property form that's open).
 // A loan amount also needs an interest rate. The message goes in the form's .formerr element.
@@ -247,3 +248,25 @@ document.addEventListener('input',function(e){
   el.value=v;while(i<v.length&&c<n){if(/[\d.]/.test(v[i]))c++;i++}
   if(n&&document.activeElement===el)el.setSelectionRange(i,i);
 });
+// Wide screens: each label and its field (plus a hint just under it) go in one box, two boxes to a row, so forms fit
+// without scrolling. Anything else (section headings, notes, the Save bar) spans the row. The label stays next to its
+// field, so missing() still finds and flags it. Loan parts inside are paired the same way.
+function pairUp(box){
+  if(!box)return;
+  [box].concat([].slice.call(box.querySelectorAll('.lpart'))).forEach(function(c){
+    c.classList.add('f2');
+    [].slice.call(c.children).forEach(function(l){
+      if(l.tagName!=='LABEL'||l.classList.contains('chk')||!l.parentNode)return;
+      var f=l.nextElementSibling;
+      if(!f||!(/^(INPUT|SELECT)$/.test(f.tagName)||f.classList.contains('ac')||f.classList.contains('seg')))return;
+      var w=document.createElement('div');w.className='fld';c.insertBefore(w,l);w.appendChild(l);w.appendChild(f);
+      var n=w.nextElementSibling;if(n&&n.tagName==='P'&&n.classList.contains('sub')&&!n.id&&!n.classList.contains('formerr'))w.appendChild(n);
+    });
+  });
+}
+// On a computer, Enter in a field saves the property form (Escape already closes it). Not on phones, where the
+// keyboard's Enter key would save a half-filled form; and not while an address suggestion is being picked.
+['p2','sheetbody'].forEach(function(id){$(id).addEventListener('keydown',function(e){
+  if(!DESK||e.key!=='Enter'||e.target.tagName!=='INPUT'||/^(checkbox|file)$/.test(e.target.type)||acList.length)return;
+  var b=$('add');if(b&&$(id).contains(b)){e.preventDefault();b.click()}
+})});

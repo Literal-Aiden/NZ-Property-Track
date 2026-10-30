@@ -126,14 +126,16 @@ function current(){
     '<div class="ctext"><h1>'+esc(p.addr)+'</h1><p>'+[esc(p.sub),T[0],pt?hl.tag:''].filter(Boolean).join(' · ')+'</p></div></div>'+
     '<div class="card herocard"><div class="row" style="cursor:default"><span class="sub">'+hl.lab+'</span><button class="edit" id="edit">Edit details</button></div>'+
     '<div class="big2">'+hl.big+'</div>'+(hl.bar!==undefined?'<div class="bar"><i class="'+(hl.bar>100?'over':'')+'" style="width:'+Math.min(hl.bar,100)+'%"></i></div>':'')+'<p class="sub">'+hl.sub+'</p></div>';
-  if(pt){$('p1').innerHTML=h+potView(p);fillCur(p);if(nearOpen)drawNear();return}
+  // The cover, headline and section tabs go in a side column on wide screens (layout.css), the section's content beside it.
+  var side=h;h='';
+  if(pt){$('p1').innerHTML=pgrid(side,potView(p));fillCur(p);if(nearOpen)drawNear();return}
   var pr=p.type==='project',S=pr?SECS:SECS_R;
   if(!S.some(function(s){return s[0]===sec}))sec='ov';
   // Owned properties are split into sections so the page stays short on a phone. A dot marks a section with something to deal with.
   var flag={};alerts(p).forEach(function(a){flag[a.sec]=1});
-  h+='<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
+  side+='<div class="secnav">'+S.map(function(s){return '<button data-x="sec" data-sec="'+s[0]+'" class="'+(sec===s[0]?'on':'')+(flag[s[0]]?' dot':'')+'">'+s[1]+'</button>'}).join('')+'</div>';
   var body={costs:costCard,tl:function(p){return timeCard(p)+picCard(p)},money:moneyCard,ten:tenCard,loan:loanCard}[sec];
-  if(body){$('p1').innerHTML=h+body(p);fillCur(p);return}
+  if(body){$('p1').innerHTML=pgrid(side,body(p));fillCur(p);return}
   if(valEdit)h+=valForm(p);
   if(pr){
     var left=p.budget-p.spent;
@@ -145,9 +147,10 @@ function current(){
       valRow(p)].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
-  $('p1').innerHTML=h+(p.plan?planCard(p):'');
+  $('p1').innerHTML=pgrid(side,h+(p.plan?planCard(p):''));
   fillCur(p);
 }
+function pgrid(side,main){return '<div class="pgrid"><div class="pside">'+side+'</div><div class="pmain">'+main+'</div></div>'}
 var SECS=[['ov','Overview'],['costs','Costs'],['tl','Timeline &amp; progress'],['loan','Mortgage']],SECS_R=[['ov','Overview'],['money','Money'],['ten','Tenancy'],['loan','Mortgage']],sec='ov';
 // Cover photo: one image per property, stored with the receipt files and included in backups.
 function addPhoto(p,f){
