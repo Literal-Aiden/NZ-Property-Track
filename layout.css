@@ -227,3 +227,15 @@ label.ftile .ic{width:24px;height:24px}
 label.rcadd{background:var(--acc2);border-width:1.5px;font-weight:600}
 /* The value row's "Updated …" date sits under the amount. */
 .list .r b.noloan .sub{font-weight:400;font-size:12px}
+/* Cash flow line on the Home portfolio card opens the cash flow page. */
+button.chipline{width:100%;border:0;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:.85}
+/* Cash flow page (drawCash in home.js): a card per property, best first. */
+.cfp{display:block;width:100%;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.cfh{display:flex;align-items:center;gap:12px}
+.cfh .ph{width:48px;height:48px;border-radius:12px}
+.cfh .info{flex:1;min-width:0;display:flex;flex-direction:column}
+.cfh .info b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfh .num{text-align:right;display:flex;flex-direction:column}
+.cfh .num>span{font-size:12px;color:var(--mute)}
+.cfp .bar{margin:10px 0 6px}

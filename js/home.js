@@ -14,7 +14,7 @@ function drawHome(){
     h+='<div class="card hero"><div class="lab">'+(wv.length?'Equity across '+wv.length+' propert'+(wv.length===1?'y':'ies')+(nv?' (plus '+nv+' without a value yet)':''):'Equity')+'</div>'+
       (wv.length?'<div class="big">'+$$(val-debt)+'</div>':'<div class="big" style="font-size:22px">Add an estimated value</div><p style="margin:-6px 0 12px;opacity:.9">Use Update value on a property to see your equity and LVR.</p>')+
       (wv.length?'<div class="row3"><div><b>'+short(val)+'</b><span>Value</span></div><div><b>'+short(debt)+'</b><span>Lending</span></div><div><b>'+(val?Math.round(debt/val*100)+'%':'–')+'</b><span>LVR</span></div></div>':'')+
-      '<div class="chipline">'+ic('trend')+'<span><b>'+(cf<0?'−':'+')+$$(Math.abs(cf))+'</b> a month cash flow'+(cf<0&&hasProj?', including reno holding costs':'')+'</span></div></div>';
+      '<button class="chipline" data-x="cf">'+ic('trend')+'<span><b>'+(cf<0?'−':'+')+$$(Math.abs(cf))+'</b> a month cash flow'+(cf<0&&hasProj?', including reno holding costs':'')+'</span><i class="chev">›</i></button></div>';
   }else h+='<div class="card hero"><div class="lab">Welcome</div><div class="big" style="font-size:26px">Add your first property</div><p style="margin:0 0 14px;opacity:.9">Track rentals, renovation projects and properties you’re thinking of buying.</p><button class="herobtn" data-x="hadd">Add a property</button></div>';
   h+='<h2 class="hh2">Quick actions</h2><div class="qa">'+
     '<button data-q="rent"><span class="ib">'+ic('dollar')+'</span>Log rent</button>'+
@@ -45,6 +45,7 @@ $('home').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;var x=b.dataset.x;
   if(x==='att'||x==='act')openProp(+b.dataset.i,b.dataset.sec);
   if(x==='tobk')navTab('setbody');
+  if(x==='cf')openCash();
   if(x==='hdeal')openTool('deal');
   if(x==='hadd'){newType=null;form();go(2)}
   if(x==='ioshint'){try{localStorage.setItem('nzpt.ioshint','1')}catch(err){}drawHome()}
@@ -101,3 +102,34 @@ $('plusbody').addEventListener('click',function(e){
   if(b.dataset.x==='pprop'){newType=null;form();go(2)}
   if(b.dataset.x==='pdeal')openTool('deal');
 });
+
+// Cash flow page (from the portfolio card on Home): each owned property's monthly money in and out, best first.
+// Rentals: rent less expenses and mortgage repayments. Projects: their holding cost (or repayments if none is set).
+function cfParts(p){
+  if(p.type==='rental'){var r=(p.rent||0)*52/12,e=(p.exp||0)/12,m=loanPay(p);return {net:cashFlow(p),rows:[['Rent',r],['Expenses',-e],['Mortgage',-m]]}}
+  var h=cashFlow(p);return {net:h,rows:[[p.hold?'Reno holding costs':'Mortgage',h]]};
+}
+function sgn(n){return (n<0?'−':'+')+$$(Math.abs(n))}
+function drawCash(){
+  var own=props.map(function(p,i){return {p:p,i:i,c:cfParts(p)}}).filter(function(o){return o.p.type!=='potential'});
+  own.sort(function(a,b){return b.c.net-a.c.net});
+  var tot=sum(own,function(o){return o.c.net}),inn=sum(own,function(o){return sum(o.c.rows,function(r){return r[1]>0?r[1]:0})}),out=inn-tot;
+  var top=Math.max.apply(null,own.map(function(o){return Math.abs(o.c.net)}).concat([1]));
+  var h='<div class="pagebar"><button class="pback" data-back aria-label="Back">'+ic('back')+'</button><b>Monthly cash flow</b></div>'+
+    '<div class="card"><span class="sub">Across '+own.length+' propert'+(own.length===1?'y':'ies')+'</span><div class="big2 '+(tot<0?'neg':'pos')+'">'+sgn(tot)+' a month</div>'+
+    '<div class="grid">'+stat('Money in a month',$$(inn))+stat('Money out a month',$$(out))+stat('Over a year',sgn(tot*12),tot<0?'neg':'pos')+stat('In positive cash flow',own.filter(function(o){return o.c.net>0.5}).length+' of '+own.length)+'</div></div>';
+  h+=own.map(function(o){
+    var p=o.p,n=o.c.net,w=Math.round(Math.abs(n)/top*100);
+    return '<button class="card cfp" data-i="'+o.i+'"><div class="cfh">'+thumb(p)+'<span class="info"><b>'+esc(p.addr)+'</b><span class="sub">'+TYPE[p.type][0]+(p.type==='project'&&!p.done?' · until it’s sold or rented':'')+'</span></span>'+
+      (Math.abs(n)<0.5?'<span class="num"><b>$0</b><span>a month</span></span></div><p class="sub" style="margin-top:8px">No loan or holding cost entered. Add a holding cost in Timeline &amp; progress to include it.</p></button>':
+      '<span class="num"><b class="'+(n<0?'neg':'pos')+'">'+sgn(n)+'</b><span>a month</span></span></div>'+
+      '<div class="bar"><i class="'+(n<0?'over':'')+'" style="width:'+w+'%"></i></div>'+
+      '<p class="sub">'+o.c.rows.filter(function(r){return r[1]}).map(function(r){return r[0]+' '+sgn(r[1])}).join(' · ')+'</p></button>');
+  }).join('');
+  if(!own.length)h+=empty('trend','No owned properties yet','Add a rental or reno project to see how each one is doing.');
+  h+='<p class="sub" style="margin:4px 4px 12px">Estimates from each property’s weekly rent, annual expenses and loan. Mortgage repayments include any principal on P&amp;I loans, so this is cash in and out, not profit. Potential buys aren’t included.</p>';
+  $('p3').innerHTML=h;fillThumbs();
+}
+// Drawn fresh each time it shows (show() in main.js), so it's up to date after visiting a property.
+function openCash(){openPage('p3')}
+$('p3').addEventListener('click',function(e){var b=e.target.closest('.cfp');if(b)openProp(+b.dataset.i)});

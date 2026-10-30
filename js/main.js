@@ -21,10 +21,11 @@ window.addEventListener('popstate',function(e){
   // Landed on an entry from an earlier load, or moved forward: make it match what's showing.
   if(!s||s.s!==sid||l>ovs.length){try{history.replaceState(hstate(),'')}catch(err){}reshow()}
 });
-function reshow(){var pg=ovs.filter(function(x){return x==='p1'||x==='p2'}).pop();show(pg||tab)}
+function reshow(){var pg=ovs.filter(function(x){return /^p[123]$/.test(x)}).pop();show(pg||tab)}
 function show(id){
   // Opening Settings gets a backup ready to share (see prepShare).
   if(id==='setbody'&&!$('setbody').classList.contains('on'))prepShare();
+  if(id==='p3')drawCash();
   document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)});
   document.querySelectorAll('#nav [data-tab]').forEach(function(b){b.classList.toggle('on',b.dataset.tab===tab)});
 }
