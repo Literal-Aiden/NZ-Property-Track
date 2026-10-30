@@ -156,3 +156,13 @@ button.r{cursor:pointer}
 .tdots i.on{background:var(--acc);width:18px;border-radius:4px}
 .tourbox .btns{margin-top:12px}
 @media (prefers-reduced-motion:reduce){.tourbox{animation:none}}
+/* Dropdown picker (picker.js): a short panel at the bottom with the choices as buttons, in thumb reach. */
+.pick{z-index:2200}
+.pick .sheetbox{max-height:55vh;padding-top:12px}
+.pkhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.pkhead b{font-size:15px}
+.pkhead .tskip{position:static}
+.pkopts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pkopts.one{grid-template-columns:1fr}
+.pkopts button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;text-align:left;cursor:pointer;min-height:42px}
+.pkopts button.on{border-color:var(--acc);background:var(--acc2);color:var(--acc);font-weight:600}

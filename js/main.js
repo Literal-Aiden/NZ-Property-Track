@@ -9,7 +9,7 @@ function ovOpen(id){ovs.push(id);try{history.pushState({nz:ovs.length},'')}catch
 function ovClose(id){var i=ovs.lastIndexOf(id);if(i<0)ovShut(id);else history.go(i-ovs.length)}
 // Replaces the top entry without adding history, e.g. the + menu turning into the property page it opened.
 function ovSwap(id){ovs[ovs.length-1]=id;try{history.replaceState({nz:ovs.length},'')}catch(e){}}
-function ovShut(id){if(id==='tool'){toolCur=null;drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();reshow()}
+function ovShut(id){if(id==='tool'){toolCur=null;drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();else if(id==='pick')closePickNow();reshow()}
 window.addEventListener('popstate',function(e){var l=(e.state&&e.state.nz)||0;while(ovs.length>l)ovShut(ovs.pop())});
 function reshow(){var pg=ovs.filter(function(x){return x==='p1'||x==='p2'}).pop();show(pg||tab)}
 function show(id){

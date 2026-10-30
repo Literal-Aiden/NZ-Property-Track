@@ -14,7 +14,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
   - `data.js` sample data, saving, app-wide state · `util.js` helpers and formatting · `receipts.js` receipt files (IndexedDB)
   - `sales.js` REINZ import and nearby sales map · `costs.js` reno costs · `timeline.js` reno timeline · `rental.js` rental money, tenancy, Healthy Homes, project → rental
   - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `address.js` address suggestions
-  - `councils.js` which council an address is in, and its rates search link · `tour.js` the welcome tour
+  - `councils.js` which council an address is in, and its rates search link · `tour.js` the welcome tour · `picker.js` the dropdown picker
   - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
 - When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
@@ -47,6 +47,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
   - Reno project: address, suburb, purchase price, purchase date, reno budget
   - Rental: address, suburb, weekly rent, annual expenses, and the estimated value if there's no purchase price
   - Potential buy: address, suburb, asking price, reno estimate, rates, insurance, months, sale price/value after reno, plus selling costs (reno to sell) or rent and expenses (buy to rent)
+- Dropdowns (`<select>`) open a compact picker at the bottom of the screen (`picker.js`) instead of the phone's own full-screen list, so they're easy to use one-handed. It applies to every select automatically: the select stays in the form, gets the chosen value and fires `input`/`change`, so form code reads it as normal. Short options show in two columns, long ones in one; an empty first option (e.g. "Fill in from a property…") becomes the title, otherwise the label just before the select. Keyboard users still get the browser's list
 - Number fields are text inputs (no spinner arrows or scroll-wheel changes). Money fields (class `money`) show $ and commas as you type; read them with `num()`/`pnum()`
 - Days owned, and total cost in (price + legal + extra + reno spend)
 
