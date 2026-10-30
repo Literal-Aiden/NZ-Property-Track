@@ -7,6 +7,8 @@ var ATT_IC={loan:'percent',costs:'dollar',tl:'clock',ten:'users'};
 function drawHome(){
   var own=props.filter(function(p){return p.type!=='potential'}),h='<p class="sub">'+hello()+'</p><h1 class="ptitle">Your portfolio</h1>';
   if(isSample)h+='<div class="note">You’re looking at sample properties. <a href="#" id="fresh">Start fresh</a> when you’re ready to add your own.</div>';
+  // On a wide screen these blocks sit in a dashboard grid (layout.css), with two extra cards; on a phone they stack as before.
+  h+='<div class="dash"><div class="dhero">';
   if(own.length){
     // Equity, value, lending and LVR only count properties with a value, so one entered with just its loan doesn't skew them.
     var wv=own.filter(function(p){return p.value}),nv=own.length-wv.length;
@@ -16,17 +18,21 @@ function drawHome(){
       (wv.length?'<div class="row3"><div><b>'+short(val)+'</b><span>Value</span></div><div><b>'+short(debt)+'</b><span>Lending</span></div><div><b>'+(val?Math.round(debt/val*100)+'%':'–')+'</b><span>LVR</span></div></div>':'')+
       '<button class="chipline" data-x="cf">'+ic('trend')+'<span><b>'+(cf<0?'−':'+')+$$(Math.abs(cf))+'</b> a month cash flow'+(cf<0&&hasProj?', including reno holding costs':'')+'</span><i class="chev">›</i></button></div>';
   }else h+='<div class="card hero"><div class="lab">Welcome</div><div class="big" style="font-size:26px">Add your first property</div><p style="margin:0 0 14px;opacity:.9">Track rentals, renovation projects and properties you’re thinking of buying.</p><button class="herobtn" data-x="hadd">Add a property</button></div>';
+  h+='</div>'+(wide()&&own.length?'<div class="dcf">'+cfMini()+'</div>':'')+'<div class="dqa">';
   h+='<h2 class="hh2">Quick actions</h2><div class="qa">'+
     '<button data-q="rent"><span class="ib">'+ic('dollar')+'</span>Log rent</button>'+
     '<button data-q="cost"><span class="ib">'+ic('tool')+'</span>Reno cost</button>'+
     '<button data-q="ms"><span class="ib">'+ic('clock')+'</span>Milestone</button>'+
     '<button data-x="hdeal"><span class="ib">'+ic('check')+'</span>Deal check</button></div>';
+  h+='</div><div class="datt">';
   var att='',n=0,l=lastBackup(),bd=l?days(l):null;
   props.forEach(function(p,i){alerts(p).forEach(function(a){n++;att+='<button class="att2" data-x="att" data-i="'+i+'" data-sec="'+a.sec+'"><span class="ib">'+ic(ATT_IC[a.sec]||'alert')+'</span><span class="tx"><b>'+esc(a.t)+'</b><span class="sub">'+esc(p.addr)+'</span></span><i class="chev">›</i></button>'})});
   if(!isSample&&props.length&&(bd===null||bd>30)){n++;att+='<button class="att2" data-x="tobk"><span class="ib">'+ic('save')+'</span><span class="tx"><b>'+(l?'Last backup '+bd+' days ago':'Not backed up yet')+'</b><span class="sub">Settings → Backup</span></span><i class="chev">›</i></button>'}
   if(n)h+='<h2 class="hh2">Needs attention <span class="sub">· '+n+'</span></h2><div class="card">'+att+'</div>';
+  h+='</div><div class="dact">';
   var act=activity();
   if(act.length)h+='<h2 class="hh2">Recent activity</h2><div class="card list">'+act.map(function(a){return '<button class="r" data-x="act" data-i="'+a.i+'" data-sec="'+a.sec+'"><span>'+esc(a.t)+' · '+esc(a.addr)+'</span><b class="'+(a.amt>0?'pos':'')+'">'+(a.amt>0?'+':'−')+$$(Math.abs(a.amt))+'</b></button>'}).join('')+'</div>';
+  h+='</div>'+(wide()&&props.length?'<div class="dprops">'+homeProps()+'</div>':'')+'</div>';
   $('home').innerHTML=h+iosHint();
   $('setdot').hidden=isSample||!props.length||(bd!==null&&bd<=30);
 }
@@ -42,8 +48,11 @@ function activity(){
 }
 $('home').addEventListener('click',function(e){
   var q=e.target.closest('[data-q]');if(q){quick(q.dataset.q);return}
+  var r=e.target.closest('.prow');if(r){openProp(+r.dataset.i);return}
   var b=e.target.closest('[data-x]');if(!b)return;var x=b.dataset.x;
   if(x==='att'||x==='act')openProp(+b.dataset.i,b.dataset.sec);
+  if(x==='cfp')openProp(+b.dataset.i);
+  if(x==='toprops')navTab('p0');
   if(x==='tobk')navTab('setbody');
   if(x==='cf')openCash();
   if(x==='hdeal')openTool('deal');
@@ -135,3 +144,16 @@ function drawCash(){
 // Drawn fresh each time it shows (show() in main.js), so it's up to date after visiting a property.
 function openCash(){openPage('p3')}
 $('p3').addEventListener('click',function(e){var b=e.target.closest('.cfp');if(b)openProp(+b.dataset.i)});
+// Dashboard cards (wide screens only). Cash flow by property: the five biggest either way, linking to the full page.
+function cfMini(){
+  var o=props.map(function(p,i){return {p:p,i:i,n:cashFlow(p)}}).filter(function(x){return x.p.type!=='potential'});
+  o.sort(function(a,b){return Math.abs(b.n)-Math.abs(a.n)});
+  return '<div class="card list">'+hd('trend','Cash flow by property')+o.slice(0,5).map(function(x){
+    return '<button class="r" data-x="cfp" data-i="'+x.i+'"><span>'+esc(x.p.addr)+'</span><b class="'+(x.n<0?'neg':'pos')+'">'+sgn(x.n)+'</b></button>'}).join('')+
+    '<button class="edit" data-x="cf" style="margin-top:10px">Full breakdown ›</button></div>';
+}
+// Your properties: a compact table, one row each, linking to the full Properties table.
+function homeProps(){
+  return '<h2 class="hh2">Your properties <button class="edit" data-x="toprops" style="margin-left:8px">See all ›</button></h2>'+
+    ptable(props.map(function(p,i){return i}),['addr','type','value','equity','cf','refix'],false);
+}

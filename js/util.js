@@ -48,6 +48,8 @@ function empty(i,t,x,btn){return '<div class="empty">'+ic(i)+'<b>'+t+'</b><p cla
 // On a computer (mouse and hover) the wording says "computer" rather than "phone".
 var DESK=!!(window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches);
 function dev(){return DESK?'computer':'phone'}
+// Wide screen (desktop layout in layout.css): Home becomes a dashboard and Properties a table.
+function wide(){return !!(window.matchMedia&&matchMedia('(min-width:900px)').matches)}
 function stat(l,v,c){return '<div class="stat"><b class="'+(c||'')+'">'+v+'</b><span>'+l+'</span></div>'}
 
 function days(d){return d?Math.max(0,Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5)):null}

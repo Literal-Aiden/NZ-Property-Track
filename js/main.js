@@ -83,7 +83,9 @@ function delProp(i){
 }
 function rcOf(x){return (x.rc||[]).map(function(r){return r.id})}
 $('p0').addEventListener('click',function(e){
-  var r=e.target.closest('.prop');if(r){openProp(+r.dataset.i);return}
+  var r=e.target.closest('.prop,.prow');if(r){openProp(+r.dataset.i);return}
+  // Table headings sort: the same column again flips the order; numbers start biggest first.
+  var th=e.target.closest('[data-sort]');if(th){var k=th.dataset.sort;propSort=propSort.k===k?{k:k,d:-propSort.d}:{k:k,d:PCOLS[k].n?-1:1};plist();return}
   var f=e.target.closest('[data-f]');if(f){propFilter=f.dataset.f;list()}
   if(e.target.closest('[data-x="hadd"]')){newType=null;form();go(2)}
 });
@@ -242,4 +244,6 @@ document.addEventListener('touchend',function(e){
 });
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){});
 render();drawTools();show('home');
+// Crossing the desktop width redraws Home and Properties (dashboard and table on wide screens, cards on a phone).
+if(window.matchMedia){var wq=matchMedia('(min-width:900px)'),wr=function(){list();drawHome()};if(wq.addEventListener)wq.addEventListener('change',wr);else if(wq.addListener)wq.addListener(wr)}
 if(!tourSeen())openTour();

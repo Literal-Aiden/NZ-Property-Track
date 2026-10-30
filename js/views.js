@@ -194,9 +194,47 @@ function list(){
     '<div class="chips">'+FILTERS.map(function(f){return '<button data-f="'+f[0]+'" class="'+(propFilter===f[0]?'on':'')+'">'+f[1]+'</button>'}).join('')+'</div><div id="plist"></div>';
   plist();
 }
+// Properties as a table on wide screens: one row per property, sortable by any column (blanks always last), with
+// totals for the owned properties shown. Potential buys have no loan, equity or cash flow yet, so those show "–".
+var propSort={k:'addr',d:1};
+function nextRefix(p){var t=iso(new Date());return parts(p).map(refixOf).filter(function(r){return r&&r>=t}).sort()[0]||null}
+var PCOLS={
+  addr:{h:'Property',v:function(p){return p.addr.toLowerCase()}},
+  type:{h:'Type',v:function(p){return p.type}},
+  value:{h:'Value',n:1,v:function(p){return p.value||null}},
+  loan:{h:'Loan',n:1,v:function(p){return p.type==='potential'?null:p.loan||0}},
+  equity:{h:'Equity',n:1,v:function(p){return p.type==='potential'||!p.value?null:p.value-(p.loan||0)}},
+  lvr:{h:'LVR',n:1,v:function(p){return p.type!=='potential'&&p.value&&p.loan?p.loan/p.value:null}},
+  cf:{h:'Cash flow / mo',n:1,v:function(p){return p.type==='potential'?null:cashFlow(p)}},
+  refix:{h:'Next re-fix',v:function(p){return p.type==='potential'?null:nextRefix(p)}}};
+function pcell(k,p){
+  var v=PCOLS[k].v(p);
+  if(k==='addr')return '<td><span class="pt-a">'+(alerts(p).length?'<span class="pdot" title="Needs attention"></span>':'')+'<b>'+esc(p.addr)+'</b></span><span class="sub">'+esc(p.sub)+'</span></td>';
+  if(k==='type')return '<td><span class="tag t-'+p.type+'">'+headline(p).tag+'</span></td>';
+  if(v===null)return '<td class="n mute">–</td>';
+  if(k==='lvr')return '<td class="n">'+Math.round(v*100)+'%</td>';
+  if(k==='refix'){var d=dd(iso(new Date()),v);return '<td class="'+(d<=90?'neg':'')+'">'+fmtD(v)+'</td>'}
+  if(k==='cf'||k==='equity')return '<td class="n '+(v<0?'neg':'pos')+'">'+(k==='cf'?signed(v):$$(v))+'</td>';
+  return '<td class="n">'+$$(v)+'</td>';
+}
+// ids: property indexes to show; cols: column keys; sort: whether the headings sort.
+function ptable(ids,cols,sort){
+  if(sort){var c=PCOLS[propSort.k];ids=ids.slice().sort(function(a,b){var x=c.v(props[a]),y=c.v(props[b]);
+    if(x===y)return 0;if(x===null)return 1;if(y===null)return -1;return (x<y?-1:1)*propSort.d})}
+  var own=ids.filter(function(i){return props[i].type!=='potential'}),tot={value:1,loan:1,equity:1,cf:1};
+  return '<div class="ptwrap"><table class="ptable"><thead><tr>'+cols.map(function(k){var c=PCOLS[k],on=sort&&propSort.k===k;
+      return '<th class="'+(c.n?'n':'')+(on?' on':'')+'"'+(sort?' data-sort="'+k+'"':'')+'>'+c.h+(on?(propSort.d>0?' ▲':' ▼'):'')+'</th>'}).join('')+'</tr></thead><tbody>'+
+    ids.map(function(i){return '<tr class="prow" data-i="'+i+'">'+cols.map(function(k){return pcell(k,props[i])}).join('')+'</tr>'}).join('')+'</tbody>'+
+    (own.length>1?'<tfoot><tr>'+cols.map(function(k,j){
+      if(!j)return '<td><b>Total ('+own.length+' owned)</b></td>';
+      if(!tot[k])return '<td></td>';
+      var s=sum(own,function(i){return PCOLS[k].v(props[i])});
+      return '<td class="n '+(k==='cf'||k==='equity'?(s<0?'neg':'pos'):'')+'"><b>'+(k==='cf'?signed(s):$$(s))+'</b></td>'}).join('')+'</tr></tfoot>':'')+'</table></div>';
+}
 function plist(){
   var q=propQ.trim().toLowerCase(),shown=props.map(function(p,i){return i}).filter(function(i){var p=props[i];
     return (propFilter==='all'||p.type===propFilter)&&(!q||(p.addr+' '+p.sub).toLowerCase().indexOf(q)>=0)});
+  if(wide()&&shown.length){$('plist').innerHTML=ptable(shown,['addr','type','value','loan','equity','lvr','cf','refix'],true);return}
   var h=shown.map(function(i){
     var p=props[i],hl=headline(p),T=TYPE[p.type];
     return '<button class="card prop" data-i="'+i+'">'+thumb(p)+(alerts(p).length?'<span class="adot" title="Needs attention"></span>':'')+
