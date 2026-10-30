@@ -53,6 +53,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
   - Reno cost: description. Milestone: its name
   - Potential buy: address, suburb, asking price, reno estimate, rates, insurance, months, sale price/value after reno, plus selling costs (reno to sell) or rent and expenses (buy to rent)
 - Dropdowns (`<select>`) open a compact picker at the bottom of the screen (`picker.js`) instead of the phone's own full-screen list, so they're easy to use one-handed. It applies to every select automatically: the select stays in the form, gets the chosen value and fires `input`/`change`, so form code reads it as normal. Short options show in two columns, long ones in one; an empty first option (e.g. "Fill in from a property…") becomes the title, otherwise the label just before the select. Keyboard users still get the browser's list
+- Buttons that open the camera or the phone's files (they take you out of the app briefly) look different from the app's own buttons: a dashed red outline on a pale red tile with an icon above the label (`.ftile` for progress photos, `.rcadd` for receipts and reports)
 - Number fields are text inputs (no spinner arrows or scroll-wheel changes). Money fields (class `money`) show $ and commas as you type; read them with `num()`/`pnum()`
 - Days owned, and total cost in (price + legal + extra + reno spend)
 

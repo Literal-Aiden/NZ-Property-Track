@@ -219,3 +219,9 @@ body.typing .screen .fbar{bottom:calc(-100px - env(safe-area-inset-bottom,0px))}
 /* Receipt "Camera" tile (rcCam in receipts.js): icon above the word, like the other add tile. */
 label.rcadd{flex-direction:column;gap:2px}
 label.rcadd .ic{width:20px;height:20px}
+/* Buttons that open the camera or the phone's files (they leave the app for a moment), styled apart from the app's
+   own buttons: dashed outline and an icon above, like the receipt tiles. */
+.ftiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+label.ftile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:0;padding:12px 8px;border:1.5px dashed var(--acc);border-radius:12px;background:var(--acc2);color:var(--acc);font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+label.ftile .ic{width:24px;height:24px}
+label.rcadd{background:var(--acc2);border-width:1.5px;font-weight:600}

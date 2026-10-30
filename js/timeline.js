@@ -46,8 +46,8 @@ function picCard(p){
     '<label>Stage</label><div class="seg">'+STAGES.map(function(s){return '<button data-x="picst" data-v="'+s[0]+'" class="'+(picStage===s[0]?'on':'')+'">'+s[1]+'</button>'}).join('')+'</div>'+
     // capture opens the phone's camera straight away; the other button picks from the gallery.
     '<p class="sub" style="margin-top:12px">Adding '+STAGES.filter(function(s){return s[0]===picStage})[0][1].toLowerCase()+' photos of '+picRoom.toLowerCase()+'</p>'+
-    '<div class="btns" style="margin-top:6px"><label class="go filebtn">'+ic('camera')+' Take photo<input type="file" class="picin" accept="image/*" capture="environment" hidden></label>'+
-    '<label class="go ghost filebtn">From gallery<input type="file" class="picin" accept="image/*" multiple hidden></label></div>'+
+    '<div class="ftiles"><label class="ftile">'+ic('camera')+'Take photo<input type="file" class="picin" accept="image/*" capture="environment" hidden></label>'+
+    '<label class="ftile">'+ic('image')+'From gallery<input type="file" class="picin" accept="image/*" multiple hidden></label></div>'+
     (rcMsg&&sec==='tl'?'<p class="sub neg" style="margin-top:6px">'+esc(rcMsg)+'</p>':'');
   ROOMS.forEach(function(room){
     var R=P.filter(function(x){return x.room===room});if(!R.length)return;
