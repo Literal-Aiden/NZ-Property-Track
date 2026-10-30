@@ -2,7 +2,9 @@
 :root{--bg:#faf6f0;--card:#fff;--ink:#2a2220;--mute:#76665f;--line:#eadfd3;--acc:#c2412d;--acc2:#fbe8e3;--good:#2f855a;--warn:#a0620e;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1715;--card:#2a2320;--ink:#f3ece8;--mute:#b3a39b;--line:#3d332e;--acc:#f0806b;--acc2:#3d2622;--good:#5fbf8a;--warn:#e0a84a;--onacc:#1c1715;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#1c1715;--card:#2a2320;--ink:#f3ece8;--mute:#b3a39b;--line:#3d332e;--acc:#f0806b;--acc2:#3d2622;--good:#5fbf8a;--warn:#e0a84a;--onacc:#1c1715;color-scheme:dark}
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* No blue tap box or focus ring on tap (Android Chrome); keyboard users still get the browser's ring. */
+:focus:not(:focus-visible){outline:none}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
 header{padding:12px 16px 0}
