@@ -78,10 +78,22 @@ function chHover(e){
   tp.hidden=false;
   var w=tp.offsetWidth,px=x/100*r.width;tp.style.left=Math.min(Math.max(0,px-w/2),r.width-w)+'px';
 }
-function chOut(e){var pl=e.target.closest&&e.target.closest('.lplot');if(!pl)return;pl.querySelector('.lx').hidden=true;pl.querySelector('.ltip').hidden=true;pl.querySelector('.lhov').innerHTML=''}
-document.addEventListener('pointermove',chHover);
-document.addEventListener('pointerdown',chHover);
-document.addEventListener('pointerout',function(e){if(e.target.closest&&e.target.closest('.lplot')&&!(e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('.lplot')))chOut(e)});
+// Hides the crosshair and tooltip: on every chart, or just pl.
+var chT=null;
+function chHide(pl){
+  clearTimeout(chT);
+  (pl?[pl]:[].slice.call(document.querySelectorAll('.lplot'))).forEach(function(p){p.querySelector('.lx').hidden=true;p.querySelector('.ltip').hidden=true;p.querySelector('.lhov').innerHTML=''});
+}
+function inPlot(t){return t&&t.closest&&t.closest('.lplot')}
+document.addEventListener('pointermove',function(e){if(inPlot(e.target)){clearTimeout(chT);chHover(e)}});
+// Tapping or clicking anywhere else hides it straight away.
+document.addEventListener('pointerdown',function(e){if(inPlot(e.target)){clearTimeout(chT);chHover(e)}else chHide()});
+// With a mouse it hides when the pointer leaves the chart. A finger doesn't really leave, so after lifting it the
+// figures stay for 2 seconds to read, then go; a scroll hides them at once.
+document.addEventListener('pointerout',function(e){var pl=inPlot(e.target);if(pl&&e.pointerType==='mouse'&&!inPlot(e.relatedTarget))chHide(pl)});
+document.addEventListener('pointerup',function(e){if(e.pointerType!=='mouse'&&inPlot(e.target)){clearTimeout(chT);chT=setTimeout(function(){chHide()},2000)}});
+document.addEventListener('pointercancel',function(){chHide()});
+document.addEventListener('scroll',function(){if(document.querySelector('.ltip:not([hidden])'))chHide()},true);
 
 // A property's Overview card: its value since it was bought (or first valued), and the loan, so the gap is the equity.
 function histCard(p){
