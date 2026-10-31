@@ -17,12 +17,24 @@ function installCard(){
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
 // Appearance: follow the device (blank), or always light or dark. Saved in nzpt.theme and applied in index.html.
+// Colour themes: [data-accent value ('' is the default), name, swatch]. The colours themselves are in styles.css.
+var ACCENTS=[['','Pōhutukawa','#c2412d'],['harbour','Harbour','#2563a8'],['pounamu','Pounamu','#0f766e'],['twilight','Twilight','#7b3fa0'],['ironsand','Ironsand','#3b3735']];
 function themeCard(){
-  var t=document.documentElement.dataset.theme||'';
+  var t=document.documentElement.dataset.theme||'',a=document.documentElement.dataset.accent||'';
   return '<div class="card">'+hd('sun','Appearance')+'<div class="seg" style="margin-top:12px">'+[['','Automatic'],['light','Light'],['dark','Dark']].map(function(o){
     return '<button data-th="'+o[0]+'" class="'+(o[0]===t?'on':'')+'">'+o[1]+'</button>'}).join('')+'</div>'+
-    '<p class="sub" style="margin-top:8px">Automatic follows your '+dev()+'’s light or dark setting.</p></div>';
+    '<p class="sub" style="margin-top:8px">Automatic follows your '+dev()+'’s light or dark setting.</p>'+
+    '<p class="sub" style="margin:16px 0 8px;font-weight:600;color:var(--ink)">Colour</p><div class="accs">'+ACCENTS.map(function(o){
+      return '<button data-acc="'+o[0]+'" class="'+(o[0]===a?'on':'')+'" aria-pressed="'+(o[0]===a)+'"><i style="background:'+o[2]+'"></i>'+o[1]+'</button>'}).join('')+'</div></div>';
 }
+function setAccent(a){
+  if(a)document.documentElement.dataset.accent=a;else delete document.documentElement.dataset.accent;
+  try{if(a)localStorage.setItem('nzpt.accent',a);else localStorage.removeItem('nzpt.accent')}catch(e){}
+  themeMeta();drawSettings();
+}
+// The browser's bar colour on phones (theme-color) follows the colour theme.
+function themeMeta(){var m=document.querySelector('meta[name="theme-color"]'),c=getComputedStyle(document.documentElement).getPropertyValue('--hero1').trim();if(m&&c)m.content=c}
+themeMeta();
 function setTheme(t){
   if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme;
   try{if(t)localStorage.setItem('nzpt.theme',t);else localStorage.removeItem('nzpt.theme')}catch(e){}
@@ -113,6 +125,7 @@ function persist(){if(persistAsked||isSample||!navigator.storage||!navigator.sto
 // Settings tab: backup, restore and installing the app.
 $('setbody').addEventListener('click',function(e){
   var th=e.target.closest('[data-th]');if(th){setTheme(th.dataset.th);return}
+  var ac=e.target.closest('[data-acc]');if(ac){setAccent(ac.dataset.acc);return}
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='bkdl')exportBackup();
   if(b.dataset.x==='bksh')shareBackup();

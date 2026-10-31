@@ -11,8 +11,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<!-- Light or dark chosen in Settings (blank follows the phone). Set before the page draws, so it never flashes. -->
-<script>(function(){try{var t=localStorage.getItem("nzpt.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}})()</script>
+<!-- Light or dark and the colour theme, chosen in Settings (blank follows the phone / is pōhutukawa red). Set before the page draws, so it never flashes. -->
+<script>(function(){try{var t=localStorage.getItem("nzpt.theme"),a=localStorage.getItem("nzpt.accent");if(t)document.documentElement.dataset.theme=t;if(a)document.documentElement.dataset.accent=a}catch(e){}})()</script>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="layout.css">
 </head>

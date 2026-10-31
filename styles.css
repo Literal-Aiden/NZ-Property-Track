@@ -176,3 +176,22 @@ input.bad,select.bad{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
 .more summary::after{content:"+";color:var(--acc);font-size:20px;line-height:1}
 .more[open] summary::after{content:"–"}
 .more[open]{padding-bottom:12px}
+/* Colour themes (Settings → Appearance, saved as nzpt.accent and set as data-accent on <html> by the script in
+   index.html's <head>). Each swaps the accent (--acc, --acc2) for light and dark, and the deep pair the red portfolio
+   card and tour logo use (--hero1, --hero2). Pōhutukawa is the default, with no data-accent. Kept away from green and
+   amber, which mean good and warning. */
+:root{--hero1:#c2412d;--hero2:#8f2a1c}
+:root[data-accent="harbour"]{--acc:#2563a8;--acc2:#e3edf8;--hero1:#2563a8;--hero2:#173f6e}
+:root[data-accent="pounamu"]{--acc:#0f766e;--acc2:#dcf1ee;--hero1:#11807a;--hero2:#0a4f4a}
+:root[data-accent="twilight"]{--acc:#7b3fa0;--acc2:#f1e6f7;--hero1:#7b3fa0;--hero2:#4e2366}
+:root[data-accent="ironsand"]{--acc:#3b3735;--acc2:#ebe6e1;--hero1:#4a4441;--hero2:#232020}
+@media (prefers-color-scheme:dark){
+  :root[data-accent="harbour"]:not([data-theme="light"]){--acc:#7fb0e6;--acc2:#1f2d3d}
+  :root[data-accent="pounamu"]:not([data-theme="light"]){--acc:#5ec4b8;--acc2:#1a3431}
+  :root[data-accent="twilight"]:not([data-theme="light"]){--acc:#c39be0;--acc2:#33263d}
+  :root[data-accent="ironsand"]:not([data-theme="light"]){--acc:#e2ddd8;--acc2:#3a3532;--hero1:#6e6663;--hero2:#45403d}
+}
+:root[data-accent="harbour"][data-theme="dark"]{--acc:#7fb0e6;--acc2:#1f2d3d}
+:root[data-accent="pounamu"][data-theme="dark"]{--acc:#5ec4b8;--acc2:#1a3431}
+:root[data-accent="twilight"][data-theme="dark"]{--acc:#c39be0;--acc2:#33263d}
+:root[data-accent="ironsand"][data-theme="dark"]{--acc:#e2ddd8;--acc2:#3a3532;--hero1:#6e6663;--hero2:#45403d}
