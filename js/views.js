@@ -76,7 +76,16 @@ function fillCur(p){
 function keepIn(id){var v={};document.querySelectorAll('#'+id+' input[id],#'+id+' select[id]').forEach(function(e){v[e.id]=e.type==='checkbox'?e.checked:e.value});current();for(var k in v){var e=$(k);if(e){if(e.type==='checkbox')e.checked=v[k];else e.value=v[k]}}mRep()}
 // Property types: label, icon, and the class for their colour (cover, thumbnail and tag).
 var TYPE={project:['Renovation project','tool','c-proj'],rental:['Rental','key','c-rent'],potential:['Potential buy','search','c-pot']};
-function thumb(p){var t=TYPE[p.type];return '<span class="ph '+t[2]+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">':ic(t[1]))+'</span>'}
+// A small drawn house for a property without a photo, one scene per type: scaffolding round a reno project, a rental
+// with its door and lit windows, and a potential buy as a dashed outline with a sign out front. Coloured from the
+// type colour (--ty) by the .scn classes in layout.css, so it follows light and dark.
+var SCENES={
+  project:'<path class="w" d="M20 36L36 22l16 14v20H20z"/><path class="t" d="M31 44h10v12H31z"/><path class="l" d="M12 58V26M60 58V26M12 33h48M12 45h48M12 33l12 12M48 33l12 12"/>',
+  rental:'<circle cx="14" cy="15" r="6" fill="#f2c14e"/><path class="w" d="M16 37L36 21l20 16v19H16z"/><path class="d" d="M31 43h10v13H31z"/><path class="t" d="M21 41h7v7h-7zM44 41h7v7h-7z"/>',
+  potential:'<path class="w dash" d="M12 39L30 25l18 14v17H12z"/><path class="l" d="M59 58V34"/><rect class="d" x="48" y="30" width="22" height="13" rx="2"/><path class="k" d="M53 35h12M53 39h8"/>'};
+function scene(t){return '<svg class="scn" viewBox="0 0 72 72" aria-hidden="true"><path class="g" d="M0 56h72v16H0z"/>'+SCENES[t]+'</svg>'}
+// badge: a small type icon in the corner when there's a photo (the drawing already shows the type), for the Properties list.
+function thumb(p,badge){var t=TYPE[p.type];return '<span class="ph ty-'+p.type+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">'+(badge?'<i class="tybadge ty-'+p.type+'">'+ic(t[1])+'</i>':''):scene(p.type))+'</span>'}
 function signed(n,suf){return '<span class="'+(n<0?'neg':'pos')+'">'+(n<0?'−':'+')+$$(Math.abs(n))+(suf||'')+'</span>'}
 // The one number that matters most for each property, used for its page and its card in the list.
 function headline(p){
@@ -120,7 +129,8 @@ function current(){
   var p=props[cur];
   if(!p){$('p1').innerHTML='<div class="pagebar"><button class="pback" data-back aria-label="Back">'+ic('back')+'</button></div><div class="card"><p class="sub">No property selected.</p></div>';return}
   var T=TYPE[p.type],hl=headline(p),pt=p.type==='potential';
-  var h='<div class="cover '+T[2]+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">':'<span class="cvic">'+ic(T[1])+'</span>')+
+  // Without a photo, the cover is the type's house drawing on a tint (dark text), rather than a photo under a shade.
+  var h='<div class="cover '+(p.photo?T[2]:'drawn ty-'+p.type)+'">'+(p.photo?'<img data-rc="'+esc(p.photo.id)+'" alt="">':'<span class="cvsc">'+scene(p.type)+'</span>')+
     '<button class="cback" data-back aria-label="Back">'+ic('back')+'</button>'+
     '<label class="cphoto">'+ic('camera')+(p.photo?'Change photo':'Add photo')+'<input type="file" class="phin" accept="image/*" hidden></label>'+
     '<div class="ctext"><h1>'+esc(p.addr)+'</h1><p>'+[esc(p.sub),T[0],pt?hl.tag:''].filter(Boolean).join(' · ')+'</p></div></div>'+
@@ -220,30 +230,43 @@ function pcell(k,p){
   if(k==='cf'||k==='equity')return '<td class="n '+(v<0?'neg':'pos')+'">'+(k==='cf'?signed(v):$$(v))+'</td>';
   return '<td class="n">'+$$(v)+'</td>';
 }
-// ids: property indexes to show; cols: column keys; sort: whether the headings sort.
-function ptable(ids,cols,sort){
+// ids: property indexes to show; cols: column keys; sort: whether the headings sort; group: rows under a heading per
+// type when showing All (sorted within each group).
+function ptable(ids,cols,sort,group){
   if(sort){var c=PCOLS[propSort.k];ids=ids.slice().sort(function(a,b){var x=c.v(props[a]),y=c.v(props[b]);
     if(x===y)return 0;if(x===null)return 1;if(y===null)return -1;return (x<y?-1:1)*propSort.d})}
   var own=ids.filter(function(i){return props[i].type!=='potential'}),tot={value:1,loan:1,equity:1,cf:1};
+  var row=function(i){return '<tr class="prow ty-'+props[i].type+'" data-i="'+i+'">'+cols.map(function(k){return pcell(k,props[i])}).join('')+'</tr>'};
+  var g=group&&tgroups(ids);
   return '<div class="ptwrap"><table class="ptable"><thead><tr>'+cols.map(function(k){var c=PCOLS[k],on=sort&&propSort.k===k;
       return '<th class="'+(c.n?'n':'')+(on?' on':'')+'"'+(sort?' data-sort="'+k+'"':'')+'>'+c.h+(on?(propSort.d>0?' ▲':' ▼'):'')+'</th>'}).join('')+'</tr></thead><tbody>'+
-    ids.map(function(i){return '<tr class="prow" data-i="'+i+'">'+cols.map(function(k){return pcell(k,props[i])}).join('')+'</tr>'}).join('')+'</tbody>'+
+    (g?g.map(function(x){return '<tr class="pgrow"><td colspan="'+cols.length+'">'+tgHead(x[0],x[1].length)+'</td></tr>'+x[1].map(row).join('')}):ids.map(row)).join('')+'</tbody>'+
     (own.length>1?'<tfoot><tr>'+cols.map(function(k,j){
       if(!j)return '<td><b>Total ('+own.length+' owned)</b></td>';
       if(!tot[k])return '<td></td>';
       var s=sum(own,function(i){return PCOLS[k].v(props[i])});
       return '<td class="n '+(k==='cf'||k==='equity'?(s<0?'neg':'pos'):'')+'"><b>'+(k==='cf'?signed(s):$$(s))+'</b></td>'}).join('')+'</tr></tfoot>':'')+'</table></div>';
 }
+// Under "All", properties are grouped by type (reno projects, rentals, potential buys), each with a heading, as long
+// as there's more than one type showing. Returns [[type, ids], …], or null for one plain list.
+function tgroups(ids){
+  if(propFilter!=='all')return null;
+  var g=['project','rental','potential'].map(function(t){return [t,ids.filter(function(i){return props[i].type===t})]}).filter(function(x){return x[1].length});
+  return g.length>1?g:null;
+}
+function tgHead(t,n){return '<h3 class="pgrp ty-'+t+'">'+ic(TYPE[t][1])+FILTERS.filter(function(f){return f[0]===t})[0][1]+'<span>'+n+'</span></h3>'}
 function plist(){
   var q=propQ.trim().toLowerCase(),shown=props.map(function(p,i){return i}).filter(function(i){var p=props[i];
     return (propFilter==='all'||p.type===propFilter)&&(!q||(p.addr+' '+p.sub).toLowerCase().indexOf(q)>=0)});
-  if(wide()&&shown.length){$('plist').innerHTML=ptable(shown,['addr','type','value','loan','equity','lvr','cf','refix'],true);return}
-  var h=shown.map(function(i){
-    var p=props[i],hl=headline(p),T=TYPE[p.type];
-    return '<button class="card prop" data-i="'+i+'">'+thumb(p)+(alerts(p).length?'<span class="adot" title="Needs attention"></span>':'')+
+  if(wide()&&shown.length){$('plist').innerHTML=ptable(shown,['addr','type','value','loan','equity','lvr','cf','refix'],true,true);return}
+  var card=function(i){
+    var p=props[i],hl=headline(p);
+    return '<button class="card prop ty-'+p.type+'" data-i="'+i+'">'+thumb(p,true)+(alerts(p).length?'<span class="adot" title="Needs attention"></span>':'')+
       '<span class="info"><b>'+esc(p.addr)+'</b><span class="sub">'+esc(p.sub)+'</span><span class="tag t-'+p.type+'">'+hl.tag+'</span></span>'+
       '<span class="num"><b>'+(hl.num||hl.big)+'</b><span>'+hl.short+'</span></span></button>';
-  }).join('')||(q?'<div class="card"><p class="sub">No properties match “'+esc(propQ.trim())+'”.</p></div>'
+  };
+  var g=tgroups(shown);
+  var h=(g?g.map(function(x){return tgHead(x[0],x[1].length)+x[1].map(card).join('')}):shown.map(card)).join('')||(q?'<div class="card"><p class="sub">No properties match “'+esc(propQ.trim())+'”.</p></div>'
     :'<div class="card"><p class="sub">'+(props.length?'Nothing here yet.':'No properties yet.')+'</p><button class="go" data-x="hadd">Add a property</button></div>');
   $('plist').innerHTML=h;fillThumbs();
 }

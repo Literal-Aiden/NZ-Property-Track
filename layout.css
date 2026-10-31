@@ -67,22 +67,51 @@ button.r{cursor:pointer}
 .c-proj{background:linear-gradient(135deg,#d9774f,#9c3a24)}
 .c-rent{background:linear-gradient(135deg,#5e8f74,#2f5a45)}
 .c-pot{background:linear-gradient(135deg,#7d8aa8,#46506b)}
+.ph.ty-project,.ph.ty-rental,.ph.ty-potential{background:color-mix(in srgb,var(--ty) 13%,var(--card))}
+/* The house drawings (scene() in views.js): g ground, w walls, t tinted fill, d solid fill, l lines, k marks on a solid fill. */
+.scn{width:100%;height:100%;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.scn .g{fill:color-mix(in srgb,var(--ty) 32%,var(--card))}
+.scn .w{fill:var(--card);stroke:var(--ty);stroke-width:2.2}
+.scn .w.dash{stroke-dasharray:4 3}
+.scn .t{fill:color-mix(in srgb,var(--ty) 30%,var(--card));stroke:var(--ty);stroke-width:1.5}
+.scn .d{fill:var(--ty)}
+.scn .l{stroke:color-mix(in srgb,var(--ty) 75%,var(--ink));stroke-width:2.2}
+.scn .k{stroke:var(--card);stroke-width:2}
 .prop .info{flex:1;min-width:0;display:flex;flex-direction:column}
 .prop .info b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag{align-self:flex-start;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;margin-top:4px}
-.t-project{background:var(--acc2);color:var(--acc)}
-.t-rental{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
-.t-potential{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+/* Property types (Properties list and table): each has its own colour (--ty-*, styles.css) for a stripe down the
+   left of its card or row, its tag, its group heading and the type badge on a cover photo. Potential buys, not
+   owned yet, get a dashed outline. */
+.ty-project{--ty:var(--ty-project)}.ty-rental{--ty:var(--ty-rental)}.ty-potential{--ty:var(--ty-potential)}
+.t-project,.t-rental,.t-potential{background:color-mix(in srgb,var(--ty) 14%,transparent);color:var(--ty)}
+.t-project{--ty:var(--ty-project)}.t-rental{--ty:var(--ty-rental)}.t-potential{--ty:var(--ty-potential)}
+.card.prop{box-shadow:inset 4px 0 0 var(--ty,transparent),0 1px 2px rgba(60,30,20,.05),0 4px 14px rgba(60,30,20,.05);padding-left:14px}
+.card.prop.ty-potential{box-shadow:inset 4px 0 0 var(--ty)}
+.card.prop.ty-potential{border:1.5px dashed var(--ty);background:color-mix(in srgb,var(--card) 55%,transparent)}
+.tybadge{position:absolute;left:4px;bottom:4px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ty);color:#fff;border:2px solid var(--card)}
+.ph .tybadge .ic{width:13px;height:13px}
+.pgrp{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px;font-weight:700;color:var(--ty)}
+.pgrp:first-child{margin-top:4px}
+.pgrp .ic{width:18px;height:18px}
+.pgrp span{font-weight:600;font-size:12px;padding:0 8px;border-radius:99px;background:color-mix(in srgb,var(--ty) 14%,transparent)}
 .prop .num{text-align:right;flex:none;display:flex;flex-direction:column}
 .prop .num b{font-size:16px}
 .prop .num>span{font-size:12px;color:var(--mute)}
-.adot{position:absolute;top:6px;left:72px;width:12px;height:12px;border-radius:50%;background:var(--warn);border:2px solid var(--card)}
+.adot{position:absolute;top:6px;left:76px;width:12px;height:12px;border-radius:50%;background:var(--warn);border:2px solid var(--card)}
 
 /* Property page */
 .cover{position:relative;height:210px;margin:0 -16px;display:flex;align-items:flex-end;padding:16px 16px 34px;color:#fff;overflow:hidden}
 .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.15),transparent 35%,rgba(0,0,0,.5))}
-.cover .cvic{position:absolute;right:18px;bottom:44px;opacity:.22}
-.cover .cvic .ic{width:96px;height:96px}
+/* No photo: the house drawing (scene()) stands on a strip of ground running the full width, with the text beside it. */
+.cover.drawn{background:color-mix(in srgb,var(--ty) 13%,var(--bg));color:var(--ink);padding-bottom:54px}
+.cover.drawn::after{display:none}
+.cover.drawn::before{content:"";position:absolute;left:0;right:0;bottom:0;height:44px;background:color-mix(in srgb,var(--ty) 32%,var(--card))}
+.cvsc{position:absolute;right:14px;bottom:11px;width:150px;height:150px}
+.cover.drawn .ctext{max-width:calc(100% - 150px)}
+.cover.drawn .ctext h1{color:var(--ink);text-shadow:none}
+.cover.drawn .ctext p{color:var(--mute);opacity:1}
+.cover.drawn .cback,.cover.drawn .cphoto{background:color-mix(in srgb,var(--card) 85%,transparent);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .cback,.cphoto{position:absolute;z-index:2;top:calc(12px + env(safe-area-inset-top,0px));border:0;background:rgba(0,0,0,.38);color:#fff;cursor:pointer}
 .cback{left:12px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
 .cphoto{right:12px;display:flex;align-items:center;gap:6px;margin:0;padding:7px 12px;border-radius:99px;font-size:12px;font-weight:600}
@@ -310,6 +339,10 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   .pdot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
   .ptable tbody tr{cursor:pointer}
   .ptable tbody tr:hover td{background:var(--acc2)}
+  .ptable .prow td:first-child{box-shadow:inset 4px 0 0 var(--ty,transparent)}
+  .ptable .pgrow td{background:var(--bg);padding:4px 14px;cursor:default}
+  .ptable .pgrow .pgrp{margin:6px 0}
+  .ptable tbody tr.pgrow:hover td{background:var(--bg)}
   .ptable tfoot td{background:var(--bg);border-top:1px solid var(--line)}
 }
 /* Desktop property page (pgrid in views.js): cover, headline and sections in a column that stays put, content beside it.
@@ -320,6 +353,8 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   .pgrid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px;align-items:start;padding-top:20px}
   .pside{display:block;position:sticky;top:20px}
   .pside .cover{margin:0;border-radius:16px;height:200px}
+  .pside .cvsc{width:116px;height:116px;bottom:18px;right:10px}
+  .pside .cover.drawn .ctext{max-width:calc(100% - 116px)}
   .pside .cback{top:12px}
   .pside .secnav{position:static;flex-direction:column;gap:4px;margin:12px 0 0;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:none}
   .pside .secnav button{flex-direction:row;justify-content:flex-start;padding:10px 12px;font-size:14px;border:0;border-radius:10px;background:none;text-align:left}
