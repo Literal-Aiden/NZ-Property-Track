@@ -185,14 +185,14 @@ function syncCard(){
   }
   h+='<p class="sub" style="margin-top:4px">Sign in to have your properties on your phone and computer, kept up to date on both. Without signing in, everything stays on this '+dev()+' only.</p>';
   if(authSent){
-    h+='<p style="margin:12px 0 0;font-size:14px">We’ve emailed a sign-in link to <b>'+esc(authSent)+'</b>. Open it on this '+dev()+(standalone?'':' in this browser')+'.</p>'+
+    h+='<div class="sysent">'+ic('check')+'<p><b>Check your email.</b> We’ve sent a sign-in link to <b>'+esc(authSent)+'</b>. Open it on this '+dev()+(standalone?'':' in this browser')+'.</p></div>'+
       (IOS&&standalone?'<p class="sub" style="margin-top:6px">On iPhone the link opens in Safari, not this app, so sign in from Safari for now.</p>':'')+
       (SYNC_CODE?'<label for="sycode" style="display:block;margin-top:12px">Or enter the 6-digit code from the email</label><input id="sycode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="'+esc(authCode)+'">':'');
   }else h+='<label for="syemail" style="display:block;margin-top:12px">Email</label><input id="syemail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="'+esc(authEmail)+'">';
   if(authMsg)h+='<p class="sub neg" style="margin-top:6px">'+esc(authMsg)+'</p>';
   if(authInfo&&!authSent)h+='<p class="sub" style="margin-top:6px"><b>'+esc(authInfo)+'</b></p>';
   return h+'<div class="btns">'+(authSent?(SYNC_CODE?'<button class="go" data-x="sycheck">Sign in</button>':'')+'<button class="go ghost" data-x="sylink">Send again</button><button class="go ghost" data-x="syother">Use a different email</button>'
-    :'<button class="go" data-x="sylink">'+(syncSt==='sending'?'Sending…':'Email me a sign-in link')+'</button>')+'</div></div>';
+    :'<button class="go" data-x="sylink"'+(syncSt==='sending'?' disabled':'')+'>'+(syncSt==='sending'?'Sending…':'Email me a sign-in link')+'</button>')+'</div></div>';
 }
 // Delete my account: a small button that opens a confirmation saying what goes and what stays.
 function delCard(){
@@ -204,7 +204,8 @@ function delCard(){
     '<div class="btns"><button class="go" data-x="sydelok">'+(delBusy?'Deleting…':'Delete my account')+'</button><button class="go ghost" data-x="sydelno">Cancel</button></div></div>';
 }
 // Redraw just the card (not while its field is being typed in).
-function drawSync(){var c=$('sync');if(c&&!c.contains(document.activeElement))c.outerHTML=syncCard()}
+// Redraws only while no field in the card is being typed in (a focused button is fine: it is redrawn after a click).
+function drawSync(){var c=$('sync'),a=document.activeElement;if(c&&!(c.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))c.outerHTML=syncCard()}
 $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('#sync [data-x]');if(!b)return;var x=b.dataset.x;
   if(x==='sylink'){if(syncSt!=='sending'){authInfo='';authEmail=authSent||authEmail;authSent=null;sendLink()}}

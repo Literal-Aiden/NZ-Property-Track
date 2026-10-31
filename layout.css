@@ -416,3 +416,13 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
 .lxa{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--mute)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (min-width:900px){.dhist{grid-column:1/-1}.lplot{height:190px}}
+
+/* Buttons show they've been pressed (and are dimmed while busy), which matters most with a mouse. */
+.go{transition:transform .08s,filter .08s}
+.go:active:not(:disabled){transform:scale(.98);filter:brightness(.9)}
+.go:disabled{opacity:.6;cursor:default}
+@media (hover:hover){.go:hover:not(:disabled){filter:brightness(1.07)}}
+/* Sync card: the sign-in link has been sent. */
+.sysent{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--good) 12%,var(--card))}
+.sysent svg{flex:none;width:20px;height:20px;color:var(--good);margin-top:1px}
+.sysent p{margin:0;font-size:14px}
