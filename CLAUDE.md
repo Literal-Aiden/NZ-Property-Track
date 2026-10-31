@@ -16,11 +16,13 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
   - `potential.js` potential buys, holding costs, maximum offer, plan vs actual · `settings.js` backup, restore, install · `tax.js` tax year summary · `address.js` address suggestions
   - `councils.js` which council an address is in, and its rates search link · `tour.js` the welcome tour · `picker.js` the dropdown picker
   - `charts.js` value and equity over time (loan history, small line charts)
+  - `sync.js` sign-in and sync across devices (Supabase)
   - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
 - When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
 - `sw.js`, `manifest.webmanifest`, `icons/` – install-as-app and offline support
-- Data is saved in the browser's localStorage under the key `nzpt.v1`, so it stays on one device only. First load shows sample properties, and "Start fresh" clears them.
+- Data is saved in the browser's localStorage under the key `nzpt.v1`. First load shows sample properties, and "Start fresh" clears them. Signing in (Settings) syncs it across devices through Supabase (see Sync below); signed out, it stays on one device only
+- `supabase/schema.sql` (the table, security rules, file storage and delete-account function; run in the Supabase SQL Editor) and `supabase/SETUP.md` (setting up the Supabase project)
 
 Open `index.html` in a browser to run it.
 
@@ -43,7 +45,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
   - Calculators: inputs on the left (`.tin`) and the result beside them (`.tout`, sticky), so it updates in view
   - Forms (Add a property, Edit details, Edit mortgage and its loan parts): `pairUp()` in `forms.js` boxes each label with its field (and a hint under it) as `.fld`, two to a row; everything else spans the row. Enter in a field saves (computers only, not while picking an address); Escape still closes
   - Other pages sit in a centred column about 860px wide; Tools shows three calculators a row; the edit panel (760px), + menu and dropdown picker open as centred dialogs; cards and rows highlight on hover
-- **Settings:** Backup/restore, Tax year summary, Appearance, Install the app, and Welcome tour. A dot on the Settings tab means a backup is due
+- **Settings:** Sync across devices, Backup/restore, Tax year summary, Appearance, Install the app, and Welcome tour. A dot on the Settings tab means a backup is due
 - **Appearance:** Light (the default), Dark or Automatic (follows the phone), saved in localStorage `nzpt.theme` (`dark` or `auto`; nothing saved means light) and applied by a small script in the `<head>` of `index.html` before the page draws (sets `data-theme` on `<html>`, which `styles.css` already themes). Below it, **Colour** offers five colour themes as swatches (`ACCENTS` / `setAccent()` in `settings.js`): Pōhutukawa red (the default), Harbour blue, Pounamu teal, Twilight plum and Ironsand charcoal. Saved in `nzpt.accent` and set as `data-accent` on `<html>` by the same `<head>` script; `styles.css` swaps `--acc` / `--acc2` for light and dark, plus `--hero1` / `--hero2` (the portfolio card, the + button glow, the tour logo), and `themeMeta()` sets the phone's bar colour (`theme-color`). Themes stay clear of green and amber, which mean good and warning. Wherever the guidelines say "red", read "the accent colour"
 - Deleting a property (in its Edit details panel), a reno cost, a money entry or a milestone happens straight away with an Undo message for 7 seconds (`undoable(msg, restore, files)` in `main.js`); receipt files are only removed once the message goes
 - Form Save / Cancel rows have class `fbar`: they stick to the bottom of the screen while the form is in view, just above the tab bar (or the screen edge while typing, or in the edit panel), so long forms can be saved one-handed
@@ -161,6 +163,16 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - Usable equity: equity available at a max LVR the user enters, and the next purchase price that could support at a deposit % they enter. "Use my portfolio" fills in total value and lending. Notes that LVR rules change and that income servicing isn't checked
 - Selling costs: commission as tiered % (e.g. 3.95% on the first $400,000, 2% on the rest), flat %, or a flat $ fee (all defaults are examples, user-editable), plus GST or no GST (GST fixed at 15% in `GST` in `tools.js`, the owner's choice; update it there if the rate changes), one combined "Marketing, legal & other" amount, and what the seller receives
 
+**Sync across devices** (`sync.js`, Supabase project `jpfnfwfzivlwlqrdlgxg`, Sydney; the publishable key is in the code, which is fine: the database's row-level security rules do the protecting. Never put the secret / service_role key in the app)
+- Optional, from the first card in Settings. Signed out, nothing is sent anywhere and the app works as before
+- Sign-in by email: "Email me a sign-in link" calls Supabase's `/auth/v1/otp`; the link comes back to the app with the session in the address (`#access_token=…`), which is read, tidied away, and the app opens on Settings (an expired link says so there). No library: plain `fetch` to Supabase's REST and auth APIs (`sbFetch()`). The session is kept in localStorage `nzpt.auth` and refreshed when it's within a minute of ending (`fresh()`). A 6-digit code works too (`checkCode()`), shown when `SYNC_CODE` is true: that needs the email template to show `{{ .Token }}`, which Supabase only allows once our own email service (SMTP, e.g. Resend) is set up. Until then, on iPhone the link signs in Safari, not the installed app (the card says so). Supabase's built-in email only sends a few an hour
+- Each property is a row in `props` (`user_id`, `id`, `data` as the property's JSON, `deleted`, `updated` stamped by the database). Properties get a lasting `p.id` the first time they're saved (`save()` in `data.js`)
+- `syncNow()`: pull, then push. Pull asks for rows changed since the newest seen (`nzpt.sync`: `at`, plus `sent`, a hash of each property as last sent or received; `canon()` sorts keys, because the database returns JSON keys in its own order). A property whose hash differs from `sent` has changed here and is sent (`outgoing()`), and wins over a change from elsewhere (last to sync wins); one missing here was deleted, and is sent as `deleted`, so other devices drop it. Example properties are never sent, and are replaced by the account's properties if it has any; on first sign-in, this device's own properties are added to the account's
+- When: shortly after each save with something to send (`syncSoon()`, from `save()`), when the app comes back into view, every minute while open, and when back online. Changes from elsewhere wait while something is being typed or edited (`busy()`: a focused field, a form's Save bar, or a panel, the add page, a calculator, the tour or the picker open), so a redraw doesn't lose it
+- The card shows who's signed in and the status (Syncing…, Up to date · synced 3 min ago, Offline, or the error), with Sync now and Sign out (second tap; the properties stay on the device)
+- With sync on, Clear all data, Start fresh and Restore change the account too (they replace everything, and that's synced)
+- NOT YET: receipt and photo files (they stay on the device they were added on; the `files` storage bucket and its rules are ready in `schema.sql`), "Delete my account and data" (`delete_me()` is ready), the code sign-in (needs SMTP), and a privacy policy before real users
+
 **Backup**
 - In the Settings tab (also reached from the "Needs attention" backup item on Home): "Share backup" (phones that can share files, via `navigator.share`; sharing must start straight from the tap, so the file is built when Settings opens (`prepShare()`, called from `show()`) and `shareBackup()` shares it at once; Chrome on Android won't share .json files, so where `canShare` refuses it the file goes as a .txt with the same contents, and Restore accepts .json or .txt) sends it to Google Drive, iCloud, email or a chat in one step; "Download backup" saves a JSON backup of all properties plus their receipt files and cover photos, or restore one (replaces everything, after confirming). REINZ sales data is never included. A dot on the Settings tab shows when a backup is due (none yet, or over 30 days)
 
@@ -205,6 +217,6 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 ## Ideas not yet built
 
-- Sync data across devices and add user accounts (needs a backend)
+- Sync: receipt and photo files, delete my account, code sign-in (see Sync across devices)
 - Current bank rates shown as a reference
 - Re-fix reminders as real notifications (e.g. if this becomes a native app); the calendar links are built but hidden

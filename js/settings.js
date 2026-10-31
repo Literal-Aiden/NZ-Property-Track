@@ -42,7 +42,7 @@ function setTheme(t){
   drawSettings();
 }
 function drawSettings(){
-  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+backupCard()+taxCard()+themeCard()+installCard()+
+  $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+syncCard()+backupCard()+taxCard()+themeCard()+installCard()+
     '<div class="card">'+hd('list','Welcome tour')+'<p class="sub" style="margin-top:4px">A quick look at what the app does and where things are.</p><button class="go ghost" data-x="tour">Show the tour</button></div>'+testCard();
 }
 // TEMPORARY, for testers: wipe this device's properties, or swap them for the example ones. Both need a second tap.

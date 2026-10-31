@@ -44,6 +44,7 @@ var SAMPLE=[
 ];
 var KEY='nzpt.v1',isSample=true;
 function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);isSample=false;return d.props||[]}}catch(e){}return JSON.parse(JSON.stringify(SAMPLE))}
-function save(){isSample=false;try{localStorage.setItem(KEY,JSON.stringify({props:props}))}catch(e){}}
+// Every property gets a lasting id the first time it is saved, so sync (sync.js) can match it across devices.
+function save(){isSample=false;props.forEach(function(p){if(!p.id)p.id=uid()});try{localStorage.setItem(KEY,JSON.stringify({props:props}))}catch(e){}if(typeof syncSoon==='function')syncSoon()}
 var props=load();
 var cur=0,newType=null,newIntent='flip',newLoan='pi',editIdx=null,editSec='details';
