@@ -13,7 +13,7 @@ var AKEY='nzpt.auth',SKEY='nzpt.sync';
 function jget(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
 function jset(k,v){try{if(v)localStorage.setItem(k,JSON.stringify(v));else localStorage.removeItem(k)}catch(e){}}
 var auth=jget(AKEY),sync=jget(SKEY)||{sent:{}},syncSt='',syncMsg='',syncT=null,syncBusy=false,syncAgain=false,refreshing=null;
-var authSent=null,authEmail='',authMsg='',authCode='',outArm=false,outT=null;
+var authSent=null,authEmail='',authMsg='',authCode='',outArm=false,outT=null,authInfo='';
 
 // Supabase's API. Errors come back as {status, msg}; status 0 means it couldn't be reached.
 function sbFetch(path,o){
@@ -53,6 +53,7 @@ function ready(fn){if(document.readyState==='loading')document.addEventListener(
   ready(function(){navTab('setbody')});
 })();
 function signedIn(){
+  authInfo='';delOpen=false;
   authSent=null;authCode='';authMsg='';
   // A different account from last time on this device: start its sync state afresh.
   if(sync.uid!==auth.uid)sync={uid:auth.uid,sent:{}};
@@ -78,6 +79,23 @@ function signOut(){
   var a=auth;auth=null;jset(AKEY,null);sync={sent:{}};jset(SKEY,null);syncSt='';syncMsg='';
   if(a)fetch(SB_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+a.at}}).catch(function(){});
   drawSync();
+}
+// Deleting the account (NZ Privacy Act: people can have their data removed): its files in storage first (the database
+// can't remove those), then the account itself with delete_me() (supabase/schema.sql), which also removes its
+// property rows. The properties on this device stay, signed out; other devices keep theirs until cleared there.
+var delOpen=false,delBusy=false,delMsg='';
+function deleteAccount(){
+  if(delBusy)return;delBusy=true;delMsg='';drawSync();
+  var dir=auth.uid+'/',pass=0;
+  // Storage lists up to 1,000 files at a time, so remove them in batches until none are left.
+  function clearFiles(){return sbFetch('/storage/v1/object/list/files',{m:'POST',b:{prefix:dir,limit:1000}}).then(function(fs){
+    var names=(fs||[]).filter(function(f){return f.id}).map(function(f){return dir+f.name});
+    if(names.length&&++pass<50)return sbFetch('/storage/v1/object/files',{m:'DELETE',b:{prefixes:names}}).then(clearFiles);
+  })}
+  fresh().then(clearFiles).then(function(){return sbFetch('/rest/v1/rpc/delete_me',{m:'POST',b:{}})}).then(function(){
+    auth=null;jset(AKEY,null);sync={sent:{}};jset(SKEY,null);syncSt='';syncMsg='';delOpen=false;
+    authInfo='Your account and everything synced to it have been deleted. Your properties are still on this '+dev()+'.';
+  },function(e){delMsg=e.status?'Couldn’t delete the account: '+e.msg:'Couldn’t reach the sync service. Check your connection and try again.'}).then(function(){delBusy=false;drawSync()});
 }
 
 // Hashing a property: keys sorted, because the database hands JSON back with its keys in its own order.
@@ -163,7 +181,7 @@ function syncCard(){
     return h+'<p class="sub" style="margin-top:4px">Signed in as <b>'+esc(auth.email||'')+'</b>. Your properties are kept up to date on every '+dev()+' you sign in on.</p>'+
       '<p class="sub'+(syncSt==='err'?' neg':'')+'" style="margin-top:6px"><b>'+st+'</b></p>'+
       '<p class="sub" style="margin-top:6px">Receipts and photos don’t sync yet: they stay on the '+dev()+' they were added on.</p>'+
-      '<div class="btns"><button class="go ghost" data-x="synow">Sync now</button><button class="go ghost" data-x="syout">'+(outArm?'Tap again to sign out':'Sign out')+'</button></div></div>';
+      '<div class="btns"><button class="go ghost" data-x="synow">Sync now</button><button class="go ghost" data-x="syout">'+(outArm?'Tap again to sign out':'Sign out')+'</button></div>'+delCard()+'</div>';
   }
   h+='<p class="sub" style="margin-top:4px">Sign in to have your properties on your phone and computer, kept up to date on both. Without signing in, everything stays on this '+dev()+' only.</p>';
   if(authSent){
@@ -172,17 +190,30 @@ function syncCard(){
       (SYNC_CODE?'<label for="sycode" style="display:block;margin-top:12px">Or enter the 6-digit code from the email</label><input id="sycode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="'+esc(authCode)+'">':'');
   }else h+='<label for="syemail" style="display:block;margin-top:12px">Email</label><input id="syemail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="'+esc(authEmail)+'">';
   if(authMsg)h+='<p class="sub neg" style="margin-top:6px">'+esc(authMsg)+'</p>';
+  if(authInfo&&!authSent)h+='<p class="sub" style="margin-top:6px"><b>'+esc(authInfo)+'</b></p>';
   return h+'<div class="btns">'+(authSent?(SYNC_CODE?'<button class="go" data-x="sycheck">Sign in</button>':'')+'<button class="go ghost" data-x="sylink">Send again</button><button class="go ghost" data-x="syother">Use a different email</button>'
     :'<button class="go" data-x="sylink">'+(syncSt==='sending'?'Sending…':'Email me a sign-in link')+'</button>')+'</div></div>';
+}
+// Delete my account: a small button that opens a confirmation saying what goes and what stays.
+function delCard(){
+  if(!delOpen)return '<button class="edit del" data-x="sydel" style="margin-top:16px">Delete my account and data</button>';
+  return '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)"><b>Delete your account?</b>'+
+    '<p class="sub" style="margin-top:6px">This removes your account and everything synced to it, including any receipts and photos, from the sync service. It can’t be undone.</p>'+
+    '<p class="sub" style="margin-top:6px">The properties on this '+dev()+' stay here, signed out. Any other devices you’ve signed in on keep their copies too. Download a backup first if you might want them later.</p>'+
+    (delMsg?'<p class="sub neg" style="margin-top:6px">'+esc(delMsg)+'</p>':'')+
+    '<div class="btns"><button class="go" data-x="sydelok">'+(delBusy?'Deleting…':'Delete my account')+'</button><button class="go ghost" data-x="sydelno">Cancel</button></div></div>';
 }
 // Redraw just the card (not while its field is being typed in).
 function drawSync(){var c=$('sync');if(c&&!c.contains(document.activeElement))c.outerHTML=syncCard()}
 $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('#sync [data-x]');if(!b)return;var x=b.dataset.x;
-  if(x==='sylink'){if(syncSt!=='sending'){authEmail=authSent||authEmail;authSent=null;sendLink()}}
+  if(x==='sylink'){if(syncSt!=='sending'){authInfo='';authEmail=authSent||authEmail;authSent=null;sendLink()}}
   if(x==='sycheck')checkCode();
   if(x==='syother'){authSent=null;authMsg='';drawSync()}
   if(x==='synow')syncNow();
+  if(x==='sydel'){delOpen=true;delMsg='';drawSync()}
+  if(x==='sydelno'&&!delBusy){delOpen=false;drawSync()}
+  if(x==='sydelok')deleteAccount();
   if(x==='syout'){if(!outArm){outArm=true;clearTimeout(outT);outT=setTimeout(function(){outArm=false;drawSync()},4000);drawSync();return}outArm=false;clearTimeout(outT);signOut()}
 });
 $('setbody').addEventListener('input',function(e){if(e.target.id==='syemail')authEmail=e.target.value;if(e.target.id==='sycode')authCode=e.target.value});
