@@ -219,7 +219,7 @@ window.addEventListener('appinstalled',function(){installEvt=null;banner()});
 // (the phone's own back gesture) or on something that scrolls sideways or takes typing, and only with no panel open.
 var TABS=['home','p0','toolbody','setbody'],swX=null,swY=0,swT=0;
 function swipeable(t){
-  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&!document.body.classList.contains('typing');
+  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container,.lplot')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&!document.body.classList.contains('typing');
 }
 function swipeTo(d){
   var on=document.querySelector('.screen.on'),id=on&&on.id;

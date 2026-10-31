@@ -122,7 +122,10 @@ function saveVal(p){
   p.value=num('v_val');noteVal(p);
   valEdit=false;isSample=false;render();
 }
-function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;return [l?['Current loan',$$(l)]:['Current loan','Mortgage-free or not added<button class="edit" id="editloan">+ Add a loan</button>','noloan'],p.value?['Equity',$$(e),e<0?'neg':'pos']:['Equity','Add the estimated value'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
+// Current loan is the figure entered; with a P&I part and time since it was entered, an estimate of what's owed now
+// (paid down month by month, as on the value chart) shows under it. Equity and LVR stay on the entered figure.
+function loanEst(p){var h=p.loans,l=p.loan||0;if(!l||!hasPI(p))return '';var n=Math.round(loanAt(p,iso(new Date()))/100)*100;return l-n>=100?'<span class="sub">Est. '+$$(n)+' now,<br>after repayments'+(h&&h.length?' since '+fmtD(h[h.length-1].d):'')+'</span>':''}
+function debtRows(p){var l=p.loan||0,e=(p.value||0)-l;var le=loanEst(p);return [l?['Current loan',$$(l)+le,le?'noloan':'']:['Current loan','Mortgage-free or not added<button class="edit" id="editloan">+ Add a loan</button>','noloan'],p.value?['Equity',$$(e),e<0?'neg':'pos']:['Equity','Add the estimated value'],l&&p.value?['LVR',Math.round(l/p.value*100)+'%']:null]}
 function rows(r){return '<div class="card list">'+r.filter(Boolean).map(function(x){return '<div class="r"><span>'+x[0]+'</span><b class="'+(x[2]||'')+'">'+x[1]+'</b></div>'}).join('')+'</div>'}
 // A property's page: cover photo, headline number, then its sections.
 function current(){
@@ -157,7 +160,7 @@ function current(){
       valRow(p)].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
-  $('p1').innerHTML=pgrid(side,h+(p.plan?planCard(p):''));
+  $('p1').innerHTML=pgrid(side,h+histCard(p)+(p.plan?planCard(p):''));
   fillCur(p);
 }
 function pgrid(side,main){return '<div class="pgrid"><div class="pside">'+side+'</div><div class="pmain">'+main+'</div></div>'}

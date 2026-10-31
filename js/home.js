@@ -32,7 +32,7 @@ function drawHome(){
   h+='</div><div class="dact">';
   var act=activity();
   if(act.length)h+='<h2 class="hh2">Recent activity</h2><div class="card list">'+act.map(function(a){return '<button class="r" data-x="act" data-i="'+a.i+'" data-sec="'+a.sec+'"><span>'+esc(a.t)+' · '+esc(a.addr)+'</span><b class="'+(a.amt>0?'pos':'')+'">'+(a.amt>0?'+':'−')+$$(Math.abs(a.amt))+'</b></button>'}).join('')+'</div>';
-  h+='</div>'+(wide()&&props.length?'<div class="dprops">'+homeProps()+'</div>':'')+'</div>';
+  h+='</div><div class="dhist">'+portHist()+'</div>'+(wide()&&props.length?'<div class="dprops">'+homeProps()+'</div>':'')+'</div>';
   $('home').innerHTML=h+iosHint();
   $('setdot').hidden=isSample||!props.length||(bd!==null&&bd<=30);
 }

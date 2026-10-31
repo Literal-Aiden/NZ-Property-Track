@@ -96,5 +96,6 @@ function convert(i){
   // Its rates, insurance, power and other monthly costs carry over, so the project's holding cost is ready (with the loan).
   if(p.rates!==undefined)['rates','ins','power','oth'].forEach(function(k){n[k]=p[k]||0});
   if(p.loan){n.loan=p.loan;n.rate=p.rate;n.ltype=p.ltype||'pi';n.term=p.term||30}   // the estimated loan becomes the project's mortgage, to edit once it's fixed
+  if(n.loan)noteLoan(n);
   props[i]=n;convOpen=false;nearOpen=false;isSample=false;render();
 }

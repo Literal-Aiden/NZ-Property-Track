@@ -2,7 +2,7 @@
 var CATS=['Demolition','Kitchen','Bathroom','Flooring','Painting','Electrical','Plumbing','Roofing','Landscaping','Consents & fees','Labour','Contingency','Other'];
 function catList(b){return CATS.map(function(n,i){return {n:n,b:b[i]||0}})}
 var SAMPLE=[
- {type:'project',addr:'24 Sample Road',sub:'Auckland',price:850000,legal:2800,extra:0,date:'2026-03-14',value:960000,budget:90000,spent:52000,loan:620000,rate:5.49,fixTerm:'12',fixStart:'2026-02-10',ltype:'pi',term:30,
+ {type:'project',addr:'24 Sample Road',sub:'Auckland',price:850000,legal:2800,extra:0,date:'2026-03-14',value:960000,valueAt:'2026-10-05',vals:[{d:'2026-07-01',v:905000},{d:'2026-10-05',v:960000}],loans:[{d:'2026-03-14',v:620000}],budget:90000,spent:52000,loan:620000,rate:5.49,fixTerm:'12',fixStart:'2026-02-10',ltype:'pi',term:30,
   cats:catList([5000,24000,12000,8000,6000,9000,7000,0,3000,3500,3500,9000,0]),items:[
   {id:'s1',cat:'Demolition',desc:'Strip-out and skip bins',who:'Sample Demolition Ltd',date:'2026-04-22',quote:4500,amt:4800,paid:true,rc:[]},
   {id:'s2',cat:'Kitchen',desc:'Cabinetry, 50% deposit',who:'Sample Kitchens',date:'2026-06-03',quote:22000,amt:11000,paid:true,rc:[]},
@@ -20,7 +20,7 @@ var SAMPLE=[
   {t:'Kitchen install',k:'Trade booked',d:'2026-10-20',who:'Sample Kitchens'},
   {t:'Flooring',k:'Trade booked',d:'2026-11-20',who:'Demo Flooring'},
   {t:'Final inspection and CCC',k:'Inspection',d:'2026-12-10'}]},
- {type:'rental',addr:'8 Demo Avenue',sub:'Hamilton',price:620000,legal:2500,extra:4200,date:'2025-08-02',value:655000,rent:640,exp:9800,loan:430000,rate:6.15,
+ {type:'rental',addr:'8 Demo Avenue',sub:'Hamilton',price:620000,legal:2500,extra:4200,date:'2025-08-02',value:655000,valueAt:'2026-09-12',vals:[{d:'2026-02-15',v:635000},{d:'2026-09-12',v:655000}],loans:[{d:'2025-08-02',v:440000},{d:'2026-03-20',v:430000}],rent:640,exp:9800,loan:430000,rate:6.15,
   parts:[{loan:230000,rate:6.9,fixTerm:'18',fixStart:'2025-06-05',ltype:'io',term:30},{loan:200000,rate:5.29,fixTerm:'12',fixStart:'2026-03-20',ltype:'io',term:30}],
   money:[
   {id:'m9',kind:'in',cat:'Rent',date:'2026-04-10',amt:2560,note:'4 weeks',rc:[]},
@@ -36,7 +36,7 @@ var SAMPLE=[
   {id:'m8',kind:'in',cat:'Rent',date:'2026-10-23',amt:2560,note:'4 weeks',rc:[]}],
   ten:{who:'Sample tenant',ls:'2025-12-15',le:'2026-12-14',ri:'2025-12-15',bond:2560,lodged:true},
   hh:{heat:'2025-08-20',ins:'2025-08-20',vent:'2025-09-02',draught:'2025-09-02'}},
- {type:'project',addr:'3 Example Street',sub:'Tauranga',price:710000,legal:2600,extra:1500,date:'2026-06-20',value:745000,budget:60000,spent:66000},
+ {type:'project',addr:'3 Example Street',sub:'Tauranga',price:710000,legal:2600,extra:1500,date:'2026-06-20',value:745000,valueAt:'2026-09-20',vals:[{d:'2026-09-20',v:745000}],budget:60000,spent:66000},
  {type:'potential',intent:'flip',addr:'51 Prospect Lane',sub:'Hamilton East, Hamilton',price:640000,legal:2500,extra:1800,reno:75000,rates:3200,ins:2400,power:150,loan:512000,rate:5.9,ltype:'io',term:30,hold:3134,months:6,sell:24000,value:830000,comps:[
   {addr:'14 Sample Crescent',sub:'Hamilton East, Hamilton',price:815000,date:'2026-08-12',note:'3 bed, renovated'},
   {addr:'7 Demo Place',sub:'Hamilton East, Hamilton',price:790000,date:'2026-07-03',note:'3 bed, partly updated'},

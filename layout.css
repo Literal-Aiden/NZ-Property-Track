@@ -396,3 +396,22 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
 .accs i{width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
 .accs button.on{border-color:var(--acc);background:var(--acc2);font-weight:700}
 .accs button.on i{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--acc)}
+/* Line charts (charts.js): value over time on a property's Overview, and the portfolio on Home. Thin 2px lines,
+   recessive grid and labels, a legend with today's figures when there's more than one line, and a crosshair with a
+   tooltip on hover or touch. */
+.lch{margin-top:12px}
+.lleg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--mute);margin-bottom:10px}
+.lleg i,.ltip i{display:inline-block;width:12px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.lleg b{color:var(--ink);margin-left:6px}
+.lplot{position:relative;height:150px;touch-action:pan-y;cursor:crosshair;-webkit-user-select:none;user-select:none}
+.lplot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lplot .gl{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
+.lplot .ln{fill:none;stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.ly{position:absolute;left:0;transform:translateY(-100%);padding-bottom:2px;font-size:11px;color:var(--mute);pointer-events:none}
+.ldot{position:absolute;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px var(--card);pointer-events:none}
+.lx{position:absolute;top:0;bottom:0;width:1px;background:var(--mute);opacity:.5;pointer-events:none}
+.ltip{position:absolute;top:-6px;transform:translateY(-100%);display:flex;flex-direction:column;gap:2px;padding:7px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;font-size:12px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.12);pointer-events:none;z-index:3}
+.ltip b{font-size:12px}
+.lxa{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--mute)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:900px){.dhist{grid-column:1/-1}.lplot{height:190px}}
