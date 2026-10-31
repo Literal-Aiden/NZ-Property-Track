@@ -70,7 +70,7 @@ function catForm(p){
   return '<p class="grp" style="margin:14px 0 0">Category budgets</p>'+catDraft.map(function(c,i){
     return '<div class="cb"><span>'+esc(c.n)+'</span><input id="cb_'+i+'" type="text" inputmode="decimal" class="money" autocomplete="off" placeholder="$0" value="'+fmtMoney(c.b||'')+'">'+(used[c.n]?'<span></span>':'<button class="edit del" data-x="catrm" data-k="'+i+'" aria-label="Remove '+esc(c.n)+'">×</button>')+'</div>';
   }).join('')+
-  '<div class="cbnew"><input id="cb_new" placeholder="New category, e.g. Deck"><button class="edit" data-x="catadd">Add</button></div>'+
+  '<div class="cbnew"><input id="cb_new" placeholder="New category, e.g. Deck"><button class="edit" data-x="catadd">Add</button></div><p class="sub neg" id="cbmsg" role="alert" style="margin-top:6px"></p>'+
   '<p class="sub" id="cbtot" style="margin-top:10px"></p>'+
   '<div class="btns fbar"><button class="go" data-x="catsave">Save budgets</button><button class="go ghost" data-x="catcancel">Cancel</button></div>';
 }

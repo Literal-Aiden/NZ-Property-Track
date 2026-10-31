@@ -19,7 +19,7 @@ var GST=0.15;   // NZ standard GST rate; fixed here at the owner's request rathe
 
 var TOOLS=[
  {id:'deal',icon:'check',name:'Quick deal check',desc:'Profit or yield in seconds, then save it as a potential buy',
-  from:function(p){return p.type==='potential'&&{plan:p.intent||'flip',price:p.price,reno:p.reno,legal:(p.legal||0)+(p.extra||0),rates:p.rates,ins:p.ins,othm:p.oth!==undefined||p.rates!==undefined?(p.oth||0)+(p.power||0)+repay(p):p.hold,months:p.months,value:p.value,value2:p.value,sell:p.sell,rent:p.rent,exp:p.exp}},
+  from:function(p){return p.type==='potential'&&{plan:p.intent||'flip',price:p.price,reno:p.reno,legal:(p.legal||0)+(p.extra||0),rates:p.rates,ins:p.ins,othm:Math.round(p.oth!==undefined||p.rates!==undefined?(p.oth||0)+(p.power||0)+repay(p):p.hold),months:p.months,value:p.value,value2:p.value,sell:p.sell,rent:p.rent,exp:p.exp}},
   f:[{i:'plan',l:'Plan',k:'s',d:'flip',o:[['flip','Reno to sell'],['rental','Buy to rent']],wide:1},
      {i:'price',l:'Asking / offer price',k:'m'},{i:'reno',l:'Reno estimate',k:'m'},
      {i:'legal',l:'Legal & purchase costs',k:'m',opt:1,wide:1},
@@ -59,7 +59,9 @@ var TOOLS=[
       'Gross yield is a year’s rent divided by the price. Net yield takes off the expenses you enter, but not mortgage repayments.');
   }},
  {id:'hold',icon:'clock',name:'Holding costs',desc:'What a property costs to hold each month',
-  from:function(p){return p.type==='potential'&&{rates:p.rates,ins:p.ins,power:p.power,oth:p.oth,loan:p.loan,rate:p.rate,type:p.ltype||'pi',term:p.term||30,months:p.months}},
+  // Potential buys, and reno projects with their bills or a loan (months: until the target finish, if set).
+  from:function(p){var x=parts(p)[0]||{};return p.type==='potential'?{rates:p.rates,ins:p.ins,power:p.power,oth:p.oth,loan:p.loan,rate:p.rate,type:p.ltype||'pi',term:p.term||30,months:p.months}
+    :p.type==='project'&&!p.done&&(p.rates!==undefined||p.loan)&&{rates:p.rates,ins:p.ins,power:p.power,oth:p.oth,loan:p.loan,rate:p.rate,type:x.ltype||'pi',term:x.term||30,months:p.target&&p.target>iso(new Date())?Math.ceil(dd(iso(new Date()),p.target)/30.4):''}},
   f:[{i:'rates',l:'Rates per year',k:'m'},{i:'ins',l:'Insurance per year',k:'m'},
      {i:'power',l:'Power / month',k:'m',opt:1},{i:'oth',l:'Other / month',k:'m',opt:1,ph:'e.g. water, lawns'},
      {i:'loan',l:'Loan amount',k:'m',opt:1},{i:'rate',l:'Interest rate %',k:'n',show:hasLoan},

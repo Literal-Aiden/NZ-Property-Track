@@ -115,6 +115,9 @@ function rentNote(p){
 function saveRent(p){
   if(missing($('rentc')))return;
   var v=num('r2_amt'),d=$('r2_date').value;
+  // The first change also records the rent before it (from the last increase, lease start or purchase, if known),
+  // so the history shows where it started.
+  var was=p.ten&&(p.ten.ri||p.ten.ls)||p.date;if(!(p.rents&&p.rents.length)&&p.rent&&was&&was<d)p.rents=[{d:was,v:p.rent}];
   if(v>(p.rent||0)&&$('r2_inc').checked)(p.ten=p.ten||{}).ri=d;
   p.rent=v;p.rents=(p.rents||[]).filter(function(x){return x.d!==d}).concat([{d:d,v:v}]);
   rentChg=false;isSample=false;render();
@@ -139,7 +142,7 @@ function tenCard(p){
   var hh=p.hh||{},left2=hhLeft(p),docs=p.hhDocs||[];
   h+='<div class="card" id="hhcard"><div class="row" style="cursor:default">'+'<span class="hdq">'+hd('thermo','Healthy Homes standards')+'<a class="qmark" href="https://www.tenancy.govt.nz/healthy-homes/healthy-homes-standards-what-a-landlord-needs-to-know/" target="_blank" rel="noopener" aria-label="What the Healthy Homes standards need (tenancy.govt.nz)">?</a></span>'+'<span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
     '<p class="sub" style="margin-top:4px">Tick each standard once the property meets it. Check the current requirements and deadlines at tenancy.govt.nz.</p>'+
-    (left2?'<button class="edit" data-x="hhall" style="margin-top:10px">Mark all '+HH.length+' as done</button>':'')+
+    (left2?'<button class="edit" data-x="hhall" style="margin-top:10px">'+(left2===HH.length?'Mark all '+HH.length+' as done':left2===1?'Mark the last one as done':'Mark the other '+left2+' as done')+'</button>':'')+
     HH.map(function(s){var d=hh[s[0]];return '<div class="task'+(d?' ok':'')+'"><input type="checkbox" data-x="hh" data-k="'+s[0]+'"'+(d?' checked':'')+' aria-label="'+s[1]+'"><div><b>'+s[1]+'</b><p class="sub">'+(d?'Done '+fmtD(d):'Not done yet')+'</p></div></div>'}).join('')+
     // Compliance reports (e.g. from an assessor) are stored like receipts and saved as soon as they're added.
     '<p class="grp" style="margin:16px 0 0">Compliance report</p>'+

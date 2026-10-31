@@ -176,8 +176,8 @@ function errSum(box){
 function fieldBox(e){return e.parentElement.classList.contains('ac')?e.parentElement:e}
 // The label for a field: the one just before it, or one pointing at it with for="".
 function fieldLabel(e){var l=fieldBox(e).previousElementSibling;if(l&&l.tagName==='LABEL')return l;return e.id?document.querySelector('label[for="'+e.id+'"]'):null}
-// A field's name for the summary, without notes like "(NZD)" or "(optional)".
-function fieldName(e){var l=fieldLabel(e),t=l?l.childNodes[0].textContent:'this field';return t.replace(/\s*\(.*$/,'').trim()}
+// A field's name for the summary, without notes like "(NZD)" or "(optional)", or a unit like "%" on the end.
+function fieldName(e){var l=fieldLabel(e),t=l?l.childNodes[0].textContent:'this field';return t.replace(/\s*\(.*$/,'').replace(/\s*%$/,'').trim()}
 // Clears a field's error and updates the summary.
 function unbad(e){
   e.classList.remove('bad');e.removeAttribute('aria-invalid');
@@ -220,6 +220,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet')
 $(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2]);if(e.target.id==='f_date')syncFs()});
 $(id).addEventListener('input',function(e){
   if(e.target.classList.contains('bad'))unbad(e.target);
+  // A rental needs a purchase price only when there's no loan balance or value, so typing either clears it.
+  if(/^(l_amt0|f_value)$/.test(e.target.id)&&e.target.value&&$('f_price')&&$('f_price').classList.contains('bad')&&(newType||(editIdx!==null&&props[editIdx].type))==='rental')unbad($('f_price'));
   if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
   if(e.target.id==='f_date')syncFs();
   var la=/^l_amt(\d+)$/.exec(e.target.id);if(la)loanAmt(+la[1]);

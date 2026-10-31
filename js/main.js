@@ -13,7 +13,9 @@ function ovOpen(id){ovs.push(id);try{history.pushState(hstate(),'')}catch(e){}}
 function ovClose(id){var i=ovs.lastIndexOf(id);if(i<0)ovShut(id);else history.go(i-ovs.length)}
 // Replaces the top entry without adding history, e.g. the + menu turning into the property page it opened.
 function ovSwap(id){ovs[ovs.length-1]=id;try{history.replaceState(hstate(),'')}catch(e){}}
-function ovShut(id){if(id==='tool'){toolCur=null;drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();else if(id==='pick')closePickNow();reshow()}
+// Closing a property page clears its open forms, so a form started there (say from a quick action) isn't still
+// half-filled next time. A calculator opened from another tab goes back to that tab.
+function ovShut(id){if(id==='p1')resetCur();if(id==='tool'){toolCur=null;if(toolFrom){tab=toolFrom;toolFrom=null}drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();else if(id==='pick')closePickNow();reshow()}
 window.addEventListener('popstate',function(e){
   navBusy=false;
   var s=e.state,l=s&&s.s===sid?s.nz:0;
@@ -41,7 +43,7 @@ function go(i){if(i===0)navTab('p0');else openPage(i===1?'p1':'p2')}
 // Switching tabs closes any pages and panels on top first. A second tap while that's under way just changes which
 // tab shows when it finishes, instead of going back again (which could step out of the app).
 function navTab(t){
-  tab=t;if(t==='toolbody'&&ovs.indexOf('tool')<0){toolCur=null;drawTools()}
+  tab=t;toolFrom=null;if(t==='toolbody'&&ovs.indexOf('tool')<0){toolCur=null;drawTools()}
   if(navBusy)return;
   if(ovs.length){
     navBusy=true;history.go(-ovs.length);
@@ -112,7 +114,8 @@ $('p1').addEventListener('click',function(e){
   else if(x==='rcdrop'){var id=b.dataset.id,pi=pendRc.filter(function(r){return r.id===id}).length;if(pi){pendRc=pendRc.filter(function(r){return r.id!==id});rcDel([id])}else dropRc.push(id);keepIn(rcCard())}
   else if(x==='cats'){catDraft=JSON.parse(JSON.stringify(cats(p)));edit()}
   else if(x==='catrm'){readDraft();catDraft.splice(k,1);current()}
-  else if(x==='catadd'){var nn=$('cb_new').value.trim();readDraft();if(!nn||catDraft.some(function(c){return c.n.toLowerCase()===nn.toLowerCase()})){$('cb_new').focus();return}catDraft.push({n:nn,b:0});current()}
+  // A blank or repeated name says why it wasn't added, under the field.
+  else if(x==='catadd'){var nn=$('cb_new').value.trim(),dup=nn&&catDraft.filter(function(c){return c.n.toLowerCase()===nn.toLowerCase()})[0],cm=$('cbmsg');readDraft();if(!nn||dup){if(cm)cm.textContent=nn?'“'+dup.n+'” is already a category.':'Type a name for the new category first.';$('cb_new').focus();return}catDraft.push({n:nn,b:0});current()}
   else if(x==='catsave'){readDraft();p.cats=catDraft;catDraft=null;isSample=false;render()}
   else if(x==='catcancel'){catDraft=null;current()}
   else if(x==='csv')exportCosts(p);
@@ -180,6 +183,7 @@ $('p1').addEventListener('input',function(e){
   if(/^r2_(amt|date|inc)$/.test(e.target.id))rentNote(props[cur]);
   if(/^t_(rates|ins|power|oth)$/.test(e.target.id))tlHoldCalc(props[cur]);
   if(e.target.classList.contains('bad'))unbad(e.target);
+  if(e.target.id==='cb_new'&&$('cbmsg'))$('cbmsg').textContent='';
   // The offer target is kept on the property without re-rendering, so typing isn't interrupted.
   if(e.target.id==='o_tgt'){var p=props[cur];p.tgt=num('o_tgt')||undefined;offerCalc(p);if(!isSample)save()}
 });

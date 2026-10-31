@@ -96,8 +96,10 @@ function quickGo(k,i){
   // Scrolls to the form without focusing a field, so the keyboard doesn't jump up straight away.
   setTimeout(function(){var c=$(q.card);if(c)c.scrollIntoView({block:c.tagName==='INPUT'?'center':'start',behavior:'smooth'})},60);
 }
-// Opens a calculator from outside the Tools tab.
+// Opens a calculator from outside the Tools tab. Back (or its own back button) returns to the tab it came from.
+var toolFrom=null;
 function openTool(id){
+  toolFrom=tab!=='toolbody'?tab:null;
   if($('plus').hidden){tab='toolbody';toolCur=id;drawTools();show('toolbody');ovOpen('tool')}
   else{closePlusNow();tab='toolbody';toolCur=id;drawTools();ovSwap('tool');show('toolbody')}
 }
@@ -149,7 +151,7 @@ function cfMini(){
   var o=props.map(function(p,i){return {p:p,i:i,n:cashFlow(p)}}).filter(function(x){return x.p.type!=='potential'});
   o.sort(function(a,b){return Math.abs(b.n)-Math.abs(a.n)});
   return '<div class="card list">'+hd('trend','Cash flow by property')+o.slice(0,5).map(function(x){
-    return '<button class="r" data-x="cfp" data-i="'+x.i+'"><span>'+esc(x.p.addr)+'</span><b class="'+(x.n<0?'neg':'pos')+'">'+sgn(x.n)+'</b></button>'}).join('')+
+    return '<button class="r" data-x="cfp" data-i="'+x.i+'"><span>'+esc(x.p.addr)+'</span>'+(Math.abs(x.n)<0.5?'<b class="mute">Not entered</b>':'<b class="'+(x.n<0?'neg':'pos')+'">'+sgn(x.n)+'</b>')+'</button>'}).join('')+
     '<button class="edit" data-x="cf" style="margin-top:10px">Full breakdown ›</button></div>';
 }
 // Your properties: a compact table, one row each, linking to the full Properties table.
