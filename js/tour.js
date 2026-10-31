@@ -1,32 +1,50 @@
 // Welcome tour: a few slides shown the first time the app opens, and again from Settings.
-// Each slide points at a part of the bottom tab bar, shown as a small copy with that button lit up.
-var TOUR_KEY='nzpt.tour',tourAt=0;
+// Each slide shows its page behind the card (pg) and lights up that button on the real tab bar (nav), which sits
+// above the tour's dimmed background. With no properties of your own, the example ones are shown while it's open.
+var TOUR_KEY='nzpt.tour',tourAt=0,tourWas=null;
 var TOUR=[
-  {ic:'home',t:'Kia ora, welcome',x:'Track your rentals, renovation projects and the properties you’re thinking of buying, all in one place. Here’s a quick look around.'},
-  {nav:'plus',t:'Add with +',x:'Tap + to add a property: a rental, a reno project or a potential buy. It’s also the quick way to log rent or an expense, a reno cost or a milestone.'},
-  {nav:'home',t:'Home',x:'Your portfolio at a glance: equity, lending, LVR and monthly cash flow.',l:['Needs attention flags re-fixes coming up, overdue milestones, unpaid invoices, leases ending and Healthy Homes','Recent activity shows the latest rent, expenses and reno costs']},
-  {nav:'p0',t:'Properties',x:'Each property has its own page.',l:['Reno projects: budget, costs with receipts, and a timeline with milestones','Rentals: rent and expenses for the tax year, tenancy, Healthy Homes','Potential buys: the numbers on a deal and the most you could offer','Mortgage: rate, re-fix date and repayments, including split loans']},
-  {nav:'toolbody',t:'Tools',x:'Calculators for a quick deal check, mortgage repayments, rental yield, holding costs, break-even rent, usable equity and selling costs. Most can fill in from one of your properties.'},
+  {ic:'home',pg:'home',t:'Kia ora, welcome',x:'Track your rentals, renovation projects, and the properties you’re thinking of buying, all in one place. Here’s a quick look around.'},
+  {nav:'plus',pg:'home',plus:1,t:'Add with +',x:'Tap + to add a property: a rental, a reno project, or a potential buy. It’s also the quick way to log rent or an expense, a reno cost, or a milestone.'},
+  {nav:'home',t:'Home',x:'Your portfolio at a glance: equity, lending, LVR, and monthly cash flow.',l:['Needs attention lists what’s due: upcoming re-fixes, overdue milestones, unpaid invoices, leases ending, and Healthy Homes standards','Recent activity shows the latest rent, expenses, and reno costs']},
+  {nav:'p0',t:'Properties',x:'Each property has its own page.',l:['Reno projects: budget, costs, receipts, and milestones','Rentals: rent, expenses, tenancy, and Healthy Homes','Potential buys: the deal numbers and your maximum offer','Mortgages: re-fix dates and repayments']},
+  {nav:'toolbody',t:'Tools',x:'Calculators for a quick deal check, mortgage repayments, rental yield, holding costs, break-even rent, usable equity, and selling costs. Most can fill in from one of your properties.'},
   {nav:'setbody',t:'Your data stays on this '+dev(),x:'Nothing is sent to a server, so download a backup from Settings now and then. You can also install the app '+(DESK?'on this computer':'on your home screen')+' from there.'}];
 function tourSeen(){try{return !!localStorage.getItem(TOUR_KEY)}catch(e){return true}}
-function openTour(){tourAt=0;drawTour();$('tour').hidden=false;ovOpen('tour')}
-function closeTourNow(){$('tour').hidden=true;try{localStorage.setItem(TOUR_KEY,'1')}catch(e){}}
-// A copy of the tab bar with one button lit up (no ids, so it doesn't clash with the real one).
-function tourNav(on){
-  var h=$('nav').innerHTML.replace(/ id="[^"]*"/g,'').replace(/<button/g,'<span class="tb"').replace(/<\/button>/g,'</span>');
-  var d=document.createElement('div');d.innerHTML=h;
-  d.querySelectorAll('.tb').forEach(function(b){b.classList.toggle('on',(b.dataset.tab||'plus')===on)});
-  return '<div class="tnav" aria-hidden="true">'+d.innerHTML+'</div>';
+function openTour(){
+  tourWas=null;
+  // Nothing of your own yet: borrow the examples for the tour (in memory only; isSample stops them being saved).
+  if(!isSample&&!props.length){tourWas={props:props,cur:cur};props=JSON.parse(JSON.stringify(SAMPLE));isSample=true;cur=0;list();banner()}
+  tourAt=0;document.body.classList.add('touring');drawTour();$('tour').hidden=false;ovOpen('tour');
+}
+// Puts back what was there before the tour (your own properties, the + menu closed) and goes back to Home.
+function tourRestore(){
+  tab='home';$('home').scrollTop=0;if(tourWas){props=tourWas.props;cur=tourWas.cur;isSample=false;tourWas=null;list();banner()}
+  document.body.classList.remove('touring');$('tour').classList.remove('top');$('plus').hidden=true;
+  document.querySelectorAll('#nav button').forEach(function(b){b.classList.remove('tlit')});
+}
+function closeTourNow(){if($('tour').hidden)return;$('tour').hidden=true;tourRestore();try{localStorage.setItem(TOUR_KEY,'1')}catch(e){}}
+// What you'd have without the borrowed examples, for the last slide's buttons.
+function tourReal(){return tourWas?{sample:false,n:tourWas.props.length}:{sample:isSample,n:props.length}}
+// Shows the slide's page behind the card (and the + menu on its slide), and lights up its button on the tab bar.
+function tourPage(s){
+  var pg=s.pg||s.nav;
+  if(pg==='toolbody'&&toolCur){toolCur=null;drawTools()}
+  if(pg==='p0'&&(propFilter!=='all'||propQ)){propFilter='all';propQ='';list()}
+  document.querySelectorAll('.screen').forEach(function(x){x.classList.toggle('on',x.id===pg)});$(pg).scrollTop=0;
+  document.querySelectorAll('#nav button').forEach(function(b){var k=b.dataset.tab||'plus';b.classList.toggle('on',k===pg);b.classList.toggle('tlit',k===s.nav)});
+  if(s.plus){drawPlus();$('plusbody').scrollTop=0}
+  $('plus').hidden=!s.plus;$('tour').classList.toggle('top',!!s.plus);
 }
 function drawTour(){
-  var s=TOUR[tourAt],last=tourAt===TOUR.length-1;
+  var s=TOUR[tourAt],last=tourAt===TOUR.length-1,r=tourReal();tourPage(s);
   var h='<button class="tskip" data-tr="close">'+(last?'Close':'Skip')+'</button>'+
-    (s.nav?tourNav(s.nav):'<div class="tlogo">'+ic(s.ic)+'</div>')+
-    '<h2 id="tourt">'+s.t+'</h2><p>'+s.x+'</p>'+(s.l?'<ul>'+s.l.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>':'')+
+    (s.ic?'<div class="tlogo">'+ic(s.ic)+'</div>':'')+
+    '<h2 id="tourt">'+s.t+'</h2><p>'+s.x+(s.nav==='p0'&&tourWas?' These ones are examples, just for the tour.':'')+'</p>'+
+    (s.l?'<ul>'+s.l.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>':'')+
     '<div class="tdots">'+TOUR.map(function(x,i){return '<i class="'+(i===tourAt?'on':'')+'"></i>'}).join('')+'</div>';
   if(!last)h+='<div class="btns">'+(tourAt?'<button class="go ghost" data-tr="prev">Back</button>':'')+'<button class="go" data-tr="next">Next</button></div>';
-  else if(isSample)h+='<p class="sub">The properties you’ll see first are examples, so you can look around. Start fresh when you’re ready to add your own.</p>'+addBtns('Look at the examples');
-  else if(!props.length)h+=addBtns('Look around first');
+  else if(r.sample)h+='<p class="sub">The properties you’ll see first are examples, so you can look around. Start fresh when you’re ready to add your own.</p>'+addBtns('Look at the examples');
+  else if(!r.n)h+=addBtns('Look around first');
   else h+='<div class="btns"><button class="go ghost" data-tr="prev">Back</button><button class="go" data-tr="close">Get started</button></div>';
   $('tourbody').innerHTML=h;
 }
@@ -38,7 +56,7 @@ $('tour').addEventListener('click',function(e){
   if(x==='prev')tourGo(-1);
   if(x==='close')ovClose('tour');
   // Opens the add page in place of the tour, clearing the examples first (like "Start fresh" on Home).
-  if(x==='add'){if(isSample){props=[];cur=0;editIdx=null;save();render()}newType=null;form();go(2)}
+  if(x==='add'){tourRestore();if(isSample){props=[];cur=0;editIdx=null;save();render()}newType=null;form();go(2)}
 });
 document.addEventListener('keydown',function(e){
   if($('tour').hidden)return;

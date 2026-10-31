@@ -134,10 +134,22 @@ button.r{cursor:pointer}
 .rlink a{display:inline-flex;align-items:center;gap:6px;color:var(--acc);font-weight:600;text-decoration:none}
 .rlink a .ic{width:16px;height:16px}
 .rlink span{display:block;margin-top:2px}
-/* Welcome tour (tour.js): a centred card over the app, with a small copy of the tab bar showing where things are. */
-.tour{justify-content:center;align-items:center;padding:16px}
-.tourbox{position:relative;width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow-y:auto;background:var(--bg);border-radius:20px;padding:22px 18px 18px;animation:up .2s ease-out}
+/* Welcome tour (tour.js): a card just above the tab bar, with each slide's page showing behind a light dim. The real
+   tab bar sits above the dim with the slide's button ringed; on the + slide the card moves to the top, over the + menu. */
+.tour{justify-content:flex-end;align-items:center;padding:16px 16px calc(84px + env(safe-area-inset-bottom,0px))}
+.tour.top{justify-content:flex-start;padding:calc(16px + env(safe-area-inset-top,0px)) 16px 16px}
+.tour .sheetbg{background:rgba(0,0,0,.3)}
+.touring #plus .sheetbg{display:none}
+.touring #plusbody{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.touring .nav{z-index:2001;pointer-events:none}
+.nav button.tlit{color:var(--acc);font-weight:600}
+.nav button.tlit:not(#plusbtn)::after{content:'';position:absolute;inset:-3px 4px;border:2px solid var(--acc);border-radius:14px;animation:tring 1.6s ease-in-out infinite}
+.nav #plusbtn.tlit .plus{animation:tplus 1.6s ease-in-out infinite}
+@keyframes tring{50%{opacity:.35}}
+@keyframes tplus{0%,100%{box-shadow:0 0 0 0 rgba(194,65,45,.5)}50%{box-shadow:0 0 0 9px rgba(194,65,45,.15)}}
+.tourbox{position:relative;width:100%;max-width:420px;max-height:62vh;overflow-y:auto;background:var(--bg);border-radius:20px;padding:22px 18px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:up .2s ease-out}
 .tourbox h2{font-size:22px;margin:16px 0 6px;letter-spacing:-.01em}
+.tskip+h2{margin-top:2px;padding-right:56px}
 .tourbox p{margin:0 0 8px;font-size:15px}
 .tourbox ul{margin:4px 0 8px;padding-left:20px;font-size:14px}
 .tourbox li{margin:4px 0}
@@ -145,17 +157,13 @@ button.r{cursor:pointer}
 .tskip{position:absolute;top:12px;right:12px;border:0;background:none;color:var(--mute);font:inherit;font-size:14px;padding:6px 8px;cursor:pointer}
 .tlogo{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin-top:6px;color:#fff;background:linear-gradient(135deg,#c2412d,#8f2a1c)}
 .tlogo .ic{width:32px;height:32px}
-.tnav{display:flex;margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 2px}
-.tnav .tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--mute);opacity:.45}
-.tnav .tb.on{opacity:1;color:var(--acc);font-weight:600}
-.tnav .tb .ic{width:20px;height:20px}
-.tnav .ndot{display:none}
-.tnav .plus{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--onacc)}
 .tdots{display:flex;justify-content:center;gap:6px;margin:14px 0 2px}
 .tdots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
 .tdots i.on{background:var(--acc);width:18px;border-radius:4px}
 .tourbox .btns{margin-top:12px}
-@media (prefers-reduced-motion:reduce){.tourbox{animation:none}}
+@media (prefers-reduced-motion:reduce){.tourbox,.nav button.tlit::after,.nav #plusbtn.tlit .plus{animation:none}}
+/* Wide screens: the card sits in the bottom right corner (top right on the + slide), clear of the sidebar. */
+@media (min-width:900px){.sheet.tour{justify-content:flex-end;align-items:flex-end;padding:24px}.sheet.tour.top{justify-content:flex-start}.tourbox{max-height:calc(100vh - 48px)}.touring #plusbody{padding-bottom:16px}}
 /* Dropdown picker (picker.js): a short panel at the bottom with the choices as buttons, in thumb reach. */
 .ddpick{z-index:2200}
 /* A light shade, so the form behind stays readable (the other panels use .45). */
