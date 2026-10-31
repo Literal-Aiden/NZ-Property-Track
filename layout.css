@@ -77,6 +77,11 @@ button.r{cursor:pointer}
 .scn .d{fill:var(--ty)}
 .scn .l{stroke:color-mix(in srgb,var(--ty) 75%,var(--ink));stroke-width:2.2}
 .scn .k{stroke:var(--card);stroke-width:2}
+/* Dark mode: the card colour would leave the walls looking hollow, so the houses are lit at night instead, with pale
+   walls and glowing windows (and the reno's doorway). */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .scn .w{fill:#ece4dc}:root:not([data-theme="light"]) .scn .t{fill:#f2c14e}}
+:root[data-theme="dark"] .scn .w{fill:#ece4dc}
+:root[data-theme="dark"] .scn .t{fill:#f2c14e}
 .prop .info{flex:1;min-width:0;display:flex;flex-direction:column}
 .prop .info b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag{align-self:flex-start;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;margin-top:4px}

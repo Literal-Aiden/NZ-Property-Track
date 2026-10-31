@@ -16,12 +16,13 @@ function installCard(){
     :'Use your browser’s menu to add it to your home screen, so it opens full screen and works offline.';
   return '<div class="card">'+hd('phone','Install the app')+'<p class="sub" style="margin-top:4px">'+t+'</p>'+(installEvt&&!standalone?'<button class="go" data-x="inst">Install app</button>':'')+'</div>';
 }
-// Appearance: follow the device (blank), or always light or dark. Saved in nzpt.theme and applied in index.html.
+// Appearance: light (the default, nothing saved), dark, or automatic (follows the device). Saved in nzpt.theme as
+// 'dark' or 'auto' and applied in index.html.
 // Colour themes: [data-accent value ('' is the default), name, swatch]. The colours themselves are in styles.css.
 var ACCENTS=[['','Pōhutukawa','#c2412d'],['harbour','Harbour','#2563a8'],['pounamu','Pounamu','#0f766e'],['twilight','Twilight','#7b3fa0'],['ironsand','Ironsand','#3b3735']];
 function themeCard(){
-  var t=document.documentElement.dataset.theme||'',a=document.documentElement.dataset.accent||'';
-  return '<div class="card">'+hd('sun','Appearance')+'<div class="seg" style="margin-top:12px">'+[['','Automatic'],['light','Light'],['dark','Dark']].map(function(o){
+  var t=document.documentElement.dataset.theme||'auto',a=document.documentElement.dataset.accent||'';
+  return '<div class="card">'+hd('sun','Appearance')+'<div class="seg" style="margin-top:12px">'+[['light','Light'],['dark','Dark'],['auto','Automatic']].map(function(o){
     return '<button data-th="'+o[0]+'" class="'+(o[0]===t?'on':'')+'">'+o[1]+'</button>'}).join('')+'</div>'+
     '<p class="sub" style="margin-top:8px">Automatic follows your '+dev()+'’s light or dark setting.</p>'+
     '<p class="sub" style="margin:16px 0 8px;font-weight:600;color:var(--ink)">Colour</p><div class="accs">'+ACCENTS.map(function(o){
@@ -36,8 +37,8 @@ function setAccent(a){
 function themeMeta(){var m=document.querySelector('meta[name="theme-color"]'),c=getComputedStyle(document.documentElement).getPropertyValue('--hero1').trim();if(m&&c)m.content=c}
 themeMeta();
 function setTheme(t){
-  if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme;
-  try{if(t)localStorage.setItem('nzpt.theme',t);else localStorage.removeItem('nzpt.theme')}catch(e){}
+  if(t==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;
+  try{if(t==='light')localStorage.removeItem('nzpt.theme');else localStorage.setItem('nzpt.theme',t)}catch(e){}
   drawSettings();
 }
 function drawSettings(){
