@@ -17,13 +17,17 @@ function valPts(p){
 function at(pts,d){var v=null;pts.forEach(function(x){if(x.d<=d)v=x.v});return v===null&&pts.length?pts[0].v:v}
 // The loan on a date. From each recorded balance, P&I parts are paid down month by month at their rate and term
 // (each part's share of that balance), until the next recorded balance; interest-only parts stay level. Before the
-// first recorded balance, that first balance is used. All an estimate: the bank's statement has the real figure.
-function loanAt(p,d){
+// first recorded balance, P&I parts are worked back (higher, by the repayments since). All an estimate: the bank's
+// statement has the real figure.
+function loanAt(p,d){var ps=parts(p);return ps.length?sum(ps,function(x){return partAt(p,x,d)}):(p.loan||0)}
+// One loan part's balance on a date, as above.
+function partAt(p,x,d){
   var h=p.loans&&p.loans.length?p.loans:[{d:iso(new Date()),v:p.loan||0}],e=h[0];
-  h.forEach(function(x){if(x.d<=d)e=x});
-  var m=Math.max(0,(new Date(d+'T00:00')-new Date(e.d+'T00:00'))/864e5/30.4375),ps=parts(p),tot=sum(ps,function(x){return x.loan});
-  if(!m||!tot)return e.v;
-  return sum(ps,function(x){var b=e.v*x.loan/tot;return x.ltype==='io'?b:paid(b,x.rate||0,x.term||30,m)});
+  h.forEach(function(y){if(y.d<=d)e=y});
+  var tot=sum(parts(p),function(y){return y.loan}),b=tot?e.v*x.loan/tot:0,m=(new Date(d+'T00:00')-new Date(e.d+'T00:00'))/864e5/30.4375;
+  if(!m||x.ltype==='io')return b;
+  // paid() is proportional to the starting balance, so working back is a division by what's left of $1.
+  return m>0?paid(b,x.rate||0,x.term||30,m):b/(paid(1,x.rate||0,(x.term||30)-m/12,-m)||1);
 }
 // What's left of a P&I loan of b after m months of repayments (rate %, term in years).
 function paid(b,rate,term,m){var r=rate/1200,n=term*12;if(!r)return Math.max(0,b-b/n*m);var g=Math.pow(1+r,m);return Math.max(0,b*g-pmt(b,rate,term)*(g-1)/r)}

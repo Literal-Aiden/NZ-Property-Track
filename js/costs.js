@@ -43,7 +43,8 @@ function itemForm(p){
    '<label>Category</label><select id="i_cat">'+cats(p).map(function(c){return '<option'+(c.n===x.cat?' selected':'')+'>'+esc(c.n)+'</option>'}).join('')+'</select>'+
    '<label>Description</label><input id="i_desc" placeholder="e.g. Kitchen benchtop" required>'+
    '<label>Supplier / tradie</label><input id="i_who">'+
-   '<label>Date</label><input id="i_date" type="date">'+
+   // A new cost starts dated today (clear it for a quote not yet invoiced); undated costs aren't in the tax summary.
+   '<label>Date</label><input id="i_date" type="date"'+(itemEdit==='new'?' value="'+iso(new Date())+'"':'')+'>'+
    '<div class="grid" style="margin-top:0"><div><label>Quote for the job</label><input id="i_quote"'+N+'</div><div><label>Invoiced so far</label><input id="i_amt"'+N+'</div></div>'+
    '<label class="chk"><input type="checkbox" id="i_paid"'+(x.paid?' checked':'')+'>Paid</label>'+
    '<label>Receipts and invoices</label>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+

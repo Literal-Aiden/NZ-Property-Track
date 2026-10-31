@@ -7,10 +7,12 @@ function tyEndOf(y){return (y+1)+'-03-31'}
 function tyLabel(y){return y+'–'+String(y+1).slice(2)}
 // The period counted: the tax year, but only up to today for the current one.
 function tyRange(y){var t=iso(new Date()),e=tyEndOf(y);return [tyStartOf(y),e<t?e:t]}
-// Mortgage interest over the period, from the loan as it stands now: an estimate, since balances and rates change.
+// Mortgage interest over the period, month by month on each part's estimated balance (loanAt in charts.js: P&I
+// parts paid down, interest-only level) at its current rate. An estimate, since rates change.
 function taxInterest(p,a,b){
-  var s=p.date&&p.date>a?p.date:a,days=s>b?0:dd(s,b)+1;
-  return sum(parts(p),function(x){return (x.loan||0)*(x.rate||0)/100*days/365});
+  var s=p.date&&p.date>a?p.date:a,end=addDays(b,1),t=0;if(s>b)return 0;
+  for(var d=s,n;d<end;d=n){n=addMonths(d,1);if(n>end)n=end;var days=dd(d,n),at=d;t+=sum(parts(p),function(x){return partAt(p,x,at)*(x.rate||0)/100*days/365})}
+  return t;
 }
 function taxProps(y){
   var r=tyRange(y),a=r[0],b=r[1];
@@ -28,6 +30,9 @@ function taxRows(o){var h='';for(var k in o)h+='<div class="r"><span>'+esc(k)+'<
 function taxBody(y){
   var L=taxProps(y),r=tyRange(y);
   var h='<p class="sub" style="margin-top:8px">'+fmtD(r[0])+' to '+fmtD(r[1])+(r[1]<tyEndOf(y)?' (so far)':'')+'</p>';
+  // Invoiced reno costs with no date can't be placed in a tax year, so they're left out: say how many, and where.
+  var nd=[];props.forEach(function(p){if(p.type!=='potential')(p.items||[]).forEach(function(x){if(x.amt&&!x.date)nd.push(p.addr)})});
+  if(nd.length)h+='<p class="sub neg" style="margin-top:6px">'+nd.length+' reno cost'+(nd.length>1?'s have':' has')+' no date, so '+(nd.length>1?'they’re':'it’s')+' not included ('+esc(nd.filter(function(a,i){return nd.indexOf(a)===i}).join(', '))+'). Add a date in Costs to count '+(nd.length>1?'them':'it')+'.</p>';
   if(!L.length)return h+'<p class="sub" style="margin-top:8px">Nothing entered for this tax year yet.</p>';
   L.forEach(function(x){
     h+='<p class="grp" style="margin:14px 0 0">'+esc(x.p.addr)+'</p><div class="list">';
@@ -42,7 +47,7 @@ function taxBody(y){
   h+='<p class="grp" style="margin:14px 0 0">All properties</p><div class="list">'+
     '<div class="r"><span>Income</span><b>'+$$(ti)+'</b></div><div class="r"><span>Expenses</span><b>'+$$(te)+'</b></div>'+
     (tr?'<div class="r"><span>Reno costs</span><b>'+$$(tr)+'</b></div>':'')+(tn?'<div class="r"><span>Mortgage interest (estimate)</span><b>'+$$(tn)+'</b></div>':'')+'</div>';
-  return h+'<p class="sub" style="margin-top:10px">Only what’s been entered in the app. Interest is estimated from each loan’s current balance and rate, so use your bank’s annual interest statement for your return. Rules on what’s deductible (interest, and whether reno costs are repairs or capital) change, so check with your accountant or IRD.</p>';
+  return h+'<p class="sub" style="margin-top:10px">Only what’s been entered in the app. Interest is estimated from each loan’s balance (paid down month by month for P&amp;I) at its current rate, so use your bank’s annual interest statement for your return. Rules on what’s deductible (interest, and whether reno costs are repairs or capital) change, so check with your accountant or IRD.</p>';
 }
 function taxCard(){
   var y0=+taxYearStart().slice(0,4);if(taxY===null)taxY=y0;
@@ -63,7 +68,7 @@ function exportTax(y){
       });
     });
     (p.items||[]).forEach(function(m){if(m.date&&m.date>=a&&m.date<=b&&m.amt)rows.push([p.addr,m.date,'Reno cost',m.cat,[m.desc,m.who].filter(Boolean).join(' · '),m.amt,(m.rc||[]).map(function(f){return f.name}).join('; ')])});
-    if(x.int)rows.push([p.addr,b,'Interest (estimate)','Mortgage interest','Estimated from the current loan and rate',Math.round(x.int*100)/100,'']);
+    if(x.int)rows.push([p.addr,b,'Interest (estimate)','Mortgage interest','Estimated from the loan balance (paid down for P&I) and current rate',Math.round(x.int*100)/100,'']);
   });
   var head=rows.shift();rows.sort(function(m,n){return (m[0]+m[1]).localeCompare(n[0]+n[1])});
   download('tax-year-'+tyLabel(y).replace('–','-')+'.csv','﻿'+[head].concat(rows).map(function(r){return r.map(csvCell).join(',')}).join('\r\n'),'text/csv');
