@@ -69,9 +69,12 @@ function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),
 // The backup: every property and the receipt files and photos they use, as JSON.
 function buildBackup(){
   var want={},t=iso(new Date());props.forEach(function(p){rcIds(p).forEach(function(id){want[id]=1})});
+  // Signed in, files added on other devices are downloaded first, so they're in the backup too.
+  return (typeof rcFetchMissing==='function'?rcFetchMissing(Object.keys(want)):Promise.resolve()).then(function(){
   return rcTx('readonly',function(s){return s.getAll()}).catch(function(){return []}).then(function(all){
     return Promise.all((all||[]).filter(function(r){return want[r.id]}).map(function(r){return b2d(r.blob).then(function(u){return {id:r.id,name:r.name,type:r.type,added:r.added,data:u}})}));
   }).then(function(rc){return {t:t,name:'nz-property-tracker-backup-'+t+'.json',data:JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc})}});
+  });
 }
 function backedUp(t){try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner()}
 function exportBackup(){

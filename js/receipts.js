@@ -5,7 +5,8 @@ function db(){return idb||(idb=new Promise(function(ok,no){var r=indexedDB.open(
 function rcTx(mode,fn){return db().then(function(d){return new Promise(function(ok,no){var t=d.transaction('rc',mode),q=fn(t.objectStore('rc'));t.oncomplete=function(){ok(q&&q.result)};t.onerror=function(){no(t.error)}})})}
 function rcPut(r){return rcTx('readwrite',function(s){s.put(r)})}
 function rcDel(ids){ids.forEach(function(id){if(RCU[id]){URL.revokeObjectURL(RCU[id]);delete RCU[id]}});return ids.length?rcTx('readwrite',function(s){ids.forEach(function(id){s.delete(id)})}).catch(function(){}):Promise.resolve()}
-function rcUrl(id){return RCU[id]?Promise.resolve(RCU[id]):rcTx('readonly',function(s){return s.get(id)}).then(function(r){return r?(RCU[id]=URL.createObjectURL(r.blob)):''})}
+// A file not on this device may be in sync storage, added on another device (rcFetch in sync.js).
+function rcUrl(id){return RCU[id]?Promise.resolve(RCU[id]):rcTx('readonly',function(s){return s.get(id)}).then(function(r){return r?(RCU[id]=URL.createObjectURL(r.blob)):typeof rcFetch==='function'?rcFetch(id):''})}
 // Photos are scaled to 1600px and saved as JPEG, which keeps a phone photo to a few hundred KB.
 function shrink(f){
   if(!/^image\/(jpeg|png|webp)$/.test(f.type))return Promise.resolve(f);

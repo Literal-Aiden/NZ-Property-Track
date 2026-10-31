@@ -7,7 +7,7 @@
 // of each property as last sent or received: a property whose hash differs has changed here and is sent; one that's
 // gone has been deleted here, and its row is marked deleted so other devices drop it too. If both devices change the
 // same property between syncs, the one that syncs last wins.
-// Receipt and photo files don't sync yet: they stay on the device they were added on.
+// Receipt and photo files sync too (see files() below).
 var SB_URL='https://jpfnfwfzivlwlqrdlgxg.supabase.co',SB_KEY='sb_publishable_vAKTq6361F1xN13IYyGnUQ_JnQkeS4V',SYNC_CODE=false;
 var AKEY='nzpt.auth',SKEY='nzpt.sync';
 function jget(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
@@ -88,7 +88,7 @@ function deleteAccount(){
   if(delBusy)return;delBusy=true;delMsg='';drawSync();
   var dir=auth.uid+'/',pass=0;
   // Storage lists up to 1,000 files at a time, so remove them in batches until none are left.
-  function clearFiles(){return sbFetch('/storage/v1/object/list/files',{m:'POST',b:{prefix:dir,limit:1000}}).then(function(fs){
+  function clearFiles(){return sbFetch('/storage/v1/object/list/files',{m:'POST',b:{prefix:auth.uid,limit:1000}}).then(function(fs){
     var names=(fs||[]).filter(function(f){return f.id}).map(function(f){return dir+f.name});
     if(names.length&&++pass<50)return sbFetch('/storage/v1/object/files',{m:'DELETE',b:{prefixes:names}}).then(clearFiles);
   })}
@@ -127,17 +127,19 @@ function syncNow(){
   if(syncBusy){syncAgain=true;return}
   if(!navigator.onLine){syncSt='offline';drawSync();return}
   syncBusy=true;syncSt='busy';drawSync();
-  fresh().then(pull).then(push).then(function(){sync.last=new Date().toISOString();jset(SKEY,sync);syncSt='ok';syncMsg=''},function(e){
+  fresh().then(pull).then(push).then(files).then(function(){sync.last=new Date().toISOString();jset(SKEY,sync);syncSt='ok';syncMsg=''},function(e){
     syncSt=e.status===0?'offline':'err';
     syncMsg=e.status===401||!auth?'':e.msg||'';
   }).then(function(){syncBusy=false;drawSync();if(syncAgain){syncAgain=false;clearTimeout(syncT);syncT=setTimeout(syncNow,5000)}});
 }
 // Changes from other devices. Examples on screen are replaced by the account's properties. While something's being
 // edited the changes wait, and the cursor stays put, so they come again next time.
+var pullHeld=false;
 function pull(){
-  var all=isSample;
+  var all=isSample;pullHeld=false;
   return sbFetch('/rest/v1/props?select=id,data,deleted,updated&order=updated'+(sync.at&&!all?'&updated=gt.'+encodeURIComponent(sync.at):'')).then(function(rows){
-    if(!rows||!rows.length||busy()&&(syncAgain=true))return;
+    if(!rows||!rows.length)return;
+    if(busy()){syncAgain=pullHeld=true;return}
     var live=rows.filter(function(r){return !r.deleted});
     if(all){if(!live.length)return;props=[];isSample=false;sync.sent={}}
     var curId=props[cur]&&props[cur].id,ch=all;
@@ -164,6 +166,86 @@ function push(){
     rows.forEach(function(r){if(r.deleted)delete sync.sent[r.id];else sync.sent[r.id]=r.h});jset(SKEY,sync);
   });
 }
+// Receipt and photo files (receipts.js keeps them in IndexedDB; properties hold only {id, name, type}). Stored in the
+// private `files` bucket at <user id>/<file id>. sync.files lists the ids known to be there: filled from the bucket
+// the first time (sync.listed), then kept up to date here. Each sync uploads files used by a property but not there
+// yet (a few at a time, so a big first upload doesn't hold up the rest), and removes files no property uses any more.
+// Files from other devices are downloaded when first shown (rcFetch, from rcUrl in receipts.js), then kept here.
+// A file the bucket won't take (a type it doesn't allow, or over 10 MB) is noted in sync.skip and stays on this device.
+var filesLeft=0,rcGetting={};
+function sbFile(path,o){
+  o=o||{};var h={apikey:SB_KEY,Authorization:'Bearer '+auth.at};for(var k in o.h||{})h[k]=o.h[k];
+  return fetch(SB_URL+'/storage/v1/object/'+path,{method:o.m||'GET',headers:h,body:o.b}).catch(function(){throw {status:0,msg:'offline'}});
+}
+function files(){
+  if(isSample)return;
+  var dir=auth.uid+'/',want={};
+  props.forEach(function(p){rcIds(p).forEach(function(id){want[id]=1})});
+  sync.files=sync.files||{};sync.skip=sync.skip||{};
+  return (sync.listed?Promise.resolve():listFiles().then(function(n){n.forEach(function(id){sync.files[id]=1});sync.listed=true}))
+    .then(function(){return rcTx('readonly',function(s){return s.getAllKeys()}).catch(function(){return []})})
+    .then(function(keys){
+      var have={};(keys||[]).forEach(function(k){have[k]=1});
+      // Used here but not on this device: another device added it, so it's in the bucket (or soon will be).
+      for(var id in want)if(!have[id])sync.files[id]=1;
+      var up=Object.keys(want).filter(function(id){return have[id]&&!sync.files[id]&&!sync.skip[id]}),batch=up.slice(0,6);
+      // Removing waits while changes from elsewhere are held back, since those may use files this device hasn't seen.
+      var gone=pullHeld?[]:Object.keys(sync.files).filter(function(id){return !want[id]});
+      filesLeft=up.length;drawSync();
+      return (gone.length?sbFetch('/storage/v1/object/files',{m:'DELETE',b:{prefixes:gone.map(function(id){return dir+id})}}).then(function(){gone.forEach(function(id){delete sync.files[id]})}):Promise.resolve())
+        .then(function(){return batch.reduce(function(pr,id){return pr.then(function(){return upload(id)}).then(function(){filesLeft--;drawSync()})},Promise.resolve())})
+        .then(function(){jset(SKEY,sync);if(filesLeft>0)syncAgain=true});
+    });
+}
+function listFiles(){
+  var out=[];
+  function page(off){return sbFetch('/storage/v1/object/list/files',{m:'POST',b:{prefix:auth.uid,limit:1000,offset:off}}).then(function(fs){
+    (fs||[]).forEach(function(f){if(f.id)out.push(f.name)});
+    return fs&&fs.length===1000?page(off+1000):out;
+  })}
+  return page(0);
+}
+function upload(id){
+  return rcTx('readonly',function(s){return s.get(id)}).then(function(r){
+    if(!r)return;
+    return sbFile('files/'+auth.uid+'/'+encodeURIComponent(id),{m:'POST',h:{'Content-Type':r.type||r.blob.type||'application/octet-stream','x-upsert':'true'},b:r.blob}).then(function(res){
+      if(res.ok){sync.files[id]=1;return}
+      return res.text().then(function(t){if(/mime|too large|size|413|415/i.test(t)){sync.skip[id]=1;return}throw {status:res.status,msg:'A file couldn’t be uploaded ('+res.status+')'}});
+    });
+  });
+}
+// The {id, name, type, added} a property holds for a file.
+function rcRef(id){
+  var f=null;
+  props.some(function(p){
+    (p.items||[]).concat(p.money||[]).forEach(function(x){(x.rc||[]).forEach(function(r){if(r.id===id)f=r})});
+    (p.hhDocs||[]).concat(p.pics||[],p.photo?[p.photo]:[]).forEach(function(r){if(r.id===id)f=r});
+    return f;
+  });
+  return f;
+}
+// A file that isn't on this device: download it, keep it, and return a URL to show it ('' if it can't be had).
+function rcFetch(id){
+  if(!auth||isSample)return Promise.resolve('');
+  if(!rcGetting[id])rcGetting[id]=fresh().then(function(){return sbFile('authenticated/files/'+auth.uid+'/'+encodeURIComponent(id))}).then(function(res){
+    if(!res.ok)return '';
+    return res.blob().then(function(b){
+      var m=rcRef(id)||{name:'File',type:b.type};
+      sync.files=sync.files||{};sync.files[id]=1;
+      return rcPut({id:id,name:m.name,type:m.type||b.type,added:m.added,blob:b}).catch(function(){}).then(function(){return RCU[id]=URL.createObjectURL(b)});
+    });
+  }).catch(function(){return ''}).then(function(u){delete rcGetting[id];return u});
+  return rcGetting[id];
+}
+// Before a backup: download any files this device doesn't have yet, so the backup is complete.
+function rcFetchMissing(ids){
+  if(!auth||isSample)return Promise.resolve();
+  return rcTx('readonly',function(s){return s.getAllKeys()}).then(function(keys){
+    var have={};(keys||[]).forEach(function(k){have[k]=1});
+    return ids.filter(function(id){return !have[id]}).reduce(function(pr,id){return pr.then(function(){return rcFetch(id)})},Promise.resolve());
+  }).catch(function(){});
+}
+
 // Check for changes from other devices when the app comes back into view, every minute while it's open, and when
 // the connection comes back.
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')syncNow()});
@@ -180,7 +262,8 @@ function syncCard(){
     var st=syncSt==='busy'?'Syncing…':syncSt==='offline'?'Offline. Changes are saved on this '+dev()+' and sync when you’re back online.':syncSt==='err'?'Couldn’t sync'+(syncMsg?': '+esc(syncMsg):'')+'. It will try again shortly.':sync.last?'Up to date · synced '+agoT(sync.last):'Not synced yet';
     return h+'<p class="sub" style="margin-top:4px">Signed in as <b>'+esc(auth.email||'')+'</b>. Your properties are kept up to date on every '+dev()+' you sign in on.</p>'+
       '<p class="sub'+(syncSt==='err'?' neg':'')+'" style="margin-top:6px"><b>'+st+'</b></p>'+
-      '<p class="sub" style="margin-top:6px">Receipts and photos don’t sync yet: they stay on the '+dev()+' they were added on.</p>'+
+      (filesLeft>0?'<p class="sub" style="margin-top:6px">Uploading receipts and photos: '+filesLeft+' to go.</p>':'')+
+      (sync.skip&&Object.keys(sync.skip).length?'<p class="sub" style="margin-top:6px">'+Object.keys(sync.skip).length+' file'+(Object.keys(sync.skip).length===1?' is':'s are')+' too large or not a photo or PDF, so '+(Object.keys(sync.skip).length===1?'it stays':'they stay')+' on this '+dev()+' only.</p>':'')+
       '<div class="btns"><button class="go ghost" data-x="synow">Sync now</button><button class="go ghost" data-x="syout">'+(outArm?'Tap again to sign out':'Sign out')+'</button></div>'+delCard()+'</div>';
   }
   h+='<p class="sub" style="margin-top:4px">Sign in to have your properties on your phone and computer, kept up to date on both. Without signing in, everything stays on this '+dev()+' only.</p>';

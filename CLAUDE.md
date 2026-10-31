@@ -172,7 +172,8 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - The card shows who's signed in and the status (Syncing…, Up to date · synced 3 min ago, Offline, or the error), with Sync now and Sign out (second tap; the properties stay on the device)
 - "Delete my account and data" (under the card's buttons) opens a confirmation saying what goes (the account and everything synced, including files, from the sync service; can't be undone) and what stays (this device's properties, signed out, and other devices' copies; suggests a backup first). `deleteAccount()` removes the user's files from the `files` storage bucket in batches of 1,000, then calls `delete_me()`, which deletes the user and, through the cascade, their property rows. Other signed-in devices are signed out when their session next refreshes
 - With sync on, Clear all data, Start fresh and Restore change the account too (they replace everything, and that's synced)
-- NOT YET: receipt and photo files (they stay on the device they were added on; the `files` storage bucket and its rules are ready in `schema.sql`), the code sign-in (needs SMTP), and a privacy policy before real users
+- Receipt and photo files (receipts, progress photos, cover photos, Healthy Homes reports) sync too, in the private `files` bucket at `<user id>/<file id>` (`files()` in `sync.js`, after pull and push). `sync.files` lists the ids known to be in the bucket (filled from a listing the first time, `sync.listed`). Each sync uploads up to 6 files used by a property but not there yet (the rest follow a few seconds later; the card shows how many are left) and removes files no property uses any more (not while changes from elsewhere are held back). A file from another device downloads the first time it's shown (`rcUrl()` in `receipts.js` falls back to `rcFetch()`) and is then kept in IndexedDB; a backup downloads any missing ones first (`rcFetchMissing()`). A file the bucket won't take (not a photo or PDF, or over 10 MB) is noted in `sync.skip` and stays on its device (the card says how many)
+- NOT YET: the code sign-in (needs SMTP), and a privacy policy before real users
 
 **Backup**
 - In the Settings tab (also reached from the "Needs attention" backup item on Home): "Share backup" (phones that can share files, via `navigator.share`; sharing must start straight from the tap, so the file is built when Settings opens (`prepShare()`, called from `show()`) and `shareBackup()` shares it at once; Chrome on Android won't share .json files, so where `canShare` refuses it the file goes as a .txt with the same contents, and Restore accepts .json or .txt) sends it to Google Drive, iCloud, email or a chat in one step; "Download backup" saves a JSON backup of all properties plus their receipt files and cover photos, or restore one (replaces everything, after confirming). REINZ sales data is never included. A dot on the Settings tab shows when a backup is due (none yet, or over 30 days)
@@ -218,6 +219,6 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 ## Ideas not yet built
 
-- Sync: receipt and photo files, code sign-in (see Sync across devices)
+- Sync: code sign-in (see Sync across devices)
 - Current bank rates shown as a reference
 - Re-fix reminders as real notifications (e.g. if this becomes a native app); the calendar links are built but hidden
