@@ -58,12 +58,13 @@ var TOOLS=[
   from:function(p){var x=parts(p)[0]||{};return p.rent&&{price:p.value||p.price,rent:p.rent,exp:p.exp||0,pm:p.mgmt||'',
     inc:p.loan?'all':'costs',loan:p.loan||'',rate:p.rate||'',type:x.ltype||p.ltype||'pi',term:x.term||p.term||30,dep:''}},
   f:[{i:'price',l:'Price or value',k:'m'},{i:'rent',l:'Weekly rent',k:'m'},
-     {i:'inc',l:'Show',k:'s',d:'costs',o:[['none','Gross yield (rent only)'],['costs','Net yield (after expenses and fee)'],['all','Cash flow (after the mortgage too)']],wide:1},
+     {i:'inc',k:'s',top:1,d:'costs',o:[['none','Gross yield'],['costs','Net yield'],['all','Cash flow']],
+      hint:{none:'Rent only: the figure usually quoted.',costs:'After expenses and the management fee.',all:'After the mortgage too.'}},
      {i:'exp',l:'Annual expenses',k:'m',opt:1,ph:'Rates, insurance, maintenance',show:function(v){return v.inc!=='none'}},
      {i:'pm',l:'Management fee %',k:'n',opt:1,ph:'Blank if none',show:function(v){return v.inc!=='none'}},
-     {i:'loan',l:'Loan amount',k:'m',show:function(v){return v.inc==='all'}},{i:'rate',l:'Interest rate %',k:'n',show:function(v){return v.inc==='all'}},
+     {i:'loan',l:'Loan amount',k:'m',grp:'Mortgage',show:function(v){return v.inc==='all'}},{i:'rate',l:'Interest rate %',k:'n',show:function(v){return v.inc==='all'}},
      {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT,show:function(v){return v.inc==='all'}},{i:'term',l:'Remaining term in years',k:'n',d:'30',show:function(v){return v.inc==='all'}},
-     {i:'dep',l:'Cash you put in',k:'m',opt:1,wide:1,ph:'Deposit plus purchase costs, for cash-on-cash return',show:function(v){return v.inc==='all'}}],
+     {i:'dep',l:'Cash you put in',k:'m',opt:1,wide:1,ph:'Deposit plus purchase costs',show:function(v){return v.inc==='all'}}],
   calc:function(v){
     if(!v.price||!v.rent)return '';
     var a=v.rent*52,gy=a/v.price*100,P=function(x){return (x/v.price*100).toFixed(2)+'%'};
@@ -152,11 +153,16 @@ var TOOLS=[
 function dealOf(v){var f=v.plan==='flip';return {price:v.price,reno:v.reno,legal:v.legal,hold:v.rates/12+v.ins/12+v.othm,months:v.months,value:f?v.value:v.value2,sell:f?v.sell:0,rent:f?0:v.rent,exp:f?0:v.exp,mgmt:f?0:v.pm}}
 
 function toolById(id){return TOOLS.filter(function(t){return t.id===id})[0]}
+// A field with grp starts a small group heading (shown and hidden with it). A top field is a switch at the top of the
+// calculator instead (see tswitch()), not in the grid.
 function tfield(f){
   var id='q_'+f.i,inp=f.k==='s'?'<select id="'+id+'">'+f.o.map(function(o){return '<option value="'+o[0]+'">'+esc(o[1])+'</option>'}).join('')+'</select>'
     :'<input id="'+id+'"'+(f.ph?' placeholder="'+esc(f.ph)+'"':'')+(f.k==='m'?MONEY:NUM);
-  return '<div id="w_'+f.i+'"'+(f.wide?' class="wide"':'')+'><label>'+f.l+(f.opt?OPT:'')+'</label>'+inp+'</div>';
+  return (f.grp?'<p class="grp wide tgrp" id="g_'+f.i+'">'+f.grp+'</p>':'')+'<div id="w_'+f.i+'"'+(f.wide?' class="wide"':'')+'><label>'+f.l+(f.opt?OPT:'')+'</label>'+inp+'</div>';
 }
+// A top field: a switch of its options (o) above everything else, with a one-line hint for the chosen one (hint), so
+// the choice decides which fields show. Its value sits in a hidden input, read like any other field.
+function tswitch(f){return '<div class="seg tsw">'+f.o.map(function(o){return '<button data-qs="'+f.i+'" data-v="'+o[0]+'">'+esc(o[1])+'</button>'}).join('')+'</div><input type="hidden" id="q_'+f.i+'"><p class="sub tswh" id="h_'+f.i+'"></p>'}
 function drawTools(){
   var t=toolCur&&toolById(toolCur);
   if(!t){
@@ -166,10 +172,10 @@ function drawTools(){
   }
   var srcs=t.from?props.map(function(p,i){return t.from(p)?'<option value="'+i+'">'+esc(p.addr)+'</option>':''}).join(''):'';
   $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b>'+t.name+'</b><button class="edit" data-x="tclear" style="margin-left:auto">Clear</button></div>'+
-    '<div class="card enter tcalc"><div class="tin"><p class="sub">'+t.desc+'</p>'+
+    '<div class="card enter tcalc"><div class="tin"><p class="sub">'+t.desc+'</p>'+t.f.filter(function(f){return f.top}).map(tswitch).join('')+
     (srcs?'<select id="q_from" style="margin-top:12px"><option value="">Fill in from a property…</option>'+srcs+'</select>':'')+
     (t.all&&props.some(function(p){return p.type!=='potential'})?'<button class="edit" data-x="tport" style="margin-top:12px">Use my portfolio</button>':'')+
-    '<div class="fgrid">'+t.f.map(tfield).join('')+'</div></div><div class="tout" id="q_out"></div></div>';
+    '<div class="fgrid">'+t.f.filter(function(f){return !f.top}).map(tfield).join('')+'</div></div><div class="tout" id="q_out"></div></div>';
   var mem=toolMem()[t.id]||{};
   t.f.forEach(function(f){var e=$('q_'+f.i),v=mem[f.i]!==undefined?mem[f.i]:(f.d||'');e.value=f.k==='m'&&v!==''?fmtMoney(v):v});
   tcalc();
@@ -177,7 +183,10 @@ function drawTools(){
 function tread(t,raw){var v={};t.f.forEach(function(f){var e=$('q_'+f.i);if(raw)raw[f.i]=e.value;v[f.i]=f.k==='s'?e.value:num('q_'+f.i)});return v}
 function tcalc(){
   var t=toolById(toolCur),raw={},v=tread(t,raw);toolSave(t.id,raw);
-  t.f.forEach(function(f){if(f.show)$('w_'+f.i).style.display=f.show(v)?'':'none'});
+  t.f.forEach(function(f){
+    if(f.show){var d=f.show(v)?'':'none';$('w_'+f.i).style.display=d;if(f.grp)$('g_'+f.i).style.display=d}
+    if(f.top){document.querySelectorAll('[data-qs="'+f.i+'"]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v[f.i])});$('h_'+f.i).textContent=(f.hint||{})[v[f.i]]||''}
+  });
   $('q_out').innerHTML=t.calc(v)||'<p class="sub" style="margin-top:14px">Fill in the fields above to see the result.</p>';
 }
 function tfill(vals){
@@ -193,6 +202,7 @@ function dealToProp(){
 }
 $('toolbody').addEventListener('click',function(e){
   var tile=e.target.closest('[data-tool]');if(tile){toolCur=tile.dataset.tool;drawTools();$('toolbody').scrollTop=0;ovOpen('tool');return}
+  var qs=e.target.closest('[data-qs]');if(qs){$('q_'+qs.dataset.qs).value=qs.dataset.v;tcalc();return}
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='thome')ovClose('tool');
   if(b.dataset.x==='tsave')dealToProp();

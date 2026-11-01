@@ -170,6 +170,9 @@ button.r{cursor:pointer}
 #hhcard .sub a{color:var(--acc);font-weight:600}
 /* Tax year summary button in a property's headline card. */
 .herocard .taxb{display:inline-flex;align-items:center;gap:6px;margin-top:10px}.herocard .taxb .ic{width:15px;height:15px}
+/* Calculators: a switch at the top (tswitch() in tools.js) with its hint, and group headings in the fields. */
+.tsw{margin-top:12px;gap:6px}.tsw button{padding:8px 4px;font-size:14px;white-space:nowrap}.tswh{margin:6px 2px 0}
+.fgrid .tgrp{margin:16px 2px 0}
 /* Set up your rental (setupCard() in rental.js): rows like the + menu's, ticked green once done. */
 .setup .pq:last-child{margin-bottom:0}
 .setup .sudone{opacity:.75}.setup .sudone .ib{background:color-mix(in srgb,var(--good) 15%,var(--card));color:var(--good)}
