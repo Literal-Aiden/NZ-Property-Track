@@ -156,6 +156,7 @@ function current(){
     if(p.done)h+='<div class="card">'+toRentBlock(p)+'</div>';
   }else{
     var ann=p.rent*52,fee=mgmtFee(p),net=ann-p.exp-fee;
+    h+=setupCard(p);
     h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)]].concat(fee?[['Management fee',$$(fee)+' a year<span class="sub">'+p.mgmt+'% of rent</span>','noloan']]:[],[['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',p.value?(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%':'–'],
       valRow(p)].concat(debtRows(p),p.held&&!p.price?[]:[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–']],[['Owned for',dOwn(p)]])));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';

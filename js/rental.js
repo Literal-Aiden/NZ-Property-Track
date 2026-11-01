@@ -86,6 +86,20 @@ function exportMoney(p){
 // Tenancy details. Rent increase timing is a legal rule, so it's shown with a pointer to check it.
 var HH=[['heat','Heating'],['ins','Insulation'],['vent','Ventilation'],['moist','Moisture ingress and drainage'],['draught','Draught stopping']];
 function hhLeft(p){var h=p.hh||{};return HH.filter(function(s){return !h[s[0]]}).length}
+// Set up your rental: shown at the top of a just-added rental's Overview (p.setup, set when it's added or a project is
+// turned into a rental), pointing to the tenancy, Healthy Homes, and rent. Each row ticks off once it's done; the card
+// goes when all three are, or when hidden.
+function setupCard(p){
+  if(!p.setup)return '';
+  var hl=hhLeft(p),R=[
+    ['ten','users','Tenancy details',p.ten?'Done':'Tenant, lease dates, and bond',!!p.ten],
+    ['hh','thermo','Healthy Homes',hl?(hl<HH.length?(HH.length-hl)+' of '+HH.length+' standards ticked':'Tick the standards it meets'):'Done',!hl],
+    ['rent','dollar','Rent received',(p.money||[]).some(function(m){return m.kind==='in'})?'Done':'Log the rent as it comes in',(p.money||[]).some(function(m){return m.kind==='in'})]];
+  if(R.every(function(r){return r[4]}))return '';
+  return '<div class="card ty-rental setup"><div class="row" style="cursor:default"><b>Set up your rental</b><button class="edit" data-x="suhide">Hide</button></div>'+
+    '<p class="sub" style="margin:2px 0 10px">Add these now and the app can remind you before the lease ends, the bond needs lodging, or rent falls behind.</p>'+
+    R.map(function(r){return '<button class="pq'+(r[4]?' sudone':'')+'" data-x="su" data-s="'+r[0]+'"><span class="ib">'+ic(r[4]?'check':r[1])+'</span><span><b>'+r[2]+'</b><span class="sub">'+r[3]+'</span></span><i class="chev">›</i></button>'}).join('')+'</div>';
+}
 // Rent box at the top of Tenancy, where people tend to look for the rent: the weekly rent, "Change rent" (a rise also
 // becomes the tenancy's last rent increase, which sets the next one) and "Log rent received" (opens the Money form).
 // Each change is kept in p.rents as {d, v}.
@@ -175,7 +189,7 @@ function toRentBlock(p){
 }
 function toRental(p){
   if(missing($('torent')))return;
-  p.type='rental';p.rent=num('r_rent');p.exp=num('r_exp');p.value=num('r_value')||p.value;p.fromProject=iso(new Date());
+  p.type='rental';p.rent=num('r_rent');p.exp=num('r_exp');p.value=num('r_value')||p.value;p.fromProject=iso(new Date());p.setup=1;
   rentOpen=false;sec='ov';isSample=false;render();$('p1').scrollTop=0;
 }
 ['input','change'].forEach(function(t){$('p1').addEventListener(t,function(e){if(/^m_(rep|wks|until|date|amt)$/.test(e.target.id))mRep()})});

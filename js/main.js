@@ -160,6 +160,13 @@ $('p1').addEventListener('click',function(e){
   else if(x==='mall'){moneyAll=!moneyAll;current()}
   else if(x==='mcsv')exportMoney(p);
   else if(x==='tenedit'){tenEdit=true;current()}
+  // Set up your rental (setupCard() in rental.js): each row opens the place to add it.
+  else if(x==='su'){
+    var s=b.dataset.s;
+    if(s==='rent'){closeItem();sec='money';moneyEdit='new';moneyKind='in';edit('money')}
+    else{sec='ten';if(s==='ten'&&!p.ten)tenEdit=true;edit(s==='ten'?'ten':'hhcard')}
+  }
+  else if(x==='suhide'){delete p.setup;isSample=false;render()}
   else if(x==='tensave')saveTen(p);
   else if(x==='tencancel'){tenEdit=false;current()}
   else if(x==='hhall'){p.hh=p.hh||{};HH.forEach(function(s){if(!p.hh[s[0]])p.hh[s[0]]=iso(new Date())});isSample=false;render()}

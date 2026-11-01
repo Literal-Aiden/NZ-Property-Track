@@ -164,6 +164,11 @@ button.r{cursor:pointer}
 .tterm label{margin-top:4px;font-size:12px}
 .tor{display:flex;align-items:center;gap:10px;margin:12px 0 -4px;font-size:12px;color:var(--mute)}
 .tor::before,.tor::after{content:'';flex:1;height:1px;background:var(--line)}
+/* Cards scrolled to on a property page stop below the sticky section tabs, so their heading shows. */
+#p1 .card{scroll-margin-top:64px}
+/* Set up your rental (setupCard() in rental.js): rows like the + menu's, ticked green once done. */
+.setup .pq:last-child{margin-bottom:0}
+.setup .sudone{opacity:.75}.setup .sudone .ib{background:color-mix(in srgb,var(--good) 15%,var(--card));color:var(--good)}
 /* Type switch at the top of Add a property. */
 .segt{margin:8px 0 2px;gap:6px}.segt button{padding:8px 4px;font-size:14px}
 .pickp{display:flex;align-items:center;gap:12px;width:100%;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}

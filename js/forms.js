@@ -62,12 +62,12 @@ var LPF=['amt','rate','fix','fs','rf'];
 function endIn(m){var d=new Date();d.setMonth(d.getMonth()+m);return iso(d)}
 function termFrom(i,src){
   var te=$('l_te'+i);if(!te)return;
-  if(src==='te'){if(!te.value)return;var m=monthsTo(te.value);$('l_ty'+i).value=Math.floor(m/12)||'';$('l_tm'+i).value=m%12||''}
+  if(src==='te'){if(!te.value)return;var m=monthsTo(te.value);$('l_ty'+i).value=Math.floor(m/12)||'';$('l_tm'+i).value=m?m%12:''}
   else{var n=num('l_ty'+i)*12+num('l_tm'+i);te.value=n?endIn(n):''}
 }
 function termSet(i,x){
   var m=x.end?monthsTo(x.end):x.term?Math.round(x.term*12):0;
-  $('l_ty'+i).value=Math.floor(m/12)||'';$('l_tm'+i).value=m%12||'';$('l_te'+i).value=x.end||(m?endIn(m):'');
+  $('l_ty'+i).value=Math.floor(m/12)||'';$('l_tm'+i).value=m?m%12:'';$('l_te'+i).value=x.end||(m?endIn(m):'');
 }
 function lpRead(){var a=[];for(var i=0;i<lpN;i++){var x={};LPF.forEach(function(k){var e=$('l_'+k+i);x[k]=e?e.value:''});a.push(x)}return a}
 function lpWrite(a){a.forEach(function(x,i){LPF.forEach(function(k){var e=$('l_'+k+i);if(e)e.value=x[k]})});fixAll()}
@@ -226,9 +226,9 @@ function addProp(){
   var p={type:newType,addr:a,sub:$('f_sub').value.trim(),price:num('f_price'),value:num('f_value')||(newType==='potential'?0:num('f_price')),date:($('f_date')||{}).value||'',legal:num('f_legal'),extra:num('f_extra')};
   if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}
-  else{p.rent=num('f_rent');p.exp=num('f_exp');p.mgmt=num('f_mgmt');if(!wasEdit&&newRent==='existing')p.held=1}
+  else{p.rent=num('f_rent');p.exp=num('f_exp');p.mgmt=num('f_mgmt');if(!wasEdit){p.setup=1;if(newRent==='existing')p.held=1}}
   if(newType!=='potential')setLoan(p,readParts());
-  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject','held'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
+  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject','held','setup'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
 function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}
@@ -245,7 +245,9 @@ function closeSheetNow(){editIdx=null;newType=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){
-$(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2]);if(e.target.id==='f_date')syncFs()});
+$(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2]);if(e.target.id==='f_date')syncFs();
+  // Years entered with no months: months becomes 0 on leaving the field, so it's clear nothing's missing.
+  if(e.target.id==='l_ty0'&&num('l_ty0')&&!$('l_tm0').value)$('l_tm0').value='0'});
 $(id).addEventListener('input',function(e){
   if(e.target.classList.contains('bad'))unbad(e.target);
   // A rental needs a purchase price only when there's no loan balance or value, so typing either clears it.
