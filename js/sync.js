@@ -250,8 +250,8 @@ function rcFetchMissing(ids){
 // Check for changes from other devices when the app comes back into view, every minute while it's open, and when
 // the connection comes back.
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')syncNow()});
-window.addEventListener('online',function(){syncNow()});
-window.addEventListener('offline',function(){if(auth){syncSt='offline';drawSync()}});
+window.addEventListener('online',function(){if(auth)drawHome();syncNow()});
+window.addEventListener('offline',function(){if(auth){syncSt='offline';drawSync();drawHome()}});
 setInterval(function(){if(document.visibilityState==='visible'&&auth)syncNow()},60000);
 if(auth)ready(syncNow);
 
@@ -265,6 +265,8 @@ function syncCard(){
       '<p class="sub'+(syncSt==='err'?' neg':'')+'" style="margin-top:6px"><b>'+st+'</b></p>'+
       (filesLeft>0?'<p class="sub" style="margin-top:6px">Uploading receipts and photos: '+filesLeft+' to go.</p>':'')+
       (sync.skip&&Object.keys(sync.skip).length?'<p class="sub" style="margin-top:6px">'+Object.keys(sync.skip).length+' file'+(Object.keys(sync.skip).length===1?' is':'s are')+' too large or not a photo or PDF, so '+(Object.keys(sync.skip).length===1?'it stays':'they stay')+' on this '+dev()+' only.</p>':'')+
+      // Changes sync per property, last to sync wins: worth knowing for edits on two devices while one is offline.
+      '<p class="sub" style="margin-top:6px">If you edit the same property on two devices while one is offline, the last one to sync is kept.</p>'+
       '<div class="btns"><button class="go ghost" data-x="synow">Sync now</button><button class="go ghost" data-x="syout">'+(outArm?'Tap again to sign out':'Sign out')+'</button></div>'+delCard()+privLink()+'</div>';
   }
   h+='<p class="sub" style="margin-top:4px">Sign in to have your properties on your phone and computer, kept up to date on both. Without signing in, everything stays on this '+dev()+' only.</p>';

@@ -7,6 +7,8 @@ var ATT_IC={loan:'percent',costs:'dollar',tl:'clock',ten:'users'};
 function drawHome(){
   var own=props.filter(function(p){return p.type!=='potential'}),h='<p class="sub">'+hello()+'</p><h1 class="ptitle">Your portfolio</h1>';
   if(isSample)h+='<div class="note">You’re looking at sample properties. <a href="#" id="fresh">Start fresh</a> when you’re ready to add your own.</div>';
+  // Signed in and offline: say changes are safe and will sync later (redrawn when the connection drops or returns).
+  if(auth&&!navigator.onLine)h+='<div class="note offnote">'+ic('cloud')+'<span>You’re offline. Changes are saved on this '+dev()+' and will sync when you’re back online.</span></div>';
   // On a wide screen these blocks sit in a dashboard grid (layout.css), with two extra cards; on a phone they stack as before.
   h+='<div class="dash"><div class="dhero">';
   if(own.length){

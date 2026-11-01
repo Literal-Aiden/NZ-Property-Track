@@ -1,5 +1,5 @@
 // NZ address suggestions while typing.
-// Address suggestions from Photon (OpenStreetMap data), limited to NZ. Typing still works if it's offline.
+// Address suggestions from Photon (OpenStreetMap data), limited to NZ. Offline, typing still works and a note says to type the address in full (acOff()).
 // Any input with class "acin" gets suggestions; data-sub names the suburb field to fill, data-next the field to focus after.
 // Photon is overseas, so a new connection costs most of a second: it's opened as soon as an address field is tapped.
 // While typing, the suggestions on screen are narrowed to what still matches instead of being cleared, and replaced
@@ -14,6 +14,8 @@ function acShow(){
     '<p class="attr">'+(n>5?n+(acMore?'+':'')+' matches, scroll for more, or add the suburb to narrow it down. ':'')+'Suggestions © OpenStreetMap contributors</p>';
   var on=s.querySelector('.opt.on');if(on)on.scrollIntoView({block:'nearest'});
 }
+// Offline (or the lookup failed): no suggestions, so a note says to type it in full, rather than nothing happening.
+function acOff(el){var s=el.parentNode.querySelector('.sugg');if(!s)return;acList=[];acSel=-1;s.hidden=false;s.innerHTML='<p class="attr acoff">Address suggestions need internet. Type the address in full, and the suburb / city below.</p>'}
 function acWarmUp(){
   if(acWarm)return;acWarm=true;
   var l=document.createElement('link');l.rel='preconnect';l.href='https://photon.komoot.io';l.crossOrigin='anonymous';document.head.appendChild(l);
@@ -41,6 +43,7 @@ function acFind(el){
   if(acIn!==el)acHide();acIn=el;
   if(k.length<3){acHide();return}
   if(acCache[k]){acShown=++acSeq;acPut(acCache[k]);return}
+  if(!navigator.onLine){acOff(el);return}
   if(acList.length){acList=acList.filter(function(a){return acMatch(a,q)});acSel=-1;acShow()}
   acT=setTimeout(function(){
     var n=++acSeq;
@@ -49,7 +52,7 @@ function acFind(el){
       // Only use it if nothing newer is showing and it's still relevant to what's typed now.
       if(n<acShown||acIn!==el||acKey(el.value).indexOf(k)!==0)return;
       acShown=n;acPut(all);
-    }).catch(function(){});
+    }).catch(function(){if(acIn===el&&!acList.length&&!navigator.onLine)acOff(el)});
   },150);
 }
 function acPick(i){var a=acList[i],el=acIn;if(!a||!el)return;el.value=a.addr;var s=$(el.dataset.sub),n=$(el.dataset.next);if(s){s.value=a.sub;s.dataset.county=a.county}acHide();if(window.rateLink)rateLink();if(n)n.focus()}
