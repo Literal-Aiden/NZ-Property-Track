@@ -170,6 +170,13 @@ button.r{cursor:pointer}
 #hhcard .sub a{color:var(--acc);font-weight:600}
 /* Tax year summary button in a property's headline card. */
 .herocard .taxb{display:inline-flex;align-items:center;gap:6px;margin-top:10px}.herocard .taxb .ic{width:15px;height:15px}
+/* Getting set up (onboard.js): step count, icon and title, numbered steps with the Share icon inline, and a note. */
+.obstep{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--mute)}
+.obhd{display:flex;align-items:center;gap:12px;margin-bottom:8px}.obhd .ftitle{margin:0;font-size:19px;line-height:1.25}
+.obsteps{margin:12px 0 0;padding-left:22px}.obsteps li{margin:0 0 8px;line-height:1.45}
+.obshare{width:18px;height:18px;vertical-align:-3px;color:var(--acc)}
+.obnote{margin-top:10px}.obnote a{color:var(--acc);font-weight:600}
+#obbody .btns{margin-top:16px}
 /* Calculators: a switch at the top (tswitch() in tools.js) with its hint, and group headings in the fields. */
 .tsw{margin-top:12px;gap:6px}.tsw button{padding:8px 4px;font-size:14px;white-space:nowrap}.tswh{margin:6px 2px 0}
 .fgrid .tgrp{margin:16px 2px 0}

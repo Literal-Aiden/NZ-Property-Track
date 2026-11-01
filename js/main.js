@@ -15,7 +15,7 @@ function ovClose(id){var i=ovs.lastIndexOf(id);if(i<0)ovShut(id);else history.go
 function ovSwap(id){ovs[ovs.length-1]=id;try{history.replaceState(hstate(),'')}catch(e){}}
 // Closing a property page clears its open forms, so a form started there (say from a quick action) isn't still
 // half-filled next time. A calculator opened from another tab goes back to that tab.
-function ovShut(id){if(id==='p1')resetCur();if(id==='tool'){toolCur=null;if(toolFrom){tab=toolFrom;toolFrom=null}drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();else if(id==='pick')closePickNow();reshow()}
+function ovShut(id){if(id==='p1')resetCur();if(id==='tool'){toolCur=null;if(toolFrom){tab=toolFrom;toolFrom=null}drawTools()}else if(id==='sheet')closeSheetNow();else if(id==='plus')closePlusNow();else if(id==='tour')closeTourNow();else if(id==='ob')closeObNow();else if(id==='pick')closePickNow();reshow()}
 window.addEventListener('popstate',function(e){
   navBusy=false;
   var s=e.state,l=s&&s.s===sid?s.nz:0;
@@ -233,7 +233,7 @@ window.addEventListener('appinstalled',function(){installEvt=null;banner()});
 // (the phone's own back gesture) or on something that scrolls sideways or takes typing, and only with no panel open.
 var TABS=['home','p0','toolbody','setbody'],swX=null,swY=0,swT=0;
 function swipeable(t){
-  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container,.lplot')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&!document.body.classList.contains('typing');
+  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container,.lplot')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&$('ob').hidden&&!document.body.classList.contains('typing');
 }
 function swipeTo(d){
   var on=document.querySelector('.screen.on'),id=on&&on.id;
@@ -260,4 +260,5 @@ if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.s
 render();drawTools();show('home');
 // Crossing the desktop width redraws Home and Properties (dashboard and table on wide screens, cards on a phone).
 if(window.matchMedia){var wq=matchMedia('(min-width:900px)'),wr=function(){list();drawHome()};if(wq.addEventListener)wq.addEventListener('change',wr);else if(wq.addListener)wq.addListener(wr)}
-if(!tourSeen())openTour();
+// First start: the welcome tour, then (once it closes) getting set up. Otherwise getting set up, if it hasn't been shown.
+if(!tourSeen())openTour();else setTimeout(obMaybe,1000);

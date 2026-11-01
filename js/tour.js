@@ -22,7 +22,7 @@ function tourRestore(){
   document.body.classList.remove('touring');$('tour').classList.remove('top');$('plus').hidden=true;
   document.querySelectorAll('#nav button').forEach(function(b){b.classList.remove('tlit')});
 }
-function closeTourNow(){if($('tour').hidden)return;$('tour').hidden=true;tourRestore();try{localStorage.setItem(TOUR_KEY,'1')}catch(e){}}
+function closeTourNow(){if($('tour').hidden)return;$('tour').hidden=true;tourRestore();try{localStorage.setItem(TOUR_KEY,'1')}catch(e){}setTimeout(obMaybe,500)}
 // What you'd have without the borrowed examples, for the last slide's buttons.
 function tourReal(){return tourWas?{sample:false,n:tourWas.props.length}:{sample:isSample,n:props.length}}
 // Shows the slide's page behind the card (and the + menu on its slide), and lights up its button on the tab bar.

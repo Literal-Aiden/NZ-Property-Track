@@ -120,7 +120,7 @@ function syncSoon(){if(!auth||syncBusy&&(syncAgain=true))return;if(!outgoing().l
 // Something on screen is being typed in or edited, so changes from elsewhere wait (redrawing would lose it).
 function busy(){
   var a=document.activeElement;
-  return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))||ovs.some(function(x){return /^(sheet|p2|tool|tour|pick)$/.test(x)})||!!document.querySelector('.screen.on .fbar');
+  return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))||ovs.some(function(x){return /^(sheet|p2|tool|tour|pick|ob)$/.test(x)})||!!document.querySelector('.screen.on .fbar');
 }
 function syncNow(){
   clearTimeout(syncT);

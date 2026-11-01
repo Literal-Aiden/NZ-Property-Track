@@ -17,6 +17,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
   - `councils.js` which council an address is in, and its rates search link · `tour.js` the welcome tour · `picker.js` the dropdown picker
   - `charts.js` value and equity over time (loan history, small line charts)
   - `sync.js` sign-in and sync across devices (Supabase)
+  - `onboard.js` getting set up after the welcome tour: install the app, then sync
   - `views.js` property page, headline numbers, alerts, Properties list, cover photos · `home.js` Home screen and the + menu · `forms.js` add/edit forms and validation · `tools.js` calculators · `main.js` navigation, rendering, event wiring, delete/undo
 - When adding a file, add it to the `<script>` or stylesheet list in `index.html` and to `FILES` in `sw.js` (and bump `CACHE`)
 - `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
@@ -152,6 +153,12 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - With no properties of your own, the example properties are borrowed for the tour so Home and Properties have something to show (in memory only, with `isSample` set so nothing is saved; the Properties slide says they're examples). `tourRestore()` puts your own back when it closes
 - Next/Back buttons, swiping, arrow keys; Skip, Escape or the phone's Back button close it (it's an `ovOpen('tour')` panel). Closing it any way marks it seen and goes to Home
 - The last slide offers "Add my first property" when showing sample data (clears the examples, like Start fresh) or when there are no properties; otherwise "Get started"
+
+**Getting set up** (`onboard.js`)
+- A small panel (`#ob`, an `ovOpen('ob')` panel like the + menu; Back, tapping outside, or Escape close it) shown once on Home after the welcome tour closes (`closeTourNow()` calls `obMaybe()`), or on the next start if the tour ended another way (e.g. "Add my first property"). Only on Home with nothing else open. Existing users see it once too
+- Step 1, install (skipped when already installed, or on a computer with no install prompt): the browser's own prompt where there is one (`installEvt`: Chrome, Edge, Android), numbered steps with the Share icon for iPhone (Safari has no prompt), or the browser menu on other phones. On iPhone it says to do it before adding properties, since the home-screen app keeps its own copy of the data
+- Step 2, sync (skipped when signed in, and in Safari on iPhone before installing, so it's offered in the home-screen app instead): "Keep your properties safe", sign in with an email to back up and use other devices, optional, with the privacy link. "Set up sync" goes to Settings with the Sync card's email field focused
+- Each step shows once: done, "Not now", or closed, it's noted in localStorage `nzpt.ob` (`{install, sync}`) and not asked again; Settings still has Install the app and Sync. Finishing the install step also retires the iPhone "Add to Home Screen" hint card on Home (`nzpt.ioshint`)
 
 **Needs attention**
 - Home shows a "Needs attention" list (and the Properties list an amber dot on each affected property): re-fix within 90 days, over budget (committed vs budget), unpaid invoices, overdue milestones, past target finish, lease ending within 60 days, bond not lodged, Healthy Homes standards not ticked, a Healthy Homes report due for review (2 years after its date), and no backup in 30 days. Tapping one opens that property at the right section
