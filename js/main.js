@@ -77,6 +77,22 @@ function finishDel(){clearTimeout(undoT);$('toast').hidden=true;if(undoData){rcD
 $('undo').addEventListener('click',function(){
   var d=undoData;if(!d)return;clearTimeout(undoT);undoData=null;$('toast').hidden=true;isSample=false;d.restore();
 });
+// On a phone, swiping the undo message sideways (or down) dismisses it: the delete goes ahead straight away, as when it
+// times out. On a computer (DESK) there's a small × instead, and no swiping.
+// The swipe follows the finger, fades as it goes, and springs back if let go short of the distance. Not from the Undo button.
+if(DESK){$('toastx').innerHTML=ic('x');$('toastx').hidden=false;$('toast').classList.add('desk')}
+$('toastx').addEventListener('click',finishDel);
+var tsX=null,tsY=0,tsDx=0,tsDy=0;
+function toastAt(dx,dy,ease){var t=$('toast');t.style.transition=ease?'transform .2s,opacity .2s':'none';t.style.transform=dx||dy?'translate('+dx+'px,'+Math.max(0,dy)+'px)':'';t.style.opacity=dx||dy?Math.max(0,1-Math.max(Math.abs(dx)/160,dy/80)):''}
+$('toast').addEventListener('pointerdown',function(e){if(DESK||e.target.closest('#undo'))return;tsX=e.clientX;tsY=e.clientY;tsDx=tsDy=0;try{this.setPointerCapture(e.pointerId)}catch(err){}});
+$('toast').addEventListener('pointermove',function(e){if(tsX===null)return;tsDx=e.clientX-tsX;tsDy=e.clientY-tsY;toastAt(tsDx,tsDy)});
+function toastEnd(){
+  if(tsX===null)return;tsX=null;
+  if(Math.abs(tsDx)>70||tsDy>40){toastAt(tsDx>0?400:tsDx<0?-400:0,tsDy>40?120:0,true);setTimeout(function(){finishDel();toastAt(0,0)},200)}
+  else toastAt(0,0,true);
+}
+$('toast').addEventListener('pointerup',toastEnd);
+$('toast').addEventListener('pointercancel',toastEnd);
 function delProp(i){
   if(undoData)finishDel();
   var p=props.splice(i,1)[0];
@@ -233,7 +249,7 @@ window.addEventListener('appinstalled',function(){installEvt=null;banner()});
 // (the phone's own back gesture) or on something that scrolls sideways or takes typing, and only with no panel open.
 var TABS=['home','p0','toolbody','setbody'],swX=null,swY=0,swT=0;
 function swipeable(t){
-  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container,.lplot')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&$('ob').hidden&&!document.body.classList.contains('typing');
+  return !t.closest('input,select,textarea,.chips,.sugg,.track,.lparts,.leaflet-container,.lplot,.toast')&&$('sheet').hidden&&$('plus').hidden&&$('pick').hidden&&$('tour').hidden&&$('ob').hidden&&!document.body.classList.contains('typing');
 }
 function swipeTo(d){
   var on=document.querySelector('.screen.on'),id=on&&on.id;
