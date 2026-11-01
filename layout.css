@@ -158,6 +158,12 @@ button.r{cursor:pointer}
 .pq .sub{font-size:12px}
 .pq:active,.pnt button:active{transform:scale(.985)}
 @media (hover:hover){.pq:hover,.pnt button:hover{border-color:color-mix(in srgb,var(--ty) 55%,var(--line))}}
+/* Remaining term: years and months, or the end date, boxed together with "or" between (either fills in the other). */
+.tbox{margin-top:14px;padding:2px 12px 12px;border:1px solid var(--line);border-radius:14px}
+.tbox .tbl{font-weight:600;color:var(--ink)}
+.tterm label{margin-top:4px;font-size:12px}
+.tor{display:flex;align-items:center;gap:10px;margin:12px 0 -4px;font-size:12px;color:var(--mute)}
+.tor::before,.tor::after{content:'';flex:1;height:1px;background:var(--line)}
 /* Type switch at the top of Add a property. */
 .segt{margin:8px 0 2px;gap:6px}.segt button{padding:8px 4px;font-size:14px}
 .pickp{display:flex;align-items:center;gap:12px;width:100%;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}

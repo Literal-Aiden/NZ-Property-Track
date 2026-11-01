@@ -1,57 +1,81 @@
 // Add and edit property forms, validation and saving.
 // Owned properties' mortgage: one or more loan parts (lpN of them, loan types in lpT), each with its own rate and fixed term.
-// Part i's fields are l_amt{i}, l_rate{i}, l_fix{i}, l_fs{i} (fixed from), l_rf{i} (custom re-fix date) and l_term{i}.
+// Part i's fields are l_amt{i}, l_rate{i}, l_fix{i}, l_fs{i} (fixed from), l_rf{i} (custom re-fix date). The remaining term is one for the whole loan (termBox()).
 var lpN=1,lpT=['pi'];
 function lpReset(p){var L=p?parts(p):[];lpN=Math.max(1,L.length);lpT=L.length?L.map(function(x){return x.ltype||'pi'}):['pi']}
 function lpBlock(i,amt){
   return '<div class="lpart">'+(lpN>1?'<div class="row" style="cursor:default"><b>Loan part '+(i+1)+'</b><button class="edit del" data-lp="'+i+'">Remove</button></div>':'')+
-   (amt?'<label>'+(lpN>1?'Amount owing on this part':'Current loan balance (NZD)')+'</label><input id="l_amt'+i+'"'+(lpN>1?' required':'')+MONEY+(lpN>1?'':'<p class="sub" style="margin-top:4px">What you owe on it now. Leave blank if it’s mortgage-free.</p>'):'')+
-   '<label>Interest rate %'+(i?'':' (enter your own, e.g. second-tier lender)')+'</label><input id="l_rate'+i+'"'+NUM+
-   '<label>Fixed term</label><select id="l_fix'+i+'">'+FIXOPTS+'</select>'+
-   '<div id="l_fw'+i+'"><label>Rate fixed from (or settlement date)</label><input id="l_fs'+i+'" type="date"></div>'+
-   '<div id="l_cw'+i+'" style="display:none"><label>Re-fix date</label><input id="l_rf'+i+'" type="date"></div>'+
-   '<p class="sub" id="l_out'+i+'" style="margin-top:8px;color:var(--acc);font-weight:600"></p>'+
    '<label>Loan type</label><div class="seg" data-p="'+i+'"><button data-l="pi" class="'+(lpT[i]==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(lpT[i]==='io'?'on':'')+'">Interest-only</button></div>'+
-   '<label>Remaining term (years, optional, default 30)</label><input id="l_term'+i+'"'+NUM+'</div>';
+   (amt?'<label>'+(lpN>1?'Amount owing on this part':'Current loan balance (NZD)')+'</label><input id="l_amt'+i+'"'+(lpN>1?' required':'')+MONEY+(lpN>1?'':'<p class="sub" style="margin-top:4px">What you owe on it now. Leave blank if it’s mortgage-free.</p>'):'')+
+   '<label>Interest rate %</label><input id="l_rate'+i+'"'+NUM+
+   '<label>Fixed term</label><select id="l_fix'+i+'">'+FIXOPTS+'</select>'+
+   '<div id="l_fw'+i+'"><label>Rate fixed from'+(editIdx===null&&!isHeld()?' (or settlement date)':'')+'</label><input id="l_fs'+i+'" type="date"></div>'+
+   '<div id="l_cw'+i+'" style="display:none"><label>Re-fix date</label><input id="l_rf'+i+'" type="date"></div>'+
+   '<p class="sub" id="l_out'+i+'" style="margin-top:8px;color:var(--acc);font-weight:600"></p></div>';
+}
+// Remaining term, once for the whole loan (a split loan's parts share it): years and months, or the date the loan ends
+// (some landlords know only that), boxed together; either one fills in the other. Its fields are l_ty0 / l_tm0 / l_te0.
+// An existing rental's loan needs it (30 years would be wrong for an older loan).
+function termBox(){
+  return '<div class="tbox"><label class="tbl">Remaining term'+(lpN>1?' of the whole loan':'')+(isHeld()?'':' (optional, 30 years if left blank)')+'</label>'+
+   '<div class="fgrid tterm"><div><label for="l_ty0">Years</label><input id="l_ty0" data-name="Remaining term"'+NUM+'</div>'+
+   '<div><label for="l_tm0">Months</label><input id="l_tm0"'+NUM+'</div></div>'+
+   '<p class="tor">or</p><label for="l_te0">Date the loan ends</label><input id="l_te0" type="date"></div>';
 }
 // main: when adding with one part, its amount sits in the main form (as "Current loan balance"), not here.
 function lpForm(main){
   var h='';for(var i=0;i<lpN;i++)h+=lpBlock(i,!(main&&lpN===1));
   return h+'<button class="edit" data-lp="add" style="margin-top:14px">'+(lpN>1?'+ Add another loan part':'+ Split the loan into parts')+'</button>'+
-    (lpN>1?'':'<p class="sub" style="margin-top:4px">If the loan is split into parts fixed for different terms or rates.</p>');
+    (lpN>1?'':'<p class="sub" style="margin-top:4px">If the loan is split into parts fixed for different terms or rates.</p>')+termBox();
 }
 function fixPreview(i){
-  // No loan amount, no dates: the rate's start and re-fix date are cleared until an amount is entered.
-  if(!num('l_amt'+i)){$('l_fs'+i).value='';$('l_rf'+i).value='';$('l_out'+i).textContent='';return}
   var v=$('l_fix'+i).value,c=v==='custom',f=v==='float';
   $('l_fw'+i).style.display=c||f?'none':'';
   $('l_cw'+i).style.display=c?'':'none';
+  // No re-fix date shown until there's a loan amount. A date picked before the amount is kept, not cleared.
+  if(!num('l_amt'+i)){$('l_out'+i).textContent='';return}
   var r=refixOf({fixTerm:v,fixStart:$('l_fs'+i).value,refix:$('l_rf'+i).value});
   $('l_out'+i).textContent=f?'Floating rate: no re-fix date':r?'Re-fix due '+fmtD(r):'';
 }
 function fixAll(){for(var i=0;i<lpN;i++)if($('l_fix'+i))fixPreview(i)}
+// An existing rental (owned a while), being added or edited: its purchase date isn't when the rate was fixed.
+function isHeld(){return newType==='rental'&&(editIdx!==null?!!(props[editIdx]||{}).held:newRent==='existing')}
 // When adding, "Rate fixed from" follows the purchase date: a part's date is filled in if it's blank, today's (the
-// default) or still the date copied last time, so one typed in by hand is left alone.
+// default) or still the date copied last time, so one typed in by hand is left alone. Not for an existing rental.
 var fsPrev='';
 function syncFs(){
-  var d=$('f_date');if(editIdx!==null||!d)return;
+  var d=$('f_date');if(editIdx!==null||!d||isHeld())return;
   var t=iso(new Date());if(!d.value)return;
   for(var i=0;i<lpN;i++){var f=$('l_fs'+i);if(f&&num('l_amt'+i)&&(!f.value||f.value===fsPrev||f.value===t)&&f.value!==d.value){f.value=d.value;fixPreview(i)}}
   fsPrev=d.value;
 }
-// Typing a loan amount fills in "Rate fixed from" if it's empty: the purchase date when adding, else today.
+// Typing a loan amount fills in "Rate fixed from" if it's empty: the purchase date when adding (not for an existing
+// rental), else today. Removing the amount clears the dates.
 function loanAmt(i){
   var f=$('l_fs'+i),d=$('f_date');
-  if(f&&num('l_amt'+i)&&!f.value)f.value=editIdx===null&&d&&d.value?d.value:iso(new Date());
+  if(f&&!num('l_amt'+i)){f.value='';$('l_rf'+i).value=''}
+  if(f&&num('l_amt'+i)&&!f.value)f.value=editIdx===null&&d&&d.value&&!isHeld()?d.value:iso(new Date());
   fixPreview(i);
 }
 // The parts as typed (raw values), so removing one can shift the rest up.
-var LPF=['amt','rate','fix','fs','rf','term'];
+var LPF=['amt','rate','fix','fs','rf'];
+// Remaining term fields: the end date fills in years and months, and years and months fill in the end date.
+function endIn(m){var d=new Date();d.setMonth(d.getMonth()+m);return iso(d)}
+function termFrom(i,src){
+  var te=$('l_te'+i);if(!te)return;
+  if(src==='te'){if(!te.value)return;var m=monthsTo(te.value);$('l_ty'+i).value=Math.floor(m/12)||'';$('l_tm'+i).value=m%12||''}
+  else{var n=num('l_ty'+i)*12+num('l_tm'+i);te.value=n?endIn(n):''}
+}
+function termSet(i,x){
+  var m=x.end?monthsTo(x.end):x.term?Math.round(x.term*12):0;
+  $('l_ty'+i).value=Math.floor(m/12)||'';$('l_tm'+i).value=m%12||'';$('l_te'+i).value=x.end||(m?endIn(m):'');
+}
 function lpRead(){var a=[];for(var i=0;i<lpN;i++){var x={};LPF.forEach(function(k){var e=$('l_'+k+i);x[k]=e?e.value:''});a.push(x)}return a}
 function lpWrite(a){a.forEach(function(x,i){LPF.forEach(function(k){var e=$('l_'+k+i);if(e)e.value=x[k]})});fixAll()}
 function readParts(){
-  var a=[];for(var i=0;i<lpN;i++){var n=num('l_amt'+i);if(!n)continue;var t=$('l_fix'+i).value;
-    a.push({loan:n,rate:num('l_rate'+i),fixTerm:t,fixStart:$('l_fs'+i).value,refix:t==='custom'?$('l_rf'+i).value:'',ltype:lpT[i],term:num('l_term'+i)||30})}
+  var a=[];for(var i=0;i<lpN;i++){var n=num('l_amt'+i);if(!n)continue;var t=$('l_fix'+i).value,mo=num('l_ty0')*12+num('l_tm0'),end=$('l_te0').value;
+    var x={loan:n,rate:num('l_rate'+i),fixTerm:t,fixStart:$('l_fs'+i).value,refix:t==='custom'?$('l_rf'+i).value:'',ltype:lpT[i],term:mo?Math.round(mo/12*1000)/1000:30};
+    if(end)x.end=end;a.push(x)}
   return a;
 }
 // p.loan is the total and p.rate the average weighted by amount, so equity, LVR and the calculators work as before.
@@ -61,15 +85,15 @@ function setLoan(p,a){
   var t=sum(a,function(x){return x.loan});p.parts=a;p.loan=t;p.rate=Math.round(sum(a,function(x){return x.loan*x.rate})/t*100)/100;
 }
 function fill(p){
-  var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.type!=='rental'?(p.legal||0)+(p.extra||0):p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_reno:p.reno,f_rates:p.rates,f_ins:p.ins,f_power:p.power,f_oth:p.oth!==undefined?p.oth:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
+  var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.type!=='rental'?(p.legal||0)+(p.extra||0):p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_mgmt:p.mgmt,f_reno:p.reno,f_rates:p.rates,f_ins:p.ins,f_power:p.power,f_oth:p.oth!==undefined?p.oth:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
   for(var k in m){var e=$(k);if(e&&m[k]!==undefined&&m[k]!==null&&m[k]!==0)e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}
 }
 // The three types of property, picked in the + menu (or switched at the top of the Add a property form): [type, icon, name].
 var NEWT=[['rental','key','Rental'],['project','tool','Reno project'],['potential','search','Potential buy']];
-var formAnim=false;
+var formAnim=false,newRent='existing';
 // Opens Add a property with the form for that type (from the + menu, or a "add one first" button).
 function newProp(t){
-  newType=t;newIntent='flip';newLoan='pi';loanOpen=false;lpReset();editIdx=null;formAnim=true;form();formAnim=false;go(2);$('p2').scrollTop=0;
+  newType=t;newIntent='flip';newRent='existing';newLoan='pi';loanOpen=false;lpReset();editIdx=null;formAnim=true;form();formAnim=false;go(2);$('p2').scrollTop=0;
   var f=$('f_addr');if(f&&matchMedia('(pointer:fine)').matches)f.focus();
 }
 var OPT=' <i class="opt">optional</i>';
@@ -80,10 +104,15 @@ function form(){
   if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=ADDBAR;return}
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
   var N=MONEY,ed=editIdx!==null;
+  // Rentals: an existing one (owned a while) needs only its value, not the purchase details; a new one needs the
+  // price and date. Rentals added before this choice existed keep all the fields, optional.
+  var rt=newType==='rental',held=rt&&(ed?!!props[editIdx].held:newRent==='existing'),rnew=rt&&!ed&&!held;
   var RQ=' required';
   var h='<div class="card'+(formAnim?' enter':'')+'">'+(editIdx===null?'<b>What are you adding?</b><div class="seg segt">'+NEWT.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===newType?'on':'')+'">'+t[2]+'</button>'}).join('')+'</div>':'<b>'+(editSec==='loan'?'Edit mortgage':'Edit property details')+'</b>')+'<p class="sub" style="margin-top:4px">Fields marked optional can be left blank.</p>'+
    (pt?'<label>Plan</label><div class="seg"><button data-n="flip" class="'+(flip?'on':'')+'">Reno to sell</button><button data-n="rental" class="'+(flip?'':'on')+'">Buy to rent</button></div>':'')+
-   (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off" required><div class="sugg" role="listbox" hidden></div></div>'+
+   (rt&&!ed?'<label>Rental</label><div class="seg"><button data-rk="existing" class="'+(held?'on':'')+'">Existing rental</button><button data-rk="new" class="'+(held?'':'on')+'">New rental</button></div>'+
+     '<p class="sub" style="margin-top:4px">'+(held?'One you’ve owned a while: just its value now, no purchase details needed.':'One you’ve just bought: with the purchase price and costs.')+'</p>':'')+
+   (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="'+(held?'f_value':'f_price')+'" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off" required><div class="sugg" role="listbox" hidden></div></div>'+
    '<label>Suburb / city</label><input id="f_sub" required>':'')+
    // Legal fees and other purchase costs are one figure (stored in legal) for projects and potential buys; rentals keep Healthy Homes costs separate.
    // Potential buys: grouped into short sections with paired fields so the form stays compact on a phone.
@@ -106,18 +135,22 @@ function form(){
      :'<div class="fgrid"><div><label>Value after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Weekly rent</label><input id="f_rent"'+RQ+N+'</div><div><label>Annual expenses</label><input id="f_exp"'+RQ+N+'</div><div><label>Months until tenanted</label><input id="f_months"'+RQ+NUM+'</div></div>')+
    (editIdx===null&&SHOW_COMPS?'<p class="sub" style="margin-top:10px">You can add comparable sales once it’s saved.</p>':''):'')+
    // Rentals may have been owned for decades, so their purchase details are optional (then the value is needed instead).
-   (sd&&!pt?'<label>Purchase price (NZD)'+(pr?'':' (optional)')+'</label><input id="f_price"'+(pr?RQ:'')+N+
-   '<label>Purchase date'+(pr?'':' (optional)')+'</label><input id="f_date" type="date"'+(pr?' required':'')+'>'+
-   (pr?'':'<p class="sub" style="margin-top:4px">Leave these blank if you don’t have them to hand, and add the current loan balance or estimated value below.</p>')+
+   (sd&&!pt?(held?'<label>Estimated value now (NZD)</label><input id="f_value"'+RQ+N+
+     '<label>Purchase date (optional)</label><input id="f_date" type="date"><p class="sub" style="margin-top:4px">Roughly when you bought it, for how long you’ve owned it and the value chart.</p>'
+   :'<label>Purchase price (NZD)'+(pr||rnew?'':' (optional)')+'</label><input id="f_price"'+(pr||rnew?RQ:'')+N+
+   '<label>Purchase date'+(pr||rnew?'':' (optional)')+'</label><input id="f_date" type="date"'+(pr||rnew?' required':'')+'>'+
+   (pr||rnew?'':'<p class="sub" style="margin-top:4px">Leave these blank if you don’t have them to hand, and add the current loan balance or estimated value below.</p>')+
    (pr?'<label>Legal fees and other purchase costs (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
       :'<label>Legal fees (optional)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (optional)</label><input id="f_extra"'+N)+
-   '<label>Estimated value now (optional)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N+
+   '<label>Estimated value now (optional)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N)+
    // When adding, what's owed now sits in the main form (it matters more than the purchase details for a long-held
    // property); the rate, term and re-fix details stay in the collapsed mortgage section below.
    (editIdx===null?(lpN===1?'<label>Current loan balance (optional)</label><input id="l_amt0" placeholder="Leave blank if mortgage-free"'+N+'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.</p>'
      :'<p class="sub" style="margin-top:14px">Loan split into '+lpN+' parts: enter each amount under Mortgage details below.</p>'):'')+
    (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+RQ+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (optional)</label><input id="f_spent"'+N)
-      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp" placeholder="Rates, insurance, maintenance etc."'+RQ+N+'<p class="sub rlink" id="ratelink"></p>')+'':'')+
+      :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp" placeholder="Rates, insurance, maintenance etc."'+RQ+N+'<p class="sub rlink" id="ratelink"></p>'+
+       '<label>Management fee % of rent (optional)</label><input id="f_mgmt" placeholder="Leave blank if you manage it yourself"'+NUM+
+       '<p class="sub" style="margin-top:4px">What your property manager charges in total, including any GST. Leave it out of annual expenses.</p>')+'':'')+
    // When adding, the optional mortgage sits in a collapsed section so the form stays short.
    (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen||lpN>1?' open':'')+'><summary>Mortgage details (if there’s a loan)</summary>'+lpForm(true)+'</details>':lpForm(false)):'')+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
@@ -130,9 +163,9 @@ function form(){
   holdCalc();rateLink();
   if($('l_fix0')){
     var L=editIdx!==null?parts(props[editIdx]):[];
-    for(var i=0;i<lpN;i++){var x=L[i]||{},m={};m['l_amt'+i]=x.loan;m['l_rate'+i]=x.rate;m['l_fs'+i]=x.fixStart;m['l_rf'+i]=x.refix;m['l_term'+i]=x.term;setv(m);
+    for(var i=0;i<lpN;i++){var x=L[i]||{},m={};m['l_amt'+i]=x.loan;m['l_rate'+i]=x.rate;m['l_fs'+i]=x.fixStart;m['l_rf'+i]=x.refix;setv(m);
       $('l_fix'+i).value=x.fixTerm||(x.refix?'custom':'12');if(!$('l_fs'+i).value&&x.loan)$('l_fs'+i).value=iso(new Date())}
-    fixAll();
+    termSet(0,L[0]||{});fixAll();
   }
   if(wide())pairUp((ed?$('sheetbody'):$('p2')).querySelector('.card'));
 }
@@ -143,6 +176,8 @@ function missing(box){
   var bad=[].filter.call(box.querySelectorAll('[required]'),function(e){return !e.value.trim()});
   var r=$('f_rate');if(r&&box.contains(r)&&num('f_loan')&&!r.value.trim())bad.push(r);
   for(var i=0;i<lpN;i++){r=$('l_rate'+i);if(r&&box.contains(r)&&num('l_amt'+i)&&!r.value.trim())bad.push(r)}
+  // An existing rental's loan needs its remaining term (years and months, or the end date, which fills them in).
+  r=$('l_ty0');if(isHeld()&&r&&box.contains(r)&&!num('l_ty0')&&!num('l_tm0')&&[].some.call(box.querySelectorAll('[id^=l_amt]'),function(e){return pnum(e.value)}))bad.push(r);
   // A rental's purchase details are optional (it may have been owned for decades), but it needs something to go on:
   // the purchase price, or else the current loan balance (an estimated value also does).
   var fp=$('f_price');if(newType==='rental'&&fp&&box.contains(fp)&&!num('f_price')&&!num('f_value')){
@@ -155,7 +190,7 @@ function missing(box){
     void e.offsetWidth;e.classList.add('bad');e.setAttribute('aria-invalid','true');
     var l=fieldLabel(e);if(l)l.classList.add('badl');
     var m=document.createElement('p');m.className='ferr';
-    m.textContent=/rate/.test(e.id)?'Needed when there’s a loan amount':e.id==='f_price'&&newType==='rental'?'Add the purchase price, or the current loan balance below':'Required';
+    m.textContent=/^l_ty/.test(e.id)?'Add the years and months left, or the date the loan ends':/rate/.test(e.id)?'Needed when there’s a loan amount':e.id==='f_price'&&newType==='rental'?'Add the purchase price, or the current loan balance below':'Required';
     fieldBox(e).insertAdjacentElement('afterend',m);
   });
   errSum(box);
@@ -167,14 +202,14 @@ function errSum(box){
   var f=box.querySelector('.formerr');if(!f)return;
   var n=[].map.call(box.querySelectorAll('.bad'),fieldName);
   f.classList.toggle('on',!!n.length);
-  f.textContent=n.length?'To save, fill in '+(n.length>1?n.slice(0,-1).join(', ')+' and '+n[n.length-1]:n[0])+'.':'';
+  f.textContent=n.length?'To save, fill in '+(n.length>1?n.slice(0,-1).join(', ')+(n.length>2?',':'')+' and '+n[n.length-1]:n[0])+'.':'';
 }
 // A field, or its wrapper when it has one (the address field sits in a box with its suggestions).
 function fieldBox(e){return e.parentElement.classList.contains('ac')?e.parentElement:e}
 // The label for a field: the one just before it, or one pointing at it with for="".
 function fieldLabel(e){var l=fieldBox(e).previousElementSibling;if(l&&l.tagName==='LABEL')return l;return e.id?document.querySelector('label[for="'+e.id+'"]'):null}
 // A field's name for the summary, without notes like "(NZD)" or "(optional)", or a unit like "%" on the end.
-function fieldName(e){var l=fieldLabel(e),t=l?l.childNodes[0].textContent:'this field';return t.replace(/\s*\(.*$/,'').replace(/\s*%$/,'').trim()}
+function fieldName(e){if(e.dataset.name)return e.dataset.name;var l=fieldLabel(e),t=l?l.childNodes[0].textContent:'this field';return t.replace(/\s*\(.*$/,'').replace(/\s*%$/,'').trim()}
 // Clears a field's error and updates the summary.
 function unbad(e){
   e.classList.remove('bad');e.removeAttribute('aria-invalid');
@@ -195,9 +230,10 @@ function addProp(){
   var a=$('f_addr').value.trim();
   var p={type:newType,addr:a,sub:$('f_sub').value.trim(),price:num('f_price'),value:num('f_value')||(newType==='potential'?0:num('f_price')),date:($('f_date')||{}).value||'',legal:num('f_legal'),extra:num('f_extra')};
   if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
-  else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}else{p.rent=num('f_rent');p.exp=num('f_exp')}
+  else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}
+  else{p.rent=num('f_rent');p.exp=num('f_exp');p.mgmt=num('f_mgmt');if(!wasEdit&&newRent==='existing')p.held=1}
   if(newType!=='potential')setLoan(p,readParts());
-  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
+  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject','held'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
 function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}
@@ -222,6 +258,8 @@ $(id).addEventListener('input',function(e){
   if(/^f_(rates|ins|power|oth|loan|rate|term|months)$/.test(e.target.id))holdCalc();
   if(e.target.id==='f_date')syncFs();
   var la=/^l_amt(\d+)$/.exec(e.target.id);if(la)loanAmt(+la[1]);
+  var lt=/^l_(ty|tm|te)(\d+)$/.exec(e.target.id);
+  if(lt){termFrom(+lt[2],lt[1]);var ty=$('l_ty'+lt[2]);if(ty.classList.contains('bad')&&(num(ty.id)||num('l_tm'+lt[2])))unbad(ty)}
   if(e.target.id==='f_sub'||e.target.id==='f_addr'){if(e.target.id==='f_sub'&&e.isTrusted)delete e.target.dataset.county;rateLink()}
 });
 $(id).addEventListener('click',function(e){
@@ -234,6 +272,8 @@ $(id).addEventListener('click',function(e){
   if(b){if(b.dataset.t!==newType){newType=b.dataset.t;keepForm()}return}
   var n=e.target.closest('[data-n]');
   if(n){newIntent=n.dataset.n;keepForm();return}
+  var rk=e.target.closest('[data-rk]');
+  if(rk){if(rk.dataset.rk!==newRent){newRent=rk.dataset.rk;keepForm()}return}
   if(e.target.id==='cancel'){closeSheet();return}
   if(e.target.id==='delprop'){var i=editIdx;closeSheetNow();delProp(i);return}
   if(e.target.id==='add')addProp();

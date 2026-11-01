@@ -121,7 +121,7 @@ $('plusbody').addEventListener('click',function(e){
 // Cash flow page (from the portfolio card on Home): each owned property's monthly money in and out, best first.
 // Rentals: rent less expenses and mortgage repayments. Projects: their holding cost (or repayments if none is set).
 function cfParts(p){
-  if(p.type==='rental'){var r=(p.rent||0)*52/12,e=(p.exp||0)/12,m=loanPay(p);return {net:cashFlow(p),rows:[['Rent',r],['Expenses',-e],['Mortgage',-m]]}}
+  if(p.type==='rental'){var r=(p.rent||0)*52/12,e=(p.exp||0)/12,f=mgmtFee(p)/12,m=loanPay(p);return {net:cashFlow(p),rows:[['Rent',r],['Expenses',-e]].concat(f?[['Management',-f]]:[],[['Mortgage',-m]])}}
   var h=cashFlow(p);
   if(hasBills(p)){var x=holdParts(p);return {net:h,rows:[['Mortgage',-x.loan],['Rates & insurance',-x.bills],['Power & other',-x.other]]}}
   return {net:h,rows:[[p.hold?'Reno holding costs':'Mortgage',h]]};

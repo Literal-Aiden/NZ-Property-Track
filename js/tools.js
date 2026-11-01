@@ -51,7 +51,7 @@ var TOOLS=[
       'Estimate only, assuming the rate stays the same for the whole term. Your bank’s figures may differ slightly.');
   }},
  {id:'yield',icon:'trend',name:'Rental yield',desc:'Gross and net yield from price and rent',
-  from:function(p){return p.rent&&{price:p.value||p.price,rent:p.rent,exp:p.exp}},
+  from:function(p){return p.rent&&{price:p.value||p.price,rent:p.rent,exp:(p.exp||0)+Math.round(mgmtFee(p))}},
   f:[{i:'price',l:'Price or value',k:'m'},{i:'rent',l:'Weekly rent',k:'m'},{i:'exp',l:'Annual expenses',k:'m',opt:1,wide:1,ph:'Rates, insurance, maintenance, management'}],
   calc:function(v){
     if(!v.price||!v.rent)return '';var a=v.rent*52,net=a-v.exp;
@@ -81,7 +81,7 @@ var TOOLS=[
     var L=parts(p),x=L[0]||{},pt=p.type==='potential';if(!p.loan&&!p.rent)return null;
     return {loan:p.loan||0,rate:p.rate||'',type:x.ltype||p.ltype||'pi',term:x.term||p.term||30,
       rates:pt?p.rates||0:0,ins:pt?p.ins||0:0,maint:0,oth:pt?((p.power||0)+(p.oth!==undefined?p.oth:0))*12:p.type==='rental'?p.exp||0:0,
-      cur:p.type==='rental'||pt&&p.intent==='rent'?p.rent||0:0};
+      pm:p.type==='rental'&&p.mgmt||'',cur:p.type==='rental'||pt&&p.intent==='rent'?p.rent||0:0};
   },
   f:[{i:'loan',l:'Loan amount',k:'m'},{i:'rate',l:'Interest rate %',k:'n'},
      {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT},{i:'term',l:'Term in years',k:'n',d:'30'},

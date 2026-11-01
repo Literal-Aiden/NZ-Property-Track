@@ -58,6 +58,9 @@ function days(d){return d?Math.max(0,Math.floor((Date.now()-new Date(d+'T00:00:0
 // How long it's been owned, in the unit that reads best: days, then months, then years.
 function dOwn(p){var n=days(p.date);if(n===null)return '–';if(n<62)return n+' day'+(n===1?'':'s');if(n<730){var m=Math.round(n/30.44);return m+' months'}var y=n/365.25;return (y<10?Math.floor(y*10)/10:Math.floor(y))+' years'}
 function basis(p){return p.price+(p.legal||0)+(p.extra||0)+(p.spent||0)}
+// A loan term in years (may be fractional) as "22 years 7 months"; and whole months from today until a date (0 if past).
+function yrsMo(t){var m=Math.round(t*12),y=Math.floor(m/12);m%=12;return (y?y+' year'+(y===1?'':'s'):'')+(y&&m?' ':'')+(m||!y?m+' month'+(m===1?'':'s'):'')}
+function monthsTo(d){var a=new Date(),b=new Date(d+'T00:00:00'),m=(b.getFullYear()-a.getFullYear())*12+b.getMonth()-a.getMonth()-(b.getDate()<a.getDate()?1:0);return Math.max(0,m)}
 function pmt(l,r,y){var m=r/1200,n=y*12;return m?l*m/(1-Math.pow(1+m,-n)):l/n}
 function iso(x){return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 function addMonths(d,m){var x=new Date(d+'T00:00:00'),day=x.getDate();x.setMonth(x.getMonth()+m);if(x.getDate()<day)x.setDate(0);return iso(x)}

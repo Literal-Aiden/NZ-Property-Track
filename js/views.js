@@ -21,7 +21,7 @@ function loanCard(p){
   var dt=fl?'Can change anytime':rf?fmtD(rf):'–';
   return top+'<p class="sub">'+$$(x.loan)+' owing at '+x.rate+'% · '+(isIO?'Interest-only':'Principal &amp; interest')+'</p>'+
    '<div class="grid">'+stat('Repayment / month now',$$(now))+stat(isIO?'If P&amp;I instead':'If interest-only',$$(alt))+stat(when,dt,d!==null&&d>=0&&d<=90?'neg':'')+stat(isIO?'Extra cash needed for P&amp;I':'Cash freed by interest-only',$$(Math.abs(pi-io)))+'</div>'+
-   '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on a '+(x.term||30)+'-year term. Split the loan in Edit mortgage if parts are fixed for different terms.</p>'+calBtn(p)+'</div>';
+   '<p class="sub" style="margin-top:10px">Interest-only frees up cash each month, but the loan isn’t paid down. The difference is mostly principal, not interest saved. Based on '+yrsMo(x.term||30)+' left on the loan. Split the loan in Edit mortgage if parts are fixed for different terms.</p>'+calBtn(p)+'</div>';
 }
 // Re-fix reminders in the phone's own calendar: an .ics file with an all-day event on each part's coming re-fix date,
 // with alerts a month and a week before, so they arrive even when the app isn't opened.
@@ -155,9 +155,9 @@ function current(){
     h+=rows([['Purchase price',$$(p.price)],valRow(p)].concat(debtRows(p),[['Total cost in',$$(basis(p))],['Budget remaining',$$(left),left<0?'neg':''],['Owned for',dOwn(p)]]));
     if(p.done)h+='<div class="card">'+toRentBlock(p)+'</div>';
   }else{
-    var ann=p.rent*52,net=ann-p.exp;
-    h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)],['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',p.value?(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%':'–'],
-      valRow(p)].concat(debtRows(p),[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–'],['Owned for',dOwn(p)]]));
+    var ann=p.rent*52,fee=mgmtFee(p),net=ann-p.exp-fee;
+    h+=rows([['Weekly rent',$$(p.rent)],['Annual expenses',$$(p.exp)]].concat(fee?[['Management fee',$$(fee)+' a year<span class="sub">'+p.mgmt+'% of rent</span>','noloan']]:[],[['Net annual income',$$(net),net<0?'neg':'pos'],['Gross / net yield',p.value?(ann/p.value*100).toFixed(1)+'% / '+(net/p.value*100).toFixed(1)+'%':'–'],
+      valRow(p)].concat(debtRows(p),p.held&&!p.price?[]:[['Purchase price',p.price?$$(p.price):'Not entered'],['Total cost in',p.price?$$(basis(p)):'–']],[['Owned for',dOwn(p)]])));
     if(p.fromProject&&p.spent)h+='<p class="sub" style="margin:-4px 4px 12px">Includes '+$$(p.spent)+' of reno costs from when this was a project.</p>';
   }
   $('p1').innerHTML=pgrid(side,h+histCard(p)+(p.plan?planCard(p):''));
@@ -173,7 +173,9 @@ function addPhoto(p,f){
 
 // Portfolio totals for owned properties. Cash flow: rentals are rent less expenses and repayments; projects are their holding cost.
 function loanPay(p){return sum(parts(p),partPay)}
-function cashFlow(p){return p.type==='rental'?((p.rent||0)*52-(p.exp||0))/12-loanPay(p):-(p.hold||loanPay(p))}
+// A rental's property management fee a year: a % of the rent (p.mgmt), on top of its annual expenses.
+function mgmtFee(p){return p.type==='rental'?(p.mgmt||0)/100*(p.rent||0)*52:0}
+function cashFlow(p){return p.type==='rental'?((p.rent||0)*52-(p.exp||0)-mgmtFee(p))/12-loanPay(p):-(p.hold||loanPay(p))}
 
 // Things that need attention, each pointing at the project section that deals with it.
 function alerts(p){
