@@ -58,7 +58,7 @@ Both are safe to paste here. They're meant to be in the app's code, and the secu
 ## Worth knowing
 
 - **Email service (done).** Sign-in emails go through Resend: in Supabase, **Authentication → Emails → SMTP Settings** with host `smtp.resend.com`, port `465`, username `resend`, and a Resend API key (sending access only) as the password. Never paste that key anywhere else. Supabase's built-in email allowed only about 2 an hour; with Resend the limit is under **Authentication → Rate Limits**. Until your own domain is verified in Resend, the sender `onboarding@resend.dev` only reaches your own Resend account's email.
-- **Free projects pause** after a week with no use, and you restore them from the dashboard. Upgrade to Pro (about US$25 a month) before launch.
+- **Free projects pause** after a week with no use, and you restore them from the dashboard. Until you upgrade to Pro (about US$25 a month, worth it before launch), `.github/workflows/keepalive.yml` keeps it awake: GitHub calls the database's `ping()` function every 3 days. It needs the `ping()` part of `schema.sql` to have been run. GitHub emails you if a run fails, and switches scheduled runs off if the repo has no commits for 60 days (it says so on the Actions tab; turn it back on there). Delete the workflow once you're on Pro.
 - **Privacy.** Once the app stores people's data, you'll need a short privacy policy (NZ Privacy Act 2020) saying:
   - what's stored and where (Supabase, Sydney)
   - who can see it

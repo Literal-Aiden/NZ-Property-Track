@@ -67,3 +67,11 @@ create or replace function public.delete_me() returns void language sql security
 $$;
 revoke all on function public.delete_me() from public, anon;
 grant execute on function public.delete_me() to authenticated;
+
+-- ── Keep-alive ─────────────────────────────────────────────────────────────
+-- Free Supabase projects pause after a week without use. A scheduled GitHub workflow
+-- (.github/workflows/keepalive.yml) calls this every few days, which counts as use. It reads no data.
+-- Not needed once the project is on a paid plan.
+create or replace function public.ping() returns timestamptz language sql stable as $$ select now() $$;
+revoke all on function public.ping() from public;
+grant execute on function public.ping() to anon, authenticated;

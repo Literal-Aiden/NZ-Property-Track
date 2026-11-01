@@ -22,7 +22,7 @@ A working prototype: plain HTML, CSS and JavaScript with no build step. The only
 - `mockup/index.html` – the clickable layout mock-up the current layout was built from (not part of the app)
 - `sw.js`, `manifest.webmanifest`, `icons/` – install-as-app and offline support
 - Data is saved in the browser's localStorage under the key `nzpt.v1`. First load shows sample properties, and "Start fresh" clears them. Signing in (Settings) syncs it across devices through Supabase (see Sync below); signed out, it stays on one device only
-- `supabase/schema.sql` (the table, security rules, file storage and delete-account function; run in the Supabase SQL Editor) and `supabase/SETUP.md` (setting up the Supabase project)
+- `supabase/schema.sql` (the table, security rules, file storage, delete-account function and keep-alive `ping()`; run in the Supabase SQL Editor) and `supabase/SETUP.md` (setting up the Supabase project)
 
 Open `index.html` in a browser to run it.
 
@@ -220,6 +220,6 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 ## Ideas not yet built
 
-- Before launch: Supabase Pro (free projects pause), remove the Testing card
+- Before launch: Supabase Pro (free projects pause after a week without use; until then `.github/workflows/keepalive.yml` calls the database's `ping()` every 3 days, delete it after upgrading), remove the Testing card
 - Current bank rates shown as a reference
 - Re-fix reminders as real notifications (e.g. if this becomes a native app); the calendar links are built but hidden
