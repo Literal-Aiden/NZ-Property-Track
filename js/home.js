@@ -63,20 +63,24 @@ $('home').addEventListener('click',function(e){
 // + menu. Each quick action picks a property (skipped when there's only one) and opens its page with the form ready.
 var QUICK={
   rent:{t:'Which rental?',none:'You don’t have a rental yet.',f:function(p){return p.type==='rental'},go:function(){sec='money';moneyEdit='new';moneyKind='in'},card:'money'},
+  exp:{t:'Expense for which rental?',none:'You don’t have a rental yet.',f:function(p){return p.type==='rental'},go:function(){sec='money';moneyEdit='new';moneyKind='out'},card:'money'},
   cost:{t:'Which reno project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='costs';itemEdit='new'},card:'costs'},
   ms:{t:'Milestone for which project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='tl';tlAdd=true},card:'k_t'},
   pics:{t:'Photos for which project?',none:'You don’t have a reno project yet.',f:function(p){return p.type==='project'},go:function(){sec='tl'},card:'pics'}};
+// The + menu's actions, grouped under the property type they're for (coloured by type): [quick action, icon, name, hint].
+// No quick action means the deal check calculator.
+var PLUS=[
+  ['rental','Rentals',[['rent','dollar','Rent received','Weekly or one payment'],['exp','receipt','Expense','Rates, insurance, and repairs']]],
+  ['project','Reno projects',[['cost','tool','Reno cost','With receipt photos'],['ms','clock','Milestone','Trades, consents, and inspections'],['pics','camera','Progress photos','Before, during, and after']]],
+  ['potential','Thinking of buying',[[null,'calc','Quick deal check','Is it worth an offer?']]]];
 function openPlus(){drawPlus();$('plus').hidden=false;$('plusbody').scrollTop=0;ovOpen('plus')}
 function closePlusNow(){$('plus').hidden=true}
 function drawPlus(k){
   var h;
-  if(!k)h='<b class="ftitle">Add</b><div class="opts">'+
-    '<button data-q="rent"><span class="ib">'+ic('dollar')+'</span><b>Rent or expense</b><span class="sub">For a rental</span></button>'+
-    '<button data-q="cost"><span class="ib">'+ic('tool')+'</span><b>Reno cost</b><span class="sub">With receipt photos</span></button>'+
-    '<button data-q="ms"><span class="ib">'+ic('clock')+'</span><b>Milestone</b><span class="sub">Trades, inspections</span></button>'+
-    '<button data-q="pics"><span class="ib">'+ic('camera')+'</span><b>Progress photos</b><span class="sub">Before, during, after</span></button>'+
-    '<button data-x="pprop" style="grid-column:1/-1"><span class="ib">'+ic('home')+'</span><b>Property</b><span class="sub">Owned or potential</span></button></div>'+
-    '<button class="edit" data-x="pdeal" style="margin-top:12px">'+ic('check')+' Quick deal check</button>';
+  if(!k)h='<b class="ftitle">Add</b>'+
+    '<button class="pnew" data-x="pprop"><span class="ib">'+ic('home')+'</span><span><b>New property</b><span class="sub">Rental, reno project, or potential buy</span></span></button>'+
+    PLUS.map(function(g){return '<div class="ty-'+g[0]+'"><div class="pgh">'+g[1]+'</div>'+g[2].map(function(a){
+      return '<button class="pq" '+(a[0]?'data-q="'+a[0]+'"':'data-x="pdeal"')+'><span class="ib">'+ic(a[1])+'</span><span><b>'+a[2]+'</b><span class="sub">'+a[3]+'</span></span><i class="chev">›</i></button>'}).join('')+'</div>'}).join('');
   else{
     var q=QUICK[k],ids=props.map(function(p,i){return i}).filter(function(i){return q.f(props[i])});
     h='<button class="back" data-x="phome">‹ Back</button><b class="ftitle">'+(ids.length?q.t:q.none)+'</b>'+
