@@ -32,18 +32,18 @@ This creates:
   - `https://literal-aiden.github.io/NZ-Property-Track/**`
   - `http://localhost:8765/**` (so I can test in the preview)
 
-**Authentication → Emails → Magic Link** (the email template): **skip this for now.** Supabase only allows template changes once your own email service (SMTP) is connected, so until then sign-in uses the standard email link. Do this part before launch, together with the SMTP setup under "Worth knowing":
-
-People will sign in with a 6-digit code from their email rather than a link. A link opens in the phone's browser, not the installed app, so on iPhone it would sign in the wrong place. Replace the template's body with:
+**Authentication → Emails → Templates** (done once custom SMTP is set up, below): people sign in with the code from the email, because a link opens in the phone's browser, not the installed app, so on iPhone it would sign in the wrong place. The link stays in the email for computers and Android. Put this in both **Magic link or OTP** and **Confirm signup** (first-time sign-ins get that one):
 
 ```html
 <h2>Your sign-in code</h2>
 <p>Enter this code in NZ Property Tracker:</p>
-<p style="font-size:28px;letter-spacing:4px"><b>{{ .Token }}</b></p>
-<p>If you didn't ask for this, you can ignore this email.</p>
+<p style="font-size:28px;letter-spacing:4px;margin:16px 0"><b>{{ .Token }}</b></p>
+<p>Or tap this link to sign in on this device:<br>
+<a href="{{ .ConfirmationURL }}">Sign in to NZ Property Tracker</a></p>
+<p style="color:#76665f;font-size:13px">If you didn't ask for this, you can ignore this email.</p>
 ```
 
-Set **Subject** to `Your NZ Property Tracker code`, then **Save**.
+Set **Subject** to `Your NZ Property Tracker code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. The code is 8 digits as set up; the app accepts 6 or 8.
 
 ## 4. Send me the two keys
 
@@ -57,7 +57,7 @@ Both are safe to paste here. They're meant to be in the app's code, and the secu
 
 ## Worth knowing
 
-- **Email limit.** Supabase's built-in email only sends a few sign-in emails an hour. That's fine for testing. Before real users, connect an email service like Resend (free for 3,000 a month) under **Authentication → Emails → SMTP Settings**.
+- **Email service (done).** Sign-in emails go through Resend: in Supabase, **Authentication → Emails → SMTP Settings** with host `smtp.resend.com`, port `465`, username `resend`, and a Resend API key (sending access only) as the password. Never paste that key anywhere else. Supabase's built-in email allowed only about 2 an hour; with Resend the limit is under **Authentication → Rate Limits**. Until your own domain is verified in Resend, the sender `onboarding@resend.dev` only reaches your own Resend account's email.
 - **Free projects pause** after a week with no use, and you restore them from the dashboard. Upgrade to Pro (about US$25 a month) before launch.
 - **Privacy.** Once the app stores people's data, you'll need a short privacy policy (NZ Privacy Act 2020) saying:
   - what's stored and where (Supabase, Sydney)

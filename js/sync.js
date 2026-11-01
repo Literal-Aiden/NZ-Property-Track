@@ -1,14 +1,15 @@
 // Sync across devices, through Supabase (the table and rules are in supabase/schema.sql). Optional: signed out, the
 // app works as before, with everything on this device only.
 // Sign-in is by email: Supabase sends a link that comes back here with the session in the address (#access_token=…).
-// A 6-digit code works too (SYNC_CODE), once the email template can show one (that needs our own email service).
+// The email also has a code (6 or 8 digits, set in Supabase), entered in the card (SYNC_CODE): the only way in for the
+// iPhone home-screen app, since the link opens in Safari. The email template shows it as {{ .Token }}.
 // Each property is one row: {id, data (the property as saved here), deleted}. The database stamps each change with its
 // own time, so a device asks for the rows changed since the newest one it has seen (sync.at). sync.sent keeps a hash
 // of each property as last sent or received: a property whose hash differs has changed here and is sent; one that's
 // gone has been deleted here, and its row is marked deleted so other devices drop it too. If both devices change the
 // same property between syncs, the one that syncs last wins.
 // Receipt and photo files sync too (see files() below).
-var SB_URL='https://jpfnfwfzivlwlqrdlgxg.supabase.co',SB_KEY='sb_publishable_vAKTq6361F1xN13IYyGnUQ_JnQkeS4V',SYNC_CODE=false;
+var SB_URL='https://jpfnfwfzivlwlqrdlgxg.supabase.co',SB_KEY='sb_publishable_vAKTq6361F1xN13IYyGnUQ_JnQkeS4V',SYNC_CODE=true;
 var AKEY='nzpt.auth',SKEY='nzpt.sync';
 function jget(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
 function jset(k,v){try{if(v)localStorage.setItem(k,JSON.stringify(v));else localStorage.removeItem(k)}catch(e){}}
@@ -68,7 +69,7 @@ function sendLink(){
   }).then(function(){syncSt='';drawSync()});
 }
 function checkCode(){
-  var c=authCode.replace(/\D/g,'');if(c.length<6){authMsg='Enter the 6-digit code from the email.';drawSync();return}
+  var c=authCode.replace(/\D/g,'');if(c.length<6){authMsg='Enter the code from the email.';drawSync();return}
   syncSt='sending';drawSync();
   sbFetch('/auth/v1/verify',{m:'POST',auth:false,b:{type:'email',email:authSent,token:c}}).then(function(d){setAuth(d);signedIn()},function(x){
     authMsg=x.status?'That code didn’t work. Check it, or send a new one.':'Couldn’t reach the sync service. Check your connection.';
@@ -268,14 +269,14 @@ function syncCard(){
   }
   h+='<p class="sub" style="margin-top:4px">Sign in to have your properties on your phone and computer, kept up to date on both. Without signing in, everything stays on this '+dev()+' only.</p>';
   if(authSent){
-    h+='<div class="sysent">'+ic('check')+'<p><b>Check your email.</b> We’ve sent a sign-in link to <b>'+esc(authSent)+'</b>. Open it on this '+dev()+(standalone?'':' in this browser')+'.</p></div>'+
-      (IOS&&standalone?'<p class="sub" style="margin-top:6px">On iPhone the link opens in Safari, not this app, so sign in from Safari for now.</p>':'')+
-      (SYNC_CODE?'<label for="sycode" style="display:block;margin-top:12px">Or enter the 6-digit code from the email</label><input id="sycode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="'+esc(authCode)+'">':'');
+    h+='<div class="sysent">'+ic('check')+'<p><b>Check your email.</b> We’ve sent '+(SYNC_CODE?'a sign-in code':'a sign-in link')+' to <b>'+esc(authSent)+'</b>.'+(SYNC_CODE?' Enter it below'+(IOS&&standalone?'':', or open the link in the email on this '+dev()+(standalone?'':' in this browser')):' Open it on this '+dev()+(standalone?'':' in this browser'))+'.</p></div>'+
+      (IOS&&standalone?'<p class="sub" style="margin-top:6px">'+(SYNC_CODE?'Use the code: on iPhone the link opens in Safari, not this app.':'On iPhone the link opens in Safari, not this app, so sign in from Safari for now.')+'</p>':'')+
+      (SYNC_CODE?'<label for="sycode" style="display:block;margin-top:12px">Code from the email</label><input id="sycode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="12345678" value="'+esc(authCode)+'">':'');
   }else h+='<label for="syemail" style="display:block;margin-top:12px">Email</label><input id="syemail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="'+esc(authEmail)+'">';
   if(authMsg)h+='<p class="sub neg" style="margin-top:6px">'+esc(authMsg)+'</p>';
   if(authInfo&&!authSent)h+='<p class="sub" style="margin-top:6px"><b>'+esc(authInfo)+'</b></p>';
   return h+'<div class="btns">'+(authSent?(SYNC_CODE?'<button class="go" data-x="sycheck">Sign in</button>':'')+'<button class="go ghost" data-x="sylink">Send again</button><button class="go ghost" data-x="syother">Use a different email</button>'
-    :'<button class="go" data-x="sylink"'+(syncSt==='sending'?' disabled':'')+'>'+(syncSt==='sending'?'Sending…':'Email me a sign-in link')+'</button>')+'</div></div>';
+    :'<button class="go" data-x="sylink"'+(syncSt==='sending'?' disabled':'')+'>'+(syncSt==='sending'?'Sending…':'Email me a sign-in code')+'</button>')+'</div></div>';
 }
 // Delete my account: a small button that opens a confirmation saying what goes and what stays.
 function delCard(){
