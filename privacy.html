@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · NZ Property Tracker</title>
+<meta name="theme-color" content="#c2412d">
+<link rel="icon" href="icons/icon-192.png">
+<!-- Same theme and colour as the app (see index.html). -->
+<script>(function(){var r=document.documentElement;r.dataset.theme="light";try{var t=localStorage.getItem("nzpt.theme"),a=localStorage.getItem("nzpt.accent");if(t==="dark")r.dataset.theme="dark";if(t==="auto")delete r.dataset.theme;if(a)r.dataset.accent=a}catch(e){}})()</script>
+<link rel="stylesheet" href="styles.css">
+<style>
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px 16px 48px}
+.back{display:inline-flex;align-items:center;gap:6px;margin:4px 0 12px;color:var(--acc);font-weight:600;text-decoration:none}
+h1{font-size:28px;margin:8px 0 4px}
+.upd{color:var(--mute);font-size:14px;margin:0 0 20px}
+h2{font-size:19px;margin:28px 0 8px}
+p,li{margin:0 0 10px}
+ul{padding-left:20px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:16px 0}
+.card p:last-child{margin:0}
+a{color:var(--acc)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0 12px}
+th,td{text-align:left;vertical-align:top;padding:8px 8px 8px 0;border-bottom:1px solid var(--line)}
+th{font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">‹ Back to the app</a>
+<h1>Privacy</h1>
+<p class="upd">Last updated 1 November 2026</p>
+
+<div class="card"><p><b>In short:</b> what you enter is yours. Without signing in, it stays on your own phone or computer. If you sign in to sync, it's stored securely so only you can reach it, and you can delete it all at any time. We don't sell your information, show ads, or track you.</p></div>
+
+<h2>Who we are</h2>
+<p>NZ Property Tracker is run by Aiden Holland. Questions or requests about your information: <a href="mailto:contact@aidenholland.com">contact@aidenholland.com</a>.</p>
+<p>We follow the Privacy Act 2020 and its information privacy principles.</p>
+
+<h2>What the app holds</h2>
+<ul>
+<li><b>What you enter:</b> property addresses, prices, values, loans, rent, expenses, reno costs, tenancy details (such as a tenant's name and bond), notes, and milestones.</li>
+<li><b>Files you add:</b> receipts, progress photos, cover photos, and Healthy Homes reports.</li>
+<li><b>Your email address,</b> only if you sign in to sync.</li>
+</ul>
+<p>We only collect what the app needs to work. There are no analytics, advertising, or tracking tools in the app.</p>
+<p>If you enter details about other people, such as a tenant's name, you're responsible for having a good reason to keep them, as their landlord. Keep only what you need.</p>
+
+<h2>Without signing in</h2>
+<p>Everything stays in your browser's storage on that phone or computer. Nothing you enter is sent to us. It's lost if you clear the browser's data or lose the device, which is why the app reminds you to make backups.</p>
+
+<h2>If you sign in to sync</h2>
+<p>Your properties and files are copied to our storage service so they're the same on each device you sign in on.</p>
+<ul>
+<li>They're stored with <b>Supabase</b>, in its <b>Sydney, Australia</b> data centre. Australia's privacy laws give protections comparable to New Zealand's.</li>
+<li>Sign-in codes are emailed through <b>Resend</b>, which receives your email address only to send them.</li>
+<li>Your information travels encrypted, and the storage service keeps it encrypted.</li>
+<li>Security rules in the database let each account reach only its own information.</li>
+<li>As the operator, we could technically access stored information. We only would to fix a problem you've asked us to look at, or where the law requires it.</li>
+</ul>
+
+<h2>Other services the app uses</h2>
+<p>Some features need to look things up online. They don't receive your other property details, and they don't know who you are.</p>
+<table>
+<tr><th>Feature</th><th>What's sent, and to whom</th></tr>
+<tr><td>Address suggestions</td><td>What you type in an Address field, to Photon (komoot, Germany)</td></tr>
+<tr><td>Rates lookup links</td><td>Opens your council's website, or a DuckDuckGo search of it, with the address</td></tr>
+</table>
+
+<h2>How long it's kept</h2>
+<p>Until you delete it. Deleting a property, receipt, or photo removes it from sync too. <b>Settings → Sync across devices → Delete my account and data</b> removes your account and everything synced to it straight away. It may stay in the storage service's own backups for a short time before they're replaced. What's on your devices stays until you clear it there.</p>
+
+<h2>Your rights</h2>
+<ul>
+<li><b>See and correct your information:</b> it's all shown and editable in the app. You can also download a backup of everything from Settings.</li>
+<li><b>Ask us:</b> to see or correct what we hold, or to delete it, at <a href="mailto:contact@aidenholland.com">contact@aidenholland.com</a>.</li>
+<li><b>Complain:</b> if you're not happy with how we've handled your information, you can contact the <a href="https://www.privacy.org.nz/">Office of the Privacy Commissioner</a>.</li>
+</ul>
+
+<h2>Changes</h2>
+<p>If this policy changes in a way that matters, we'll update the date above and say so in the app.</p>
+
+<p class="upd" style="margin-top:28px">This page explains how the app handles information. It isn't legal advice.</p>
+</main>
+</body>
+</html>

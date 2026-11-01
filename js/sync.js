@@ -265,7 +265,7 @@ function syncCard(){
       '<p class="sub'+(syncSt==='err'?' neg':'')+'" style="margin-top:6px"><b>'+st+'</b></p>'+
       (filesLeft>0?'<p class="sub" style="margin-top:6px">Uploading receipts and photos: '+filesLeft+' to go.</p>':'')+
       (sync.skip&&Object.keys(sync.skip).length?'<p class="sub" style="margin-top:6px">'+Object.keys(sync.skip).length+' file'+(Object.keys(sync.skip).length===1?' is':'s are')+' too large or not a photo or PDF, so '+(Object.keys(sync.skip).length===1?'it stays':'they stay')+' on this '+dev()+' only.</p>':'')+
-      '<div class="btns"><button class="go ghost" data-x="synow">Sync now</button><button class="go ghost" data-x="syout">'+(outArm?'Tap again to sign out':'Sign out')+'</button></div>'+delCard()+'</div>';
+      '<div class="btns"><button class="go ghost" data-x="synow">Sync now</button><button class="go ghost" data-x="syout">'+(outArm?'Tap again to sign out':'Sign out')+'</button></div>'+delCard()+privLink()+'</div>';
   }
   h+='<p class="sub" style="margin-top:4px">Sign in to have your properties on your phone and computer, kept up to date on both. Without signing in, everything stays on this '+dev()+' only.</p>';
   if(authSent){
@@ -276,7 +276,7 @@ function syncCard(){
   if(authMsg)h+='<p class="sub neg" style="margin-top:6px">'+esc(authMsg)+'</p>';
   if(authInfo&&!authSent)h+='<p class="sub" style="margin-top:6px"><b>'+esc(authInfo)+'</b></p>';
   return h+'<div class="btns">'+(authSent?(SYNC_CODE?'<button class="go" data-x="sycheck">Sign in</button>':'')+'<button class="go ghost" data-x="sylink">Send again</button><button class="go ghost" data-x="syother">Use a different email</button>'
-    :'<button class="go" data-x="sylink"'+(syncSt==='sending'?' disabled':'')+'>'+(syncSt==='sending'?'Sending…':'Email me a sign-in code')+'</button>')+'</div></div>';
+    :'<button class="go" data-x="sylink"'+(syncSt==='sending'?' disabled':'')+'>'+(syncSt==='sending'?'Sending…':'Email me a sign-in code')+'</button>')+'</div>'+privLink()+'</div>';
 }
 // Delete my account: a small button that opens a confirmation saying what goes and what stays.
 function delCard(){
@@ -287,6 +287,8 @@ function delCard(){
     (delMsg?'<p class="sub neg" style="margin-top:6px">'+esc(delMsg)+'</p>':'')+
     '<div class="btns"><button class="go" data-x="sydelok">'+(delBusy?'Deleting…':'Delete my account')+'</button><button class="go ghost" data-x="sydelno">Cancel</button></div></div>';
 }
+// The privacy policy (privacy.html).
+function privLink(){return '<p class="sub" style="margin-top:14px"><a href="privacy.html" style="color:var(--acc)">How your information is handled</a></p>'}
 // Redraw just the card (not while its field is being typed in).
 // Redraws only while no field in the card is being typed in (a focused button is fine: it is redrawn after a click).
 function drawSync(){var c=$('sync'),a=document.activeElement;if(c&&!(c.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))c.outerHTML=syncCard()}
