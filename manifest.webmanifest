@@ -1,6 +1,6 @@
 {
-  "name": "NZ Property Tracker",
-  "short_name": "Properties",
+  "name": "Rent & Reno",
+  "short_name": "Rent & Reno",
   "description": "Track rentals, renovation projects and potential buys.",
   "start_url": "./",
   "scope": "./",

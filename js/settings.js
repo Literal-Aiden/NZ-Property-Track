@@ -73,7 +73,7 @@ function buildBackup(){
   return (typeof rcFetchMissing==='function'?rcFetchMissing(Object.keys(want)):Promise.resolve()).then(function(){
   return rcTx('readonly',function(s){return s.getAll()}).catch(function(){return []}).then(function(all){
     return Promise.all((all||[]).filter(function(r){return want[r.id]}).map(function(r){return b2d(r.blob).then(function(u){return {id:r.id,name:r.name,type:r.type,added:r.added,data:u}})}));
-  }).then(function(rc){return {t:t,name:'nz-property-tracker-backup-'+t+'.json',data:JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc})}});
+  }).then(function(rc){return {t:t,name:'rent-and-reno-backup-'+t+'.json',data:JSON.stringify({app:'nzpt',v:1,exported:t,props:props,receipts:rc})}});
   });
 }
 function backedUp(t){try{localStorage.setItem(BKEY,t)}catch(e){}bkMsg='';banner()}
@@ -96,7 +96,7 @@ function prepShare(){
 }
 function shareBackup(){
   if(!shareFile){bkMsg='Getting the backup ready. Tap Share backup again in a moment.';drawSettings();prepShare();return}
-  navigator.share({files:[shareFile],title:'NZ Property Tracker backup'}).then(function(){backedUp(shareT)},function(e){
+  navigator.share({files:[shareFile],title:'Rent & Reno backup'}).then(function(){backedUp(shareT)},function(e){
     if(e&&e.name==='AbortError')return;
     bkMsg='Sharing didn’t work on this '+dev()+''+(e&&e.name?' ('+e.name+')':'')+'. Use Download backup instead.';drawSettings();
   });
@@ -105,7 +105,7 @@ function shareBackup(){
 function canShareFiles(){try{return !!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.txt',{type:'text/plain'})]}))}catch(e){return false}}
 function readBackup(f){
   var rd=new FileReader();
-  rd.onload=function(){bkMsg='';try{var d=JSON.parse(rd.result);if(d.app!=='nzpt'||!Array.isArray(d.props))throw 0;d.receipts=d.receipts||[];bkPend=d}catch(e){bkMsg='That file isn’t an NZ Property Tracker backup.'}drawSettings()};
+  rd.onload=function(){bkMsg='';try{var d=JSON.parse(rd.result);if(d.app!=='nzpt'||!Array.isArray(d.props))throw 0;d.receipts=d.receipts||[];bkPend=d}catch(e){bkMsg='That file isn’t a Rent & Reno backup.'}drawSettings()};
   rd.readAsText(f);
 }
 function restore(){

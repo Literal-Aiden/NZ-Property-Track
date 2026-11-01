@@ -35,7 +35,7 @@ function refixIcs(p){
       'BEGIN:VALARM','TRIGGER:-P30D','ACTION:DISPLAY','DESCRIPTION:'+icsText(what+' in a month'),'END:VALARM',
       'BEGIN:VALARM','TRIGGER:-P7D','ACTION:DISPLAY','DESCRIPTION:'+icsText(what+' in a week'),'END:VALARM','END:VEVENT'].join('\r\n');
   });
-  download('refix-'+slug(p.addr)+'.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//NZ Property Tracker//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'].concat(ev,['END:VCALENDAR']).join('\r\n')+'\r\n','text/calendar');
+  download('refix-'+slug(p.addr)+'.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Rent & Reno//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'].concat(ev,['END:VCALENDAR']).join('\r\n')+'\r\n','text/calendar');
 }
 // Android saves an .ics to Downloads without adding it, so there each re-fix gets a Google Calendar link that opens
 // the event ready to save (Google's link can't set alerts, so the description suggests one). iPhones open .ics files

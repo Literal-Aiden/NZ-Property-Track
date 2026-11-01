@@ -1,4 +1,4 @@
--- NZ Property Tracker: sync across devices.
+-- Rent & Reno: sync across devices.
 -- Run this once in the Supabase dashboard: SQL Editor → New query → paste all of this → Run.
 -- Safe to run again (it skips or replaces what already exists).
 

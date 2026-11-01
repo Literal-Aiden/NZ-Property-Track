@@ -1,4 +1,4 @@
-# NZ Property Tracker
+# Rent & Reno
 
 Track rental properties and renovation projects: costs, reno budget, yields, and mortgage re-fix dates.
 

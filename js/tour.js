@@ -3,12 +3,12 @@
 // above the tour's dimmed background. With no properties of your own, the example ones are shown while it's open.
 var TOUR_KEY='nzpt.tour',tourAt=0,tourWas=null;
 var TOUR=[
-  {ic:'home',pg:'home',t:'Kia ora, welcome',x:'Track your rentals, renovation projects, and the properties you’re thinking of buying, all in one place. Here’s a quick look around.'},
+  {ic:'home',pg:'home',t:'Kia ora, welcome to Rent & Reno',x:'Track your rentals, renovation projects, and the properties you’re thinking of buying, all in one place. Here’s a quick look around.'},
   {nav:'plus',pg:'home',plus:1,t:'Add with +',x:'Tap + to add a property: a rental, a reno project, or a potential buy. It’s also the quick way to log rent or an expense, a reno cost, or a milestone.'},
   {nav:'home',t:'Home',x:'Your portfolio at a glance: equity, lending, LVR, and monthly cash flow.',l:['Needs attention lists what’s due: upcoming re-fixes, overdue milestones, unpaid invoices, leases ending, and Healthy Homes standards','Recent activity shows the latest rent, expenses, and reno costs']},
   {nav:'p0',t:'Properties',x:'Each property has its own page.',l:['Reno projects: budget, costs, receipts, and milestones','Rentals: rent, expenses, tenancy, and Healthy Homes','Potential buys: the deal numbers and your maximum offer','Mortgages: re-fix dates and repayments']},
   {nav:'toolbody',t:'Tools',x:'Calculators for a quick deal check, mortgage repayments, rental yield, holding costs, break-even rent, usable equity, and selling costs. Most can fill in from one of your properties.'},
-  {nav:'setbody',t:'Your data stays on this '+dev(),x:'Nothing is sent to a server, so download a backup from Settings now and then. You can also install the app '+(DESK?'on this computer':'on your home screen')+' from there.'}];
+  {nav:'setbody',t:'Your data stays on this '+dev(),x:'Nothing leaves it unless you sign in to sync across devices. That’s in Settings, along with backups and installing the app '+(DESK?'on this computer':'on your home screen')+'.'}];
 function tourSeen(){try{return !!localStorage.getItem(TOUR_KEY)}catch(e){return true}}
 function openTour(){
   tourWas=null;

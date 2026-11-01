@@ -36,14 +36,14 @@ This creates:
 
 ```html
 <h2>Your sign-in code</h2>
-<p>Enter this code in NZ Property Tracker:</p>
+<p>Enter this code in Rent &amp; Reno:</p>
 <p style="font-size:28px;letter-spacing:4px;margin:16px 0"><b>{{ .Token }}</b></p>
 <p>Or tap this link to sign in on this device:<br>
-<a href="{{ .ConfirmationURL }}">Sign in to NZ Property Tracker</a></p>
+<a href="{{ .ConfirmationURL }}">Sign in to Rent &amp; Reno</a></p>
 <p style="color:#76665f;font-size:13px">If you didn't ask for this, you can ignore this email.</p>
 ```
 
-Set **Subject** to `Your NZ Property Tracker code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. The code is 8 digits as set up; the app accepts 6 or 8.
+Set **Subject** to `Your Rent & Reno code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. The code is 8 digits as set up; the app accepts 6 or 8.
 
 ## 4. Send me the two keys
 
