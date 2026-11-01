@@ -3,10 +3,10 @@
 // Part i's fields are l_amt{i}, l_rate{i}, l_fix{i}, l_fs{i} (fixed from), l_rf{i} (custom re-fix date). The remaining term is one for the whole loan (termBox()).
 var lpN=1,lpT=['pi'];
 function lpReset(p){var L=p?parts(p):[];lpN=Math.max(1,L.length);lpT=L.length?L.map(function(x){return x.ltype||'pi'}):['pi']}
-function lpBlock(i,amt){
+function lpBlock(i){
   return '<div class="lpart">'+(lpN>1?'<div class="row" style="cursor:default"><b>Loan part '+(i+1)+'</b><button class="edit del" data-lp="'+i+'">Remove</button></div>':'')+
    '<label>Loan type</label><div class="seg" data-p="'+i+'"><button data-l="pi" class="'+(lpT[i]==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(lpT[i]==='io'?'on':'')+'">Interest-only</button></div>'+
-   (amt?'<label>'+(lpN>1?'Amount owing on this part':'Current loan balance (NZD)')+'</label><input id="l_amt'+i+'"'+(lpN>1?' required':'')+MONEY+(lpN>1?'':'<p class="sub" style="margin-top:4px">What you owe on it now. Leave blank if it’s mortgage-free.</p>'):'')+
+   '<label>'+(lpN>1?'Amount owing on this part':'Current loan balance (NZD)')+'</label><input id="l_amt'+i+'"'+(lpN>1?' required':'')+MONEY+(lpN>1?'':'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.'+(editIdx===null?'':' Clear it if the loan’s paid off.')+'</p>')+
    '<label>Interest rate %</label><input id="l_rate'+i+'"'+NUM+
    '<label>Fixed term</label><select id="l_fix'+i+'">'+FIXOPTS+'</select>'+
    '<div id="l_fw'+i+'"><label>Rate fixed from'+(editIdx===null&&!isHeld()?' (or settlement date)':'')+'</label><input id="l_fs'+i+'" type="date"></div>'+
@@ -22,9 +22,8 @@ function termBox(){
    '<div><label for="l_tm0">Months</label><input id="l_tm0"'+NUM+'</div></div>'+
    '<p class="tor">or</p><label for="l_te0">Date the loan ends</label><input id="l_te0" type="date"></div>';
 }
-// main: when adding with one part, its amount sits in the main form (as "Current loan balance"), not here.
-function lpForm(main){
-  var h='';for(var i=0;i<lpN;i++)h+=lpBlock(i,!(main&&lpN===1));
+function lpForm(){
+  var h='';for(var i=0;i<lpN;i++)h+=lpBlock(i);
   return h+'<button class="edit" data-lp="add" style="margin-top:14px">'+(lpN>1?'+ Add another loan part':'+ Split the loan into parts')+'</button>'+
     (lpN>1?'':'<p class="sub" style="margin-top:4px">If the loan is split into parts fixed for different terms or rates.</p>')+termBox();
 }
@@ -143,16 +142,12 @@ function form(){
    (pr?'<label>Legal fees and other purchase costs (optional)</label><input id="f_legal"'+N+'<p class="sub" style="margin-top:4px">Lawyer’s fees plus things like the builder’s report, LIM and valuation.</p>'
       :'<label>Legal fees (optional)</label><input id="f_legal"'+N+'<label>Healthy Homes / quick reno costs (optional)</label><input id="f_extra"'+N)+
    '<label>Estimated value now (optional)</label><input id="f_value" placeholder="Leave blank to use the purchase price"'+N)+
-   // When adding, what's owed now sits in the main form (it matters more than the purchase details for a long-held
-   // property); the rate, term and re-fix details stay in the collapsed mortgage section below.
-   (editIdx===null?(lpN===1?'<label>Current loan balance (optional)</label><input id="l_amt0" placeholder="Leave blank if mortgage-free"'+N+'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.</p>'
-     :'<p class="sub" style="margin-top:14px">Loan split into '+lpN+' parts: enter each amount under Mortgage details below.</p>'):'')+
    (pr?'<label>Renovation budget (NZD)</label><input id="f_budget"'+RQ+N+(editIdx!==null&&(props[editIdx].items||[]).length?'<p class="sub" style="margin-top:8px">Spent so far is added up from your itemised reno costs.</p>':'<label>Spent so far (optional)</label><input id="f_spent"'+N)
       :'<label>Weekly rent (NZD)</label><input id="f_rent"'+RQ+N+'<label>Annual expenses (NZD)</label><input id="f_exp" placeholder="Rates, insurance, maintenance etc."'+RQ+N+'<p class="sub rlink" id="ratelink"></p>'+
        '<label>Management fee % of rent (optional)</label><input id="f_mgmt" placeholder="Leave blank if you manage it yourself"'+NUM+
        '<p class="sub" style="margin-top:4px">What your property manager charges in total, including any GST. Leave it out of annual expenses.</p>')+'':'')+
    // When adding, the optional mortgage sits in a collapsed section so the form stays short.
-   (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen||lpN>1?' open':'')+'><summary>Mortgage details (if there’s a loan)</summary>'+lpForm(true)+'</details>':lpForm(false)):'')+
+   (sl?(editIdx===null?'<details class="more" id="loanmore"'+(loanOpen||lpN>1?' open':'')+'><summary>Mortgage details (if there’s a loan)</summary>'+lpForm()+'</details>':lpForm()):'')+
    '<p class="sub neg formerr" style="margin-top:12px" role="alert"></p>'+
    '<div class="btns fbar"><button class="go" id="add">'+(editIdx===null?'Add property':'Save changes')+'</button>'+(editIdx===null?'':'<button class="go ghost" id="cancel">Cancel</button>')+'</div>'+
    (ed&&sd?'<button class="edit del" id="delprop" style="margin-top:16px">Delete this property</button>':'')+'</div>';
