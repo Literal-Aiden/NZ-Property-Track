@@ -11,6 +11,7 @@ body{overflow:hidden}
 body.typing .nav{display:none}
 .nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--mute);font:inherit;font-size:11px;padding:4px 0;cursor:pointer}
 .nav button .ic{width:22px;height:22px}
+.nav .brand{display:none}
 .nav button.on{color:var(--acc);font-weight:600}
 .nav .plus{width:56px;height:56px;margin-top:-26px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 6px 18px color-mix(in srgb,var(--hero1) 35%,transparent)}
 .nav .plus .ic{width:26px;height:26px}
@@ -303,7 +304,10 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   /* Sidebar: the app's name, a red "Add" button, then the sections with their names beside the icons. */
   .nav{top:0;right:auto;width:220px;grid-template-columns:1fr;grid-auto-rows:min-content;align-content:start;gap:2px;
     padding:calc(20px + env(safe-area-inset-top,0px)) 12px 16px;border-top:0;border-right:1px solid var(--line)}
-  .nav::before{content:"Rent & Reno";order:-2;display:block;padding:4px 10px 18px;font-size:17px;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+  /* The app icon and name at the top, which go back to Home. */
+  .nav .brand{order:-2;display:flex;align-items:center;gap:10px;padding:2px 10px 18px;font-size:17px;font-weight:750;color:var(--ink);letter-spacing:-.01em;text-decoration:none}
+  .nav .brand img{width:30px;height:30px;border-radius:8px;flex:none}
+  .nav .brand:hover{color:var(--acc)}
   .nav button{flex-direction:row;justify-content:flex-start;gap:12px;padding:10px 12px;border-radius:10px;font-size:15px}
   .nav button:hover{background:var(--acc2);color:var(--acc)}
   .nav button.on{background:var(--acc2)}

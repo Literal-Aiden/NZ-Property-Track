@@ -57,6 +57,7 @@ function render(){props.forEach(syncHold);if(!isSample){save();persist()}list();
 $('nav').addEventListener('click',function(e){
   var b=e.target.closest('[data-tab]');
   if(b&&b.dataset.tab==='p0'&&tab==='p0'&&!ovs.length){propFilter='all';propQ='';list();$('p0').scrollTop=0;return}
+  if(e.target.closest('[data-home]')){e.preventDefault();navTab('home');return}
   if(b)navTab(b.dataset.tab);else if(e.target.closest('#plusbtn'))openPlus();
 });
 document.addEventListener('click',function(e){if(e.target.closest('[data-back]')){if(ovs.length)history.back();else show(tab)}});
