@@ -14,10 +14,11 @@ function taxInterest(p,a,b){
   for(var d=s,n;d<end;d=n){n=addMonths(d,1);if(n>end)n=end;var days=dd(d,n),at=d;t+=sum(parts(p),function(x){return partAt(p,x,at)*(x.rate||0)/100*days/365})}
   return t;
 }
-function taxProps(y){
+// only: a property's index to summarise just that one (from its page), or null for every owned property.
+function taxProps(y,only){
   var r=tyRange(y),a=r[0],b=r[1];
   return props.map(function(p,i){
-    if(p.type==='potential')return null;
+    if(p.type==='potential'||only!=null&&i!==only)return null;
     var inc={},exp={},reno={},ni=0,ne=0,nr=0;
     (p.money||[]).forEach(function(x){var v=mIn(x,a,b);if(!v)return;var o=x.kind==='in'?inc:exp;o[x.cat]=(o[x.cat]||0)+v;if(x.kind==='in')ni+=v;else ne+=v});
     (p.items||[]).forEach(function(x){if(!x.date||x.date<a||x.date>b||!x.amt)return;reno[x.cat]=(reno[x.cat]||0)+x.amt;nr+=x.amt});
@@ -27,15 +28,15 @@ function taxProps(y){
   }).filter(Boolean);
 }
 function taxRows(o){var h='';for(var k in o)h+='<div class="r"><span>'+esc(k)+'</span><b>'+$$(o[k])+'</b></div>';return h}
-function taxBody(y){
-  var L=taxProps(y),r=tyRange(y);
+function taxBody(y,only){
+  var L=taxProps(y,only),r=tyRange(y);
   var h='<p class="sub" style="margin-top:8px">'+fmtD(r[0])+' to '+fmtD(r[1])+(r[1]<tyEndOf(y)?' (so far)':'')+'</p>';
   // Invoiced reno costs with no date can't be placed in a tax year, so they're left out: say how many, and where.
-  var nd=[];props.forEach(function(p){if(p.type!=='potential')(p.items||[]).forEach(function(x){if(x.amt&&!x.date)nd.push(p.addr)})});
+  var nd=[];props.forEach(function(p,i){if(p.type!=='potential'&&(only==null||i===only))(p.items||[]).forEach(function(x){if(x.amt&&!x.date)nd.push(p.addr)})});
   if(nd.length)h+='<p class="sub neg" style="margin-top:6px">'+nd.length+' reno cost'+(nd.length>1?'s have':' has')+' no date, so '+(nd.length>1?'they’re':'it’s')+' not included ('+esc(nd.filter(function(a,i){return nd.indexOf(a)===i}).join(', '))+'). Add a date in Costs to count '+(nd.length>1?'them':'it')+'.</p>';
   if(!L.length)return h+'<p class="sub" style="margin-top:8px">Nothing entered for this tax year yet.</p>';
   L.forEach(function(x){
-    h+='<p class="grp" style="margin:14px 0 0">'+esc(x.p.addr)+'</p><div class="list">';
+    h+=(only==null?'<p class="grp" style="margin:14px 0 0">'+esc(x.p.addr)+'</p>':'')+'<div class="list"'+(only==null?'':' style="margin-top:12px"')+'>';
     if(x.ni)h+=taxRows(x.inc);
     if(x.ne)h+=taxRows(x.exp);
     if(x.ni||x.ne)h+='<div class="r"><span>Net from entries</span><b class="'+(x.ni-x.ne<0?'neg':'pos')+'">'+$$(x.ni-x.ne)+'</b></div>';
@@ -44,22 +45,25 @@ function taxBody(y){
     h+='</div>';
   });
   var ti=sum(L,function(x){return x.ni}),te=sum(L,function(x){return x.ne}),tr=sum(L,function(x){return x.nr}),tn=sum(L,function(x){return x.int});
-  h+='<p class="grp" style="margin:14px 0 0">All properties</p><div class="list">'+
+  if(only==null)h+='<p class="grp" style="margin:14px 0 0">All properties</p><div class="list">'+
     '<div class="r"><span>Income</span><b>'+$$(ti)+'</b></div><div class="r"><span>Expenses</span><b>'+$$(te)+'</b></div>'+
     (tr?'<div class="r"><span>Reno costs</span><b>'+$$(tr)+'</b></div>':'')+(tn?'<div class="r"><span>Mortgage interest (estimate)</span><b>'+$$(tn)+'</b></div>':'')+'</div>';
   return h+'<p class="sub" style="margin-top:10px">Only what’s been entered in the app. Interest is estimated from each loan’s balance (paid down month by month for P&amp;I) at its current rate, so use your bank’s annual interest statement for your return. Rules on what’s deductible (interest, and whether reno costs are repairs or capital) change, so check with your accountant or IRD.</p>';
 }
-function taxCard(){
-  var y0=+taxYearStart().slice(0,4);if(taxY===null)taxY=y0;
-  var h='<div class="card" id="taxcard">'+hd('file','Tax year summary')+'<p class="sub" style="margin-top:4px">Income, expenses, reno costs and estimated interest for one tax year, across all your properties. For your accountant.</p>'+
-    '<div class="seg" style="margin-top:12px">'+[y0,y0-1,y0-2].map(function(y){return '<button data-ty="'+y+'" class="'+(y===taxY?'on':'')+'">'+tyLabel(y)+'</button>'}).join('')+'</div>'+taxBody(taxY);
-  if(taxProps(taxY).length)h+='<div class="btns"><button class="go" data-x="taxcsv">Download CSV</button><button class="go ghost" data-x="taxprint">Print or save as PDF</button></div>';
+// only: a property's index for that property's summary (opened from its page, in the slide-up panel), else all of them.
+function taxCard(only){
+  var y0=+taxYearStart().slice(0,4),one=only!=null;if(taxY===null)taxY=y0;
+  var h='<div class="card" id="taxcard">'+hd('file','Tax year summary')+
+    '<p class="sub" style="margin-top:4px">'+(one?esc(props[only].addr)+': income, expenses, reno costs and estimated interest for one tax year. For your accountant.':'Income, expenses, reno costs and estimated interest for one tax year, across all your properties. For your accountant.')+'</p>'+
+    '<div class="seg" style="margin-top:12px">'+[y0,y0-1,y0-2].map(function(y){return '<button data-ty="'+y+'" class="'+(y===taxY?'on':'')+'">'+tyLabel(y)+'</button>'}).join('')+'</div>'+taxBody(taxY,only);
+  if(taxProps(taxY,only).length)h+='<div class="btns"><button class="go" data-x="taxcsv">Download CSV</button><button class="go ghost" data-x="taxprint">Print or save as PDF</button></div>';
+  if(one)h+='<div class="btns"><button class="go ghost" id="cancel">Close</button></div>';
   return h+'</div>';
 }
 // Every entry in the year, one row each (weekly rent one row per week), for a spreadsheet.
-function exportTax(y){
+function exportTax(y,only){
   var r=tyRange(y),a=r[0],b=r[1],rows=[['Property','Date','Type','Category','Description','Amount (NZD)','Receipt files']];
-  taxProps(y).forEach(function(x){
+  taxProps(y,only).forEach(function(x){
     var p=x.p;
     (p.money||[]).forEach(function(m){
       (m.n?weekDates(m).map(function(d,k){return {date:d,amt:m.wk,note:'Week '+(k+1)+' of '+m.n+(m.note?' · '+m.note:''),rc:k?[]:m.rc}}):[m]).forEach(function(e){
@@ -71,12 +75,12 @@ function exportTax(y){
     if(x.int)rows.push([p.addr,b,'Interest (estimate)','Mortgage interest','Estimated from the loan balance (paid down for P&I) and current rate',Math.round(x.int*100)/100,'']);
   });
   var head=rows.shift();rows.sort(function(m,n){return (m[0]+m[1]).localeCompare(n[0]+n[1])});
-  download('tax-year-'+tyLabel(y).replace('–','-')+'.csv','﻿'+[head].concat(rows).map(function(r){return r.map(csvCell).join(',')}).join('\r\n'),'text/csv');
+  download('tax-year-'+tyLabel(y).replace('–','-')+(only!=null?'-'+slug(props[only].addr):'')+'.csv','﻿'+[head].concat(rows).map(function(r){return r.map(csvCell).join(',')}).join('\r\n'),'text/csv');
 }
 // Prints just the summary (the phone's print screen can save it as a PDF).
-function printTax(y){
+function printTax(y,only){
   var d=$('printout');if(!d){d=document.createElement('div');d.id='printout';document.body.appendChild(d)}
-  d.innerHTML='<h1>Tax year summary '+tyLabel(y)+'</h1>'+taxBody(y);
+  d.innerHTML='<h1>Tax year summary '+tyLabel(y)+(only!=null?': '+esc(props[only].addr):'')+'</h1>'+taxBody(y,only);
   document.body.classList.add('printing');
   setTimeout(function(){window.print();document.body.classList.remove('printing')},50);
 }
@@ -85,4 +89,14 @@ $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='taxcsv')exportTax(taxY);
   if(b.dataset.x==='taxprint')printTax(taxY);
+});
+// One property's summary, from the "Tax year summary" button on its page: opens in the slide-up panel over it.
+var taxOne=null;
+function openTaxOne(i){taxOne=i;editIdx=null;$('sheetbody').innerHTML=taxCard(i);$('sheet').hidden=false;$('sheetbody').scrollTop=0;ovOpen('sheet')}
+$('sheetbody').addEventListener('click',function(e){
+  if(taxOne===null||!$('sheetbody').querySelector('#taxcard'))return;
+  var t=e.target.closest('[data-ty]');if(t){taxY=+t.dataset.ty;$('sheetbody').innerHTML=taxCard(taxOne);return}
+  var b=e.target.closest('[data-x]');if(!b)return;
+  if(b.dataset.x==='taxcsv')exportTax(taxY,taxOne);
+  if(b.dataset.x==='taxprint')printTax(taxY,taxOne);
 });

@@ -131,7 +131,7 @@ function form(){
    '<p class="sub" id="holdout" style="margin-top:10px;color:var(--ink);font-weight:600"></p><p class="sub" id="loanout" style="margin-top:4px"></p>'+
    fsec(flip?'trend':'key',flip?'Selling':'Renting')+
    (flip?'<div class="fgrid"><div><label>Sale price after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Selling costs</label><input id="f_sell" placeholder="Agent fees etc."'+RQ+N+'</div><div><label>Months until sold</label><input id="f_months"'+RQ+NUM+'</div></div>'
-     :'<div class="fgrid"><div><label>Value after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Weekly rent</label><input id="f_rent"'+RQ+N+'</div><div><label>Annual expenses</label><input id="f_exp"'+RQ+N+'</div><div><label>Months until tenanted</label><input id="f_months"'+RQ+NUM+'</div></div>')+
+     :'<div class="fgrid"><div><label>Value after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Weekly rent</label><input id="f_rent"'+RQ+N+'</div><div><label>Annual expenses</label><input id="f_exp"'+RQ+N+'</div><div><label>Months until tenanted</label><input id="f_months"'+RQ+NUM+'</div><div><label>Management fee %'+OPT+'</label><input id="f_mgmt" placeholder="Blank if none"'+NUM+'</div></div>')+
    (editIdx===null&&SHOW_COMPS?'<p class="sub" style="margin-top:10px">You can add comparable sales once it’s saved.</p>':''):'')+
    // Rentals may have been owned for decades, so their purchase details are optional (then the value is needed instead).
    (sd&&!pt?(held?'<label>Estimated value now (NZD)</label><input id="f_value"'+RQ+N+
@@ -224,11 +224,11 @@ function addProp(){
   var wasEdit=editIdx!==null;
   var a=$('f_addr').value.trim();
   var p={type:newType,addr:a,sub:$('f_sub').value.trim(),price:num('f_price'),value:num('f_value')||(newType==='potential'?0:num('f_price')),date:($('f_date')||{}).value||'',legal:num('f_legal'),extra:num('f_extra')};
-  if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp')}}
+  if(newType==='potential'){delete p.date;p.intent=newIntent;p.beds=num('f_beds');p.land=num('f_land');p.reno=num('f_reno');p.rates=num('f_rates');p.ins=num('f_ins');p.power=num('f_power');p.oth=num('f_oth');p.loan=num('f_loan');p.rate=p.loan?num('f_rate'):0;p.ltype=newLoan;p.term=num('f_term')||30;p.hold=holdOf(p);p.months=num('f_months');if(newIntent==='flip')p.sell=num('f_sell');else{p.rent=num('f_rent');p.exp=num('f_exp');p.mgmt=num('f_mgmt')}}
   else if(newType==='project'){p.budget=num('f_budget');p.spent=num('f_spent')}
   else{p.rent=num('f_rent');p.exp=num('f_exp');p.mgmt=num('f_mgmt');if(!wasEdit){p.setup=1;if(newRent==='existing')p.held=1}}
   if(newType!=='potential')setLoan(p,readParts());
-  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject','held','setup'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
+  isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','hhDate','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject','held','setup'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
 function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}
@@ -241,7 +241,7 @@ function rateLink(){
     :'Enter the suburb / city to get a link to the council’s rates search.';
 }
 function closeSheet(){ovClose('sheet')}
-function closeSheetNow(){editIdx=null;newType=null;form()}
+function closeSheetNow(){editIdx=null;newType=null;taxOne=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){

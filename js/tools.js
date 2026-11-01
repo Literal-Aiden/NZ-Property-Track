@@ -19,7 +19,7 @@ var GST=0.15;   // NZ standard GST rate; fixed here at the owner's request rathe
 
 var TOOLS=[
  {id:'deal',icon:'check',name:'Quick deal check',desc:'Profit or yield in seconds, then save it as a potential buy',
-  from:function(p){return p.type==='potential'&&{plan:p.intent||'flip',price:p.price,reno:p.reno,legal:(p.legal||0)+(p.extra||0),rates:p.rates,ins:p.ins,othm:Math.round(p.oth!==undefined||p.rates!==undefined?(p.oth||0)+(p.power||0)+repay(p):p.hold),months:p.months,value:p.value,value2:p.value,sell:p.sell,rent:p.rent,exp:p.exp}},
+  from:function(p){return p.type==='potential'&&{plan:p.intent||'flip',price:p.price,reno:p.reno,legal:(p.legal||0)+(p.extra||0),rates:p.rates,ins:p.ins,othm:Math.round(p.oth!==undefined||p.rates!==undefined?(p.oth||0)+(p.power||0)+repay(p):p.hold),months:p.months,value:p.value,value2:p.value,sell:p.sell,rent:p.rent,exp:p.exp,pm:p.mgmt||''}},
   f:[{i:'plan',l:'Plan',k:'s',d:'flip',o:[['flip','Reno to sell'],['rental','Buy to rent']],wide:1},
      {i:'price',l:'Asking / offer price',k:'m'},{i:'reno',l:'Reno estimate',k:'m'},
      {i:'legal',l:'Legal & purchase costs',k:'m',opt:1,wide:1},
@@ -29,12 +29,13 @@ var TOOLS=[
      {i:'sell',l:'Selling costs',k:'m',show:function(v){return v.plan==='flip'}},
      {i:'value2',l:'Value after reno',k:'m',show:function(v){return v.plan!=='flip'}},
      {i:'rent',l:'Weekly rent',k:'m',show:function(v){return v.plan!=='flip'}},
-     {i:'exp',l:'Annual expenses',k:'m',show:function(v){return v.plan!=='flip'}}],
+     {i:'exp',l:'Annual expenses',k:'m',show:function(v){return v.plan!=='flip'}},
+     {i:'pm',l:'Management fee %',k:'n',opt:1,ph:'Blank if none',show:function(v){return v.plan!=='flip'}}],
   calc:function(v){
     var flip=v.plan==='flip',p=dealOf(v),d=deal(p);if(!v.price||!p.value)return '';
     var save='<button class="go" data-x="tsave">Save as potential buy</button>';
     return flip?tres($$(d.prof),'estimated profit, before tax',[['Total cost incl. selling',$$(d.all)],['Return on costs',pct(d.roc),d.prof<0?'neg':''],['Holding ('+(v.months||0)+' months × '+$$(p.hold)+')',$$(d.hold)]],'Estimates only. Check current IRD guidance on tax for property bought to sell.')+save
-      :tres(d.cost?(d.ann/d.cost*100).toFixed(1)+'%':'–','gross yield on total cost',[['Net yield on total cost',d.cost?(d.net/d.cost*100).toFixed(1)+'%':'–'],['Total cost in',$$(d.cost)],['Equity after reno',$$(p.value-d.cost),p.value<d.cost?'neg':'pos']],'Estimates only. Yield is on total cost in, not the asking price.')+save;
+      :tres(d.cost?(d.ann/d.cost*100).toFixed(1)+'%':'–','gross yield on total cost',[['Net yield on total cost',d.cost?(d.net/d.cost*100).toFixed(1)+'%':'–']].concat(d.fee?[['Management fee a year',$$(d.fee)]]:[],[['Total cost in',$$(d.cost)],['Equity after reno',$$(p.value-d.cost),p.value<d.cost?'neg':'pos']]),'Estimates only. Yield is on total cost in, not the asking price.')+save;
   }},
  {id:'mort',icon:'percent',name:'Mortgage repayments',desc:'Repayments for any loan, rate and how often you pay',
   from:function(p){var L=parts(p);return L.length&&{loan:p.loan,rate:p.rate,term:L[0].term||30,type:L[0].ltype||'pi'}},
@@ -50,13 +51,36 @@ var TOOLS=[
       io?['Interest per year',$$(per*ppy)]:['Total interest over '+term+' years',$$(per*ppy*term-v.loan)]],
       'Estimate only, assuming the rate stays the same for the whole term. Your bank’s figures may differ slightly.');
   }},
- {id:'yield',icon:'trend',name:'Rental yield',desc:'Gross and net yield from price and rent',
-  from:function(p){return p.rent&&{price:p.value||p.price,rent:p.rent,exp:(p.exp||0)+Math.round(mgmtFee(p))}},
-  f:[{i:'price',l:'Price or value',k:'m'},{i:'rent',l:'Weekly rent',k:'m'},{i:'exp',l:'Annual expenses',k:'m',opt:1,wide:1,ph:'Rates, insurance, maintenance, management'}],
+ // Rental yield: choose the measure. Gross yield (rent only, the figure usually quoted) and net yield (after expenses
+ // and a management fee) are % of the price or value, with the $ a year. With the mortgage too it's cash flow, not a
+ // yield: led by the $ a month and a year, plus the cash-on-cash return when the deposit (cash put in) is entered.
+ {id:'yield',icon:'trend',name:'Rental yield',desc:'Gross yield, net yield, or cash flow after the mortgage',
+  from:function(p){var x=parts(p)[0]||{};return p.rent&&{price:p.value||p.price,rent:p.rent,exp:p.exp||0,pm:p.mgmt||'',
+    inc:p.loan?'all':'costs',loan:p.loan||'',rate:p.rate||'',type:x.ltype||p.ltype||'pi',term:x.term||p.term||30,dep:''}},
+  f:[{i:'price',l:'Price or value',k:'m'},{i:'rent',l:'Weekly rent',k:'m'},
+     {i:'inc',l:'Show',k:'s',d:'costs',o:[['none','Gross yield (rent only)'],['costs','Net yield (after expenses and fee)'],['all','Cash flow (after the mortgage too)']],wide:1},
+     {i:'exp',l:'Annual expenses',k:'m',opt:1,ph:'Rates, insurance, maintenance',show:function(v){return v.inc!=='none'}},
+     {i:'pm',l:'Management fee %',k:'n',opt:1,ph:'Blank if none',show:function(v){return v.inc!=='none'}},
+     {i:'loan',l:'Loan amount',k:'m',show:function(v){return v.inc==='all'}},{i:'rate',l:'Interest rate %',k:'n',show:function(v){return v.inc==='all'}},
+     {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT,show:function(v){return v.inc==='all'}},{i:'term',l:'Remaining term in years',k:'n',d:'30',show:function(v){return v.inc==='all'}},
+     {i:'dep',l:'Cash you put in',k:'m',opt:1,wide:1,ph:'Deposit plus purchase costs, for cash-on-cash return',show:function(v){return v.inc==='all'}}],
   calc:function(v){
-    if(!v.price||!v.rent)return '';var a=v.rent*52,net=a-v.exp;
-    return tres((a/v.price*100).toFixed(2)+'%','gross yield',[['Net yield',(net/v.price*100).toFixed(2)+'%',net<0?'neg':''],['Rent per year',$$(a)],['Net income per year',$$(net),net<0?'neg':'']],
-      'Gross yield is a year’s rent divided by the price. Net yield takes off the expenses you enter, but not mortgage repayments.');
+    if(!v.price||!v.rent)return '';
+    var a=v.rent*52,gy=a/v.price*100,P=function(x){return (x/v.price*100).toFixed(2)+'%'};
+    if(v.inc==='none')return tres(gy.toFixed(2)+'%','gross yield · '+$$(a)+' rent a year',[['Rent per year',$$(a)]],'Gross yield is a year’s rent divided by the price or value: the figure usually quoted. Net yield takes off the running costs too.');
+    var fee=a*(v.pm||0)/100,net=a-v.exp-fee,
+      cost=[['Rent per year',$$(a)]].concat(v.exp?[['Annual expenses','−'+$$(v.exp)]]:[],fee?[['Management fee ('+v.pm+'%)','−'+$$(fee)]]:[]);
+    if(v.inc==='costs'||!v.loan)return tres(P(net),'net yield · '+$$(net)+' a year',[['Gross yield',gy.toFixed(2)+'%']].concat(cost,[['Net income per year',$$(net),net<0?'neg':'pos']]),
+      'Net yield is the rent less the expenses and management fee you enter, divided by the price or value. Like gross yield, it leaves out the mortgage'+(v.inc==='all'?': add a loan amount to see the cash flow.':'.'));
+    // Cash flow: what's left after a year's repayments. On P&I part of each repayment pays the loan down, so it's money
+    // kept rather than a cost; the note says roughly how much in the first year.
+    var io=v.type==='io',rep=repayP(v.loan,v.rate,v.term||30,12,io)*12,after=net-rep,int1=0,b=v.loan,mr=(v.rate||0)/1200,mp=rep/12;
+    if(!io)for(var m=0;m<12;m++){var it=b*mr;int1+=it;b-=mp-it}
+    return tres($$(after/12)+' a month','cash flow after the mortgage · '+$$(after)+' a year',
+      (v.dep?[['Cash-on-cash return',(after/v.dep*100).toFixed(2)+'%',after<0?'neg':'']]:[]).concat([['Gross yield',gy.toFixed(2)+'%'],['Net yield',P(net)]],cost,
+      [['Net income per year',$$(net),net<0?'neg':'pos'],['Mortgage repayments ('+(io?'interest-only':'P&I')+')','−'+$$(rep)],['Cash flow per year',$$(after),after<0?'neg':'pos']]),
+      'Cash flow is what’s left of the rent after expenses, the management fee, and a year’s repayments.'+(v.dep?' Cash-on-cash return is that a year divided by the cash you put in.':' Add the cash you put in to see the cash-on-cash return.')+
+      (io?'':' About '+$$(rep-int1)+' of the first year’s repayments pays down the loan, so it’s money kept, not a cost.')+' Repayments are estimates.');
   }},
  {id:'hold',icon:'clock',name:'Holding costs',desc:'What a property costs to hold each month',
   // Potential buys, and reno projects with their bills or a loan (months: until the target finish, if set).
@@ -125,7 +149,7 @@ var TOOLS=[
   }}
 ];
 // Quick deal check fields as a potential buy, so deal() does the maths.
-function dealOf(v){var f=v.plan==='flip';return {price:v.price,reno:v.reno,legal:v.legal,hold:v.rates/12+v.ins/12+v.othm,months:v.months,value:f?v.value:v.value2,sell:f?v.sell:0,rent:f?0:v.rent,exp:f?0:v.exp}}
+function dealOf(v){var f=v.plan==='flip';return {price:v.price,reno:v.reno,legal:v.legal,hold:v.rates/12+v.ins/12+v.othm,months:v.months,value:f?v.value:v.value2,sell:f?v.sell:0,rent:f?0:v.rent,exp:f?0:v.exp,mgmt:f?0:v.pm}}
 
 function toolById(id){return TOOLS.filter(function(t){return t.id===id})[0]}
 function tfield(f){
@@ -164,7 +188,7 @@ function tfill(vals){
 function dealToProp(){
   var v=tread(toolById('deal')),f=v.plan==='flip';
   editIdx=null;newType='potential';newIntent=v.plan;newLoan='pi';loanOpen=false;formAnim=true;form();formAnim=false;
-  setv({f_price:v.price,f_reno:v.reno,f_legal:v.legal,f_rates:v.rates,f_ins:v.ins,f_oth:v.othm,f_months:v.months,f_value:f?v.value:v.value2,f_sell:f?v.sell:0,f_rent:f?0:v.rent,f_exp:f?0:v.exp});
+  setv({f_price:v.price,f_reno:v.reno,f_legal:v.legal,f_rates:v.rates,f_ins:v.ins,f_oth:v.othm,f_months:v.months,f_value:f?v.value:v.value2,f_sell:f?v.sell:0,f_rent:f?0:v.rent,f_exp:f?0:v.exp,f_mgmt:f?0:v.pm});
   holdCalc();go(2);
 }
 $('toolbody').addEventListener('click',function(e){

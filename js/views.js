@@ -138,7 +138,7 @@ function current(){
     '<label class="cphoto">'+ic('camera')+(p.photo?'Change photo':'Add photo')+'<input type="file" class="phin" accept="image/*" hidden></label>'+
     '<div class="ctext"><h1>'+esc(p.addr)+'</h1><p>'+[esc(p.sub),T[0],pt?hl.tag:''].filter(Boolean).join(' · ')+'</p></div></div>'+
     '<div class="card herocard"><div class="row" style="cursor:default"><span class="sub">'+hl.lab+'</span><button class="edit" id="edit">Edit details</button></div>'+
-    '<div class="big2">'+hl.big+'</div>'+(hl.bar!==undefined?'<div class="bar"><i class="'+(hl.bar>100?'over':'')+'" style="width:'+Math.min(hl.bar,100)+'%"></i></div>':'')+'<p class="sub">'+hl.sub+'</p></div>';
+    '<div class="big2">'+hl.big+'</div>'+(hl.bar!==undefined?'<div class="bar"><i class="'+(hl.bar>100?'over':'')+'" style="width:'+Math.min(hl.bar,100)+'%"></i></div>':'')+'<p class="sub">'+hl.sub+'</p>'+(pt?'':'<button class="edit taxb" data-x="ptax">'+ic('file')+'Tax year summary</button>')+'</div>';
   // The cover, headline and section tabs go in a side column on wide screens (layout.css), the section's content beside it.
   var side=h;h='';
   if(pt){$('p1').innerHTML=pgrid(side,potView(p));fillCur(p);if(nearOpen)drawNear();return}
@@ -199,6 +199,7 @@ function alerts(p){
     if(left!==null&&left<=60)a.push({t:left<0?'Fixed term ended':'Lease ends in '+left+' day'+(left===1?'':'s'),sec:'ten'});
     if(t.bond&&!t.lodged)a.push({t:'Bond not lodged',sec:'ten'});
     if(hl)a.push({t:'Healthy Homes: '+hl+' to do',sec:'ten'});
+    var hr=hhDue(p),hd2=hr?dd(today,hr):null;if(hd2!==null&&hd2<=60)a.push({t:hd2<0?'Healthy Homes report: review overdue':'Healthy Homes report: review in '+hd2+' day'+(hd2===1?'':'s'),sec:'ten'});
   }
   return a;
 }

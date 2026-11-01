@@ -166,6 +166,10 @@ button.r{cursor:pointer}
 .tor::before,.tor::after{content:'';flex:1;height:1px;background:var(--line)}
 /* Cards scrolled to on a property page stop below the sticky section tabs, so their heading shows. */
 #p1 .card{scroll-margin-top:64px}
+/* Links in the Healthy Homes card (the report review note) in the accent colour. */
+#hhcard .sub a{color:var(--acc);font-weight:600}
+/* Tax year summary button in a property's headline card. */
+.herocard .taxb{display:inline-flex;align-items:center;gap:6px;margin-top:10px}.herocard .taxb .ic{width:15px;height:15px}
 /* Set up your rental (setupCard() in rental.js): rows like the + menu's, ticked green once done. */
 .setup .pq:last-child{margin-bottom:0}
 .setup .sudone{opacity:.75}.setup .sudone .ib{background:color-mix(in srgb,var(--good) 15%,var(--card));color:var(--good)}

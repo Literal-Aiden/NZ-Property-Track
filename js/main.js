@@ -167,6 +167,7 @@ $('p1').addEventListener('click',function(e){
     else{sec='ten';if(s==='ten'&&!p.ten)tenEdit=true;edit(s==='ten'?'ten':'hhcard')}
   }
   else if(x==='suhide'){delete p.setup;isSample=false;render()}
+  else if(x==='ptax')openTaxOne(cur);
   else if(x==='tensave')saveTen(p);
   else if(x==='tencancel'){tenEdit=false;current()}
   else if(x==='hhall'){p.hh=p.hh||{};HH.forEach(function(s){if(!p.hh[s[0]])p.hh[s[0]]=iso(new Date())});isSample=false;render()}
@@ -219,6 +220,7 @@ $('p1').addEventListener('change',function(e){
   if(e.target.id==='nearbeds'){nearBeds=e.target.checked;drawNear()}
   if(e.target.classList.contains('rcin')&&e.target.files.length)addReceipts(e.target.files);
   if(e.target.classList.contains('hhin')&&e.target.files.length)addHhDocs(props[cur],e.target.files);
+  if(e.target.id==='hh_date'){var hp=props[cur];if(e.target.value)hp.hhDate=e.target.value;else delete hp.hhDate;isSample=false;render()}
   if(e.target.classList.contains('picin')&&e.target.files.length)addPics(props[cur],e.target.files);
   if(e.target.id==='pic_room'){picRoom=e.target.value;current()}
   if(e.target.classList.contains('phin')&&e.target.files[0])addPhoto(props[cur],e.target.files[0]);

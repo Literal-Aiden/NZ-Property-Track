@@ -85,6 +85,10 @@ function exportMoney(p){
 
 // Tenancy details. Rent increase timing is a legal rule, so it's shown with a pointer to check it.
 var HH=[['heat','Heating'],['ins','Insulation'],['vent','Ventilation'],['moist','Moisture ingress and drainage'],['draught','Draught stopping']];
+// tenancy.govt.nz's page on what the Healthy Homes standards need, linked from the checklist and the report date.
+var HH_URL='https://www.tenancy.govt.nz/healthy-homes/healthy-homes-standards-what-a-landlord-needs-to-know/';
+// When the Healthy Homes report is due for review: 2 years after its date.
+function hhDue(p){return p.hhDate?addMonths(p.hhDate,24):null}
 function hhLeft(p){var h=p.hh||{};return HH.filter(function(s){return !h[s[0]]}).length}
 // Set up your rental: shown at the top of a just-added rental's Overview (p.setup, set when it's added or a project is
 // turned into a rental), pointing to the tenancy, Healthy Homes, and rent. Each row ticks off once it's done; the card
@@ -154,7 +158,7 @@ function tenCard(p){
   }
   h+='</div>';
   var hh=p.hh||{},left2=hhLeft(p),docs=p.hhDocs||[];
-  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default">'+'<span class="hdq">'+hd('thermo','Healthy Homes standards')+'<a class="qmark" href="https://www.tenancy.govt.nz/healthy-homes/healthy-homes-standards-what-a-landlord-needs-to-know/" target="_blank" rel="noopener" aria-label="What the Healthy Homes standards need (tenancy.govt.nz)">?</a></span>'+'<span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
+  h+='<div class="card" id="hhcard"><div class="row" style="cursor:default">'+'<span class="hdq">'+hd('thermo','Healthy Homes standards')+'<a class="qmark" href="'+HH_URL+'" target="_blank" rel="noopener" aria-label="What the Healthy Homes standards need (tenancy.govt.nz)">?</a></span>'+'<span class="sub'+(left2?' neg':'')+'">'+(HH.length-left2)+' of '+HH.length+' done</span></div>'+
     '<p class="sub" style="margin-top:4px">Tick each standard once the property meets it. Check the current requirements and deadlines at tenancy.govt.nz.</p>'+
     (left2?'<button class="edit" data-x="hhall" style="margin-top:10px">'+(left2===HH.length?'Mark all '+HH.length+' as done':left2===1?'Mark the last one as done':'Mark the other '+left2+' as done')+'</button>':'')+
     HH.map(function(s){var d=hh[s[0]];return '<div class="task'+(d?' ok':'')+'"><input type="checkbox" data-x="hh" data-k="'+s[0]+'"'+(d?' checked':'')+' aria-label="'+s[1]+'"><div><b>'+s[1]+'</b><p class="sub">'+(d?'Done '+fmtD(d):'Not done yet')+'</p></div></div>'}).join('')+
@@ -162,7 +166,12 @@ function tenCard(p){
     '<p class="grp" style="margin:16px 0 0">Compliance report</p>'+
     '<p class="sub" style="margin-top:4px">'+(docs.length?'Tap a file to open it.':'Upload the Healthy Homes compliance report or statement, as a PDF or photos.')+'</p>'+(rcMsg?'<p class="sub neg">'+esc(rcMsg)+'</p>':'')+
     '<div class="rcs">'+docs.map(function(r){return rcThumb(r,'hhdrop',hhArm===r.id)}).join('')+'<label class="rcadd">'+ic('file')+'Report<input type="file" class="hhin" accept="image/*,application/pdf" multiple hidden></label></div>'+
-    (hhArm?'<p class="sub neg" style="margin-top:6px">Tap × again to remove that file.</p>':'')+'</div>';
+    (hhArm?'<p class="sub neg" style="margin-top:6px">Tap × again to remove that file.</p>':'')+
+    // The report's date (p.hhDate, saved as soon as it's picked) sets a reminder to review it 2 years on (the owner's
+    // choice, not a legal rule), with a pointer to the current requirements.
+    '<label for="hh_date">Report date (optional)</label><input id="hh_date" type="date" value="'+esc(p.hhDate||'')+'">'+
+    '<p class="sub" style="margin-top:6px">'+(p.hhDate?'<b>Review by '+fmtD(hhDue(p))+'</b>, 2 years after the report. ':'Add the date and the app will remind you to review it 2 years on. ')+
+    '<a href="'+HH_URL+'" target="_blank" rel="noopener">Check the current requirements at tenancy.govt.nz ↗</a></p></div>';
   return h;
 }
 var hhArm=null;

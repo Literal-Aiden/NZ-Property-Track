@@ -1,8 +1,8 @@
 // Potential buys: deal maths, holding costs, plan vs actual and converting to a project.
 // Deal maths for a potential buy. All figures are the user's estimates.
 function deal(p){
-  var hold=(p.hold||0)*(p.months||0),cost=p.price+(p.legal||0)+(p.extra||0)+(p.reno||0)+hold,all=cost+(p.sell||0),ann=(p.rent||0)*52,net=ann-(p.exp||0);
-  return {hold:hold,cost:cost,all:all,prof:p.value-all,roc:all?(p.value-all)/all*100:0,ann:ann,net:net};
+  var hold=(p.hold||0)*(p.months||0),cost=p.price+(p.legal||0)+(p.extra||0)+(p.reno||0)+hold,all=cost+(p.sell||0),ann=(p.rent||0)*52,fee=ann*(p.mgmt||0)/100,net=ann-(p.exp||0)-fee;
+  return {hold:hold,cost:cost,all:all,prof:p.value-all,roc:all?(p.value-all)/all*100:0,ann:ann,fee:fee,net:net};
 }
 // Monthly holding cost for a potential buy: the bills plus the actual loan repayment (interest-only, or principal & interest),
 // so it's as close as possible to what goes out each month.
@@ -28,7 +28,7 @@ function potView(p){
   var lines=[['Purchase price',p.price],['Legal &amp; other purchase costs',(p.legal||0)+(p.extra||0)],['Renovation',p.reno||0],['Holding ('+(p.months||0)+' mo × '+$$(p.hold||0)+')',d.hold]];
   if(flip)lines.push(['Selling costs',p.sell||0]);
   h+='<div class="lines">'+lines.map(function(l){return '<div><span>'+l[0]+'</span><b>'+$$(l[1])+'</b></div>'}).join('')+'<div class="tot"><span>Total cost</span><b>'+$$(flip?d.all:d.cost)+'</b></div></div>';
-  h+='<p class="sub" style="margin-top:10px">'+(flip?'Estimates only. Profit is before tax: check current IRD guidance on tax for property bought to sell.':'Estimates only. Yield is on total cost in, not the asking price.')+'</p>'+convBlock()+'</div>';
+  h+='<p class="sub" style="margin-top:10px">'+(flip?'Estimates only. Profit is before tax: check current IRD guidance on tax for property bought to sell.':'Estimates only. Yield is on total cost in, not the asking price.'+(d.fee?' Net income allows for a '+p.mgmt+'% management fee ('+$$(d.fee)+' a year).':''))+'</p>'+convBlock()+'</div>';
   h+=offerCard(p);
   if(!SHOW_COMPS)return h;
   var c=p.comps||[];
@@ -91,7 +91,7 @@ function convert(i){
   if(missing($('conv')))return;
   var p=props[i],d=$('v_date').value;
   var n={type:'project',addr:p.addr,sub:p.sub,price:num('v_price'),date:d,legal:num('v_legal'),extra:0,value:num('v_value')||num('v_price'),budget:num('v_budget'),spent:0,hold:p.hold||0,start:d,
-    plan:{intent:p.intent||'flip',price:p.price,legal:p.legal,extra:p.extra,reno:p.reno,hold:p.hold,months:p.months,sell:p.sell,value:p.value,rent:p.rent,exp:p.exp,converted:iso(new Date())}};
+    plan:{intent:p.intent||'flip',price:p.price,legal:p.legal,extra:p.extra,reno:p.reno,hold:p.hold,months:p.months,sell:p.sell,value:p.value,rent:p.rent,exp:p.exp,mgmt:p.mgmt,converted:iso(new Date())}};
   ['beds','land','comps'].forEach(function(k){if(p[k])n[k]=p[k]});
   // Its rates, insurance, power and other monthly costs carry over, so the project's holding cost is ready (with the loan).
   if(p.rates!==undefined)['rates','ins','power','oth'].forEach(function(k){n[k]=p[k]||0});
