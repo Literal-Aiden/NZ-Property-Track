@@ -122,14 +122,6 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 #setbody .card+.card{margin-top:12px}
 @keyframes up{from{transform:translateY(40px);opacity:.6}}
 @media (prefers-reduced-motion:reduce){.sheetbox{animation:none}}
-.pick{display:flex;align-items:center;gap:14px;width:100%;margin-top:12px;padding:16px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
-.pick:hover,.pick:focus-visible{border-color:var(--acc);background:var(--acc2)}
-.pick:active{transform:scale(.99)}
-.pick svg{flex:none;width:42px;height:42px;padding:9px;border-radius:12px;background:var(--acc2);color:var(--acc);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pick>span{flex:1;min-width:0}
-.pick b{display:block;font-size:16px}
-.pick .sub{display:block;margin-top:2px}
-.pick i{font-style:normal;font-size:22px;color:var(--mute)}
 .back{border:0;background:none;color:var(--acc);font:inherit;font-size:14px;padding:0 0 8px;cursor:pointer}
 .ftitle{display:block;font-size:20px}
 .enter{animation:fadeup .22s ease-out}

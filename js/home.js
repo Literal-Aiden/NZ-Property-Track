@@ -56,7 +56,7 @@ $('home').addEventListener('click',function(e){
   if(x==='tobk')navTab('setbody');
   if(x==='cf')openCash();
   if(x==='hdeal')openTool('deal');
-  if(x==='hadd'){newType=null;form();go(2)}
+  if(x==='hadd')openPlus();
   if(x==='ioshint'){try{localStorage.setItem('nzpt.ioshint','1')}catch(err){}drawHome()}
 });
 
@@ -77,15 +77,15 @@ function openPlus(){drawPlus();$('plus').hidden=false;$('plusbody').scrollTop=0;
 function closePlusNow(){$('plus').hidden=true}
 function drawPlus(k){
   var h;
-  if(!k)h='<b class="ftitle">Add</b>'+
-    '<button class="pnew" data-x="pprop"><span class="ib">'+ic('home')+'</span><span><b>New property</b><span class="sub">Rental, reno project, or potential buy</span></span></button>'+
+  if(!k)h='<b class="ftitle">Add</b><div class="pgh">New property</div><div class="pnt">'+
+    NEWT.map(function(t){return '<button class="ty-'+t[0]+'" data-nt="'+t[0]+'"><span class="ib">'+ic(t[1])+'</span><b>'+t[2]+'</b></button>'}).join('')+'</div>'+
     PLUS.map(function(g){return '<div class="ty-'+g[0]+'"><div class="pgh">'+g[1]+'</div>'+g[2].map(function(a){
       return '<button class="pq" '+(a[0]?'data-q="'+a[0]+'"':'data-x="pdeal"')+'><span class="ib">'+ic(a[1])+'</span><span><b>'+a[2]+'</b><span class="sub">'+a[3]+'</span></span><i class="chev">›</i></button>'}).join('')+'</div>'}).join('');
   else{
     var q=QUICK[k],ids=props.map(function(p,i){return i}).filter(function(i){return q.f(props[i])});
     h='<button class="back" data-x="phome">‹ Back</button><b class="ftitle">'+(ids.length?q.t:q.none)+'</b>'+
       (ids.length?ids.map(function(i){var p=props[i];return '<button class="pickp" data-pk="'+k+'" data-k="'+i+'">'+thumb(p)+'<span><b>'+esc(p.addr)+'</b><span class="sub">'+esc(p.sub)+'</span></span><i class="chev">›</i></button>'}).join('')
-        :'<p class="sub" style="margin:8px 0 0">Add one first, then come back here.</p><button class="go" data-x="pprop">Add a property</button>');
+        :'<p class="sub" style="margin:8px 0 0">Add one first, then come back here.</p><button class="go" data-nt="'+(k==='rent'||k==='exp'?'rental':'project')+'">Add a '+(k==='rent'||k==='exp'?'rental':'reno project')+'</button>');
   }
   $('plusbody').innerHTML='<div class="grab"></div>'+h;
 }
@@ -112,9 +112,9 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('plus').
 $('plusbody').addEventListener('click',function(e){
   var q=e.target.closest('[data-q]');if(q){drawPlus(q.dataset.q);var p=QUICK[q.dataset.q],ids=props.filter(p.f);if(ids.length===1)quickGo(q.dataset.q,props.indexOf(ids[0]));return}
   var pk=e.target.closest('[data-pk]');if(pk){quickGo(pk.dataset.pk,+pk.dataset.k);return}
+  var nt=e.target.closest('[data-nt]');if(nt){newProp(nt.dataset.nt);return}
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='phome')drawPlus();
-  if(b.dataset.x==='pprop'){newType=null;form();go(2)}
   if(b.dataset.x==='pdeal')openTool('deal');
 });
 

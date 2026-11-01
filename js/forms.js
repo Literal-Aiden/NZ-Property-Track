@@ -64,27 +64,24 @@ function fill(p){
   var m={f_addr:p.addr,f_sub:p.sub,f_price:p.price,f_date:p.date,f_legal:p.type!=='rental'?(p.legal||0)+(p.extra||0):p.legal,f_extra:p.extra,f_value:p.value,f_budget:p.budget,f_spent:p.spent,f_rent:p.rent,f_exp:p.exp,f_reno:p.reno,f_rates:p.rates,f_ins:p.ins,f_power:p.power,f_oth:p.oth!==undefined?p.oth:p.hold,f_beds:p.beds,f_land:p.land,f_months:p.months,f_sell:p.sell,f_loan:p.loan,f_rate:p.rate,f_refix:p.refix,f_fixstart:p.fixStart,f_term:p.term};
   for(var k in m){var e=$(k);if(e&&m[k]!==undefined&&m[k]!==null&&m[k]!==0)e.value=e.classList.contains('money')?fmtMoney(m[k]):m[k]}
 }
-// Add new starts with a choice of what's being added; the form for that type appears once one is picked.
-var KINDS_ADD=[
-  ['project','Current renovation project','A property you own and are renovating now','<path d="M4 20l9-9M14 4l6 6-3 3-6-6zM11 7l3-3"/>'],
-  ['rental','Current rental property','A property you own that’s tenanted','<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>'],
-  ['potential','Potential purchase','Rental investment or renovation flip you’re considering','<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>']];
+// The three types of property, picked in the + menu (or switched at the top of the Add a property form): [type, icon, name].
+var NEWT=[['rental','key','Rental'],['project','tool','Reno project'],['potential','search','Potential buy']];
 var formAnim=false;
-function chooser(){
-  return '<div class="card enter"><b>What are you adding?</b><p class="sub" style="margin-top:4px">Choose one to see the details needed.</p>'+KINDS_ADD.map(function(k){
-    return '<button class="pick" data-t="'+k[0]+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+k[3]+'</svg><span><b>'+k[1]+'</b><span class="sub">'+k[2]+'</span></span><i aria-hidden="true">›</i></button>';
-  }).join('')+'</div>';
+// Opens Add a property with the form for that type (from the + menu, or a "add one first" button).
+function newProp(t){
+  newType=t;newIntent='flip';newLoan='pi';loanOpen=false;lpReset();editIdx=null;formAnim=true;form();formAnim=false;go(2);$('p2').scrollTop=0;
+  var f=$('f_addr');if(f&&matchMedia('(pointer:fine)').matches)f.focus();
 }
 var OPT=' <i class="opt">optional</i>';
 function fsec(n,t){return '<p class="fsec">'+ic(n)+t+'</p>'}
 var ADDBAR='<div class="pagebar"><button class="pback" data-back aria-label="Back">'+ic('back')+'</button><b>Add a property</b></div>';
 function form(){
   clearTimeout(acT);acList=[];acSel=-1;
-  if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=ADDBAR+chooser();return}
+  if(editIdx===null&&!newType){$('sheet').hidden=true;$('sheetbody').innerHTML='';$('p2').innerHTML=ADDBAR;return}
   var pr=newType==='project',pt=newType==='potential',flip=newIntent==='flip',sd=editIdx===null||editSec==='details',sl=!pt&&(editIdx===null||editSec==='loan');
-  var N=MONEY,ed=editIdx!==null,kind=KINDS_ADD.filter(function(k){return k[0]===newType})[0];
+  var N=MONEY,ed=editIdx!==null;
   var RQ=' required';
-  var h='<div class="card'+(formAnim?' enter':'')+'">'+(editIdx===null?'<button class="back" id="chg">‹ Change type</button><b class="ftitle">New '+kind[1].replace(/^Current /,'').replace(/^P/,'p')+'</b>':'<b>'+(editSec==='loan'?'Edit mortgage':'Edit property details')+'</b>')+'<p class="sub" style="margin-top:4px">Fields marked optional can be left blank.</p>'+
+  var h='<div class="card'+(formAnim?' enter':'')+'">'+(editIdx===null?'<b>What are you adding?</b><div class="seg segt">'+NEWT.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===newType?'on':'')+'">'+t[2]+'</button>'}).join('')+'</div>':'<b>'+(editSec==='loan'?'Edit mortgage':'Edit property details')+'</b>')+'<p class="sub" style="margin-top:4px">Fields marked optional can be left blank.</p>'+
    (pt?'<label>Plan</label><div class="seg"><button data-n="flip" class="'+(flip?'on':'')+'">Reno to sell</button><button data-n="rental" class="'+(flip?'':'on')+'">Buy to rent</button></div>':'')+
    (sd?'<label>Address</label><div class="ac"><input id="f_addr" class="acin" data-sub="f_sub" data-next="f_price" placeholder="Start typing, e.g. 12 Queen Street" autocomplete="off" required><div class="sugg" role="listbox" hidden></div></div>'+
    '<label>Suburb / city</label><input id="f_sub" required>':'')+
@@ -234,8 +231,7 @@ $(id).addEventListener('click',function(e){
   var lp=e.target.closest('[data-lp]');
   if(lp){var d=lpRead();if(lp.dataset.lp==='add'){lpN++;lpT.push('pi');keepForm();var f=$('l_amt'+(lpN-1));if(f)f.focus()}else{var k=+lp.dataset.lp;d.splice(k,1);lpT.splice(k,1);lpN--;keepForm();lpWrite(d)}return}
   var b=e.target.closest('[data-t]');
-  if(b){newType=b.dataset.t;lpReset();formAnim=true;form();formAnim=false;$('p2').scrollTop=0;var f=$('f_addr');if(f&&matchMedia('(pointer:fine)').matches)f.focus();return}
-  if(e.target.closest('#chg')){newType=null;loanOpen=false;form();$('p2').scrollTop=0;return}
+  if(b){if(b.dataset.t!==newType){newType=b.dataset.t;keepForm()}return}
   var n=e.target.closest('[data-n]');
   if(n){newIntent=n.dataset.n;keepForm();return}
   if(e.target.id==='cancel'){closeSheet();return}

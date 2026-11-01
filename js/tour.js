@@ -56,7 +56,7 @@ $('tour').addEventListener('click',function(e){
   if(x==='prev')tourGo(-1);
   if(x==='close')ovClose('tour');
   // Opens the add page in place of the tour, clearing the examples first (like "Start fresh" on Home).
-  if(x==='add'){tourRestore();if(isSample){props=[];cur=0;editIdx=null;save();render()}newType=null;form();go(2)}
+  if(x==='add'){tourRestore();if(isSample){props=[];cur=0;editIdx=null;save();render()}openPlus()}
 });
 document.addEventListener('keydown',function(e){
   if($('tour').hidden)return;

@@ -140,21 +140,25 @@ button.r{cursor:pointer}
 .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:-4px auto 14px}
 .sheetbox::before{display:none}
 #plusbody .ftitle{margin-bottom:12px}
-/* New property leads in the accent colour; the other actions are rows grouped under their property type, in its colour. */
-.pnew,.pq{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;cursor:pointer}
-.pnew>span:nth-child(2),.pq>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column}
-.pnew{padding:14px 16px;border:0;border-radius:16px;background:var(--acc);color:var(--onacc)}
-.pnew .ib{background:color-mix(in srgb,var(--onacc) 20%,transparent);color:var(--onacc)}
-.pnew b{font-size:16px}
-.pnew .sub{color:inherit;opacity:.88;font-size:13px}
+/* New property: one tile per type, side by side, each in its type's colour; picking one opens its form. The other
+   actions are rows grouped under the property type they're for, in its colour. */
+.pnt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pnt button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px 12px;border:1px solid color-mix(in srgb,var(--ty) 30%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--ty) 10%,var(--card));color:var(--ink);font:inherit;text-align:center;cursor:pointer}
+.pnt .ib{width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--ty)}
+.pnt b{font-size:14px;line-height:1.2}
+.pq{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;cursor:pointer}
+.pq>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column}
 .pgh{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:13px;font-weight:700;color:var(--mute)}
 .pgh::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--ty)}
+.ftitle+.pgh{margin-top:4px}.ftitle+.pgh::before{display:none}
 .pq{padding:10px 12px;margin-bottom:6px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink)}
 .pq .ib{width:36px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--ty) 14%,var(--card));color:var(--ty)}
 .pq b{font-size:15px}
 .pq .sub{font-size:12px}
-.pq:active,.pnew:active{transform:scale(.985)}
-@media (hover:hover){.pq:hover{border-color:color-mix(in srgb,var(--ty) 45%,var(--line))}.pnew:hover{filter:brightness(1.06)}}
+.pq:active,.pnt button:active{transform:scale(.985)}
+@media (hover:hover){.pq:hover,.pnt button:hover{border-color:color-mix(in srgb,var(--ty) 55%,var(--line))}}
+/* Type switch at the top of Add a property. */
+.segt{margin:8px 0 2px;gap:6px}.segt button{padding:8px 4px;font-size:14px}
 .pickp{display:flex;align-items:center;gap:12px;width:100%;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .pickp .ph{width:48px;height:48px;border-radius:12px}
 .pickp .ph .ic{width:20px;height:20px}

@@ -89,7 +89,7 @@ $('p0').addEventListener('click',function(e){
   // Table headings sort: the same column again flips the order; numbers start biggest first.
   var th=e.target.closest('[data-sort]');if(th){var k=th.dataset.sort;propSort=propSort.k===k?{k:k,d:-propSort.d}:{k:k,d:PCOLS[k].n?-1:1};plist();return}
   var f=e.target.closest('[data-f]');if(f){propFilter=f.dataset.f;list()}
-  if(e.target.closest('[data-x="hadd"]')){newType=null;form();go(2)}
+  if(e.target.closest('[data-x="hadd"]'))openPlus();
 });
 $('p0').addEventListener('input',function(e){if(e.target.id==='pq'){propQ=e.target.value;plist()}});
 // Opens a property's page, optionally at a section.
