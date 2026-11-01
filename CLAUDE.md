@@ -136,7 +136,7 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 - "Bought it? Track it as a reno project" converts a potential buy (purchase price, date and reno budget required), keeping the original estimates in `p.plan`. The project then shows Plan vs actual and projected total cost/profit
 
 **Phone app feel**
-- Installable: `manifest.webmanifest`, icons in `icons/`, and `sw.js` (network first for the app's own files, cached copy offline; never caches other sites or `.csv`). Only works when served over http(s), not from `file://`. Chrome offers an "Install app" button in Settings; iPhone gets a one-off "Add to Home Screen" hint card on Home
+- Installable: `manifest.webmanifest`, icons in `icons/` (a white house with a rising line on pōhutukawa red, full-bleed so phones can round or crop it; drawn at 192, 512 and 180 px for iPhone), and `sw.js` (network first for the app's own files, cached copy offline; never caches other sites or `.csv`). Only works when served over http(s), not from `file://`. Chrome offers an "Install app" button in Settings; iPhone gets a one-off "Add to Home Screen" hint card on Home
 - Asks the browser for persistent storage once there's real data, so receipts aren't cleared when space runs low
 - Owned properties are split into section tabs (projects: Overview · Costs · Timeline & progress · Mortgage; rentals: Overview · Money · Tenancy · Mortgage). A dot marks a section with something needing attention
 - "Edit details" and "Edit mortgage" open in a slide-up panel over the property page (closes on Cancel, tapping outside, or Escape)
