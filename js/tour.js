@@ -55,8 +55,9 @@ $('tour').addEventListener('click',function(e){
   if(x==='next')tourGo(1);
   if(x==='prev')tourGo(-1);
   if(x==='close')ovClose('tour');
-  // Opens the add page in place of the tour, clearing the examples first (like "Start fresh" on Home).
-  if(x==='add'){tourRestore();if(isSample){props=[];cur=0;editIdx=null;save();render()}openPlus()}
+  // Add my first property: the tour closes (marked seen) and the + menu takes its place, history entry and all, to pick
+  // the type. Getting set up waits: it only shows with nothing else open.
+  if(x==='add'){closeTourNow();if(isSample){props=[];cur=0;editIdx=null;save();render()}drawPlus();$('plus').hidden=false;$('plusbody').scrollTop=0;ovSwap('plus')}
 });
 document.addEventListener('keydown',function(e){
   if($('tour').hidden)return;
