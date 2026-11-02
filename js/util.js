@@ -73,7 +73,9 @@ function parts(p){return p.parts&&p.parts.length?p.parts:p.loan?[p]:[]}
 function partPay(x){return x.loan?(x.ltype==='io'?x.loan*(x.rate||0)/1200:pmt(x.loan,x.rate||0,x.term||30)):0}
 function refixOf(p){if(p.fixTerm==='float')return null;if(!p.fixTerm||p.fixTerm==='custom')return p.refix||null;return addMonths(p.fixStart||iso(new Date()),+p.fixTerm)}
 function fmtD(d){return new Date(d+'T00:00:00').toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'})}
-var FIXOPTS=[['6','6 months'],['12','1 year'],['18','18 months'],['24','2 years'],['36','3 years'],['48','4 years'],['60','5 years'],['float','Floating'],['custom','Custom date']].map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join('');
+// Starts blank (no term guessed); "other" asks for the number of months (saved as that number, like the others).
+var FIXSTD=['6','12','18','24','36','48','60'];
+var FIXOPTS=[['',''],['6','6 months'],['12','1 year'],['18','18 months'],['24','2 years'],['36','3 years'],['48','4 years'],['60','5 years'],['other','Other term (months)'],['float','Floating'],['custom','I know the date it’s fixed until']].map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join('');
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function sum(a,f){return a.reduce(function(t,x){return t+(+f(x)||0)},0)}
 function dd(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)}

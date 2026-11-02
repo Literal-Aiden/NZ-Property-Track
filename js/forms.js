@@ -8,9 +8,14 @@ function lpBlock(i){
    '<label>Loan type</label><div class="seg" data-p="'+i+'"><button data-l="pi" class="'+(lpT[i]==='pi'?'on':'')+'">Principal &amp; interest</button><button data-l="io" class="'+(lpT[i]==='io'?'on':'')+'">Interest-only</button></div>'+
    '<label>'+(lpN>1?'Amount owing on this part':'Current loan balance (NZD)')+'</label><input id="l_amt'+i+'"'+(lpN>1?' required':'')+MONEY+(lpN>1?'':'<p class="sub" style="margin-top:4px">What you owe on it now, not the original loan.'+(editIdx===null?'':' Clear it if the loan’s paid off.')+'</p>')+
    '<label>Interest rate %</label><input id="l_rate'+i+'"'+NUM+
-   '<label>Fixed term</label><select id="l_fix'+i+'">'+FIXOPTS+'</select>'+
+   // An existing rental asks only Fixed or Floating and the date it's fixed until (what the bank's app and letters show);
+   // how long it was fixed for, and from when, are rarely to hand. The hidden select keeps fixPreview() and saving as they are.
+   (isHeld()?'<label>Fixed or floating</label><div class="seg" data-fp="'+i+'"><button data-fx="custom">Fixed</button><button data-fx="float">Floating</button></div>'+
+     '<select id="l_fix'+i+'" hidden><option value="custom"></option><option value="float"></option></select>'
+     :'<label>Fixed term</label><select id="l_fix'+i+'">'+FIXOPTS+'</select>'+
+       '<div id="l_ow'+i+'" style="display:none"><label>Fixed for (months)</label><input id="l_om'+i+'"'+NUM+'</div>')+
    '<div id="l_fw'+i+'"><label>Rate fixed from'+(editIdx===null&&!isHeld()?' (or settlement date)':'')+'</label><input id="l_fs'+i+'" type="date"></div>'+
-   '<div id="l_cw'+i+'" style="display:none"><label>Re-fix date</label><input id="l_rf'+i+'" type="date"></div>'+
+   '<div id="l_cw'+i+'" style="display:none"><label>Rate fixed until</label><input id="l_rf'+i+'" type="date"></div>'+
    '<p class="sub" id="l_out'+i+'" style="margin-top:8px;color:var(--acc);font-weight:600"></p></div>';
 }
 // Remaining term, once for the whole loan (a split loan's parts share it): years and months, or the date the loan ends
@@ -28,13 +33,19 @@ function lpForm(){
     (lpN>1?'':'<p class="sub" style="margin-top:4px">If the loan is split into parts fixed for different terms or rates.</p>')+termBox();
 }
 function fixPreview(i){
-  var v=$('l_fix'+i).value,c=v==='custom',f=v==='float';
-  $('l_fw'+i).style.display=c||f?'none':'';
+  // A term carried over from a new rental's form (switched to existing) isn't one of Fixed / Floating: it's Fixed.
+  var s=$('l_fix'+i);if(!s.value&&s.hidden)s.value='custom';
+  var v=s.value,c=v==='custom',f=v==='float',o=v==='other';
+  document.querySelectorAll('[data-fp="'+i+'"] button').forEach(function(b){b.classList.toggle('on',b.dataset.fx===v)});
+  // "Rate fixed from" only once there's a term to count from.
+  $('l_fw'+i).style.display=c||f||!v?'none':'';
   $('l_cw'+i).style.display=c?'':'none';
+  if($('l_ow'+i))$('l_ow'+i).style.display=o?'':'none';
   // No re-fix date shown until there's a loan amount. A date picked before the amount is kept, not cleared.
   if(!num('l_amt'+i)){$('l_out'+i).textContent='';return}
-  var r=refixOf({fixTerm:v,fixStart:$('l_fs'+i).value,refix:$('l_rf'+i).value});
-  $('l_out'+i).textContent=f?'Floating rate: no re-fix date':r?'Re-fix due '+fmtD(r):'';
+  var r=refixOf({fixTerm:o?String(num('l_om'+i)||''):v,fixStart:$('l_fs'+i).value,refix:$('l_rf'+i).value});
+  // A date typed in is the re-fix date, so it isn't repeated under it.
+  $('l_out'+i).textContent=f?'Floating rate: no re-fix date':r&&!c?'Re-fix due '+fmtD(r):'';
 }
 function fixAll(){for(var i=0;i<lpN;i++)if($('l_fix'+i))fixPreview(i)}
 // An existing rental (owned a while), being added or edited: its purchase date isn't when the rate was fixed.
@@ -57,7 +68,7 @@ function loanAmt(i){
   fixPreview(i);
 }
 // The parts as typed (raw values), so removing one can shift the rest up.
-var LPF=['amt','rate','fix','fs','rf'];
+var LPF=['amt','rate','fix','om','fs','rf'];
 // Remaining term fields: the end date fills in years and months, and years and months fill in the end date.
 function endIn(m){var d=new Date();d.setMonth(d.getMonth()+m);return iso(d)}
 function termFrom(i,src){
@@ -72,7 +83,7 @@ function termSet(i,x){
 function lpRead(){var a=[];for(var i=0;i<lpN;i++){var x={};LPF.forEach(function(k){var e=$('l_'+k+i);x[k]=e?e.value:''});a.push(x)}return a}
 function lpWrite(a){a.forEach(function(x,i){LPF.forEach(function(k){var e=$('l_'+k+i);if(e)e.value=x[k]})});fixAll()}
 function readParts(){
-  var a=[];for(var i=0;i<lpN;i++){var n=num('l_amt'+i);if(!n)continue;var t=$('l_fix'+i).value,mo=num('l_ty0')*12+num('l_tm0'),end=$('l_te0').value;
+  var a=[];for(var i=0;i<lpN;i++){var n=num('l_amt'+i);if(!n)continue;var t=$('l_fix'+i).value;if(t==='other')t=String(num('l_om'+i)||'');var mo=num('l_ty0')*12+num('l_tm0'),end=$('l_te0').value;
     var x={loan:n,rate:num('l_rate'+i),fixTerm:t,fixStart:$('l_fs'+i).value,refix:t==='custom'?$('l_rf'+i).value:'',ltype:lpT[i],term:mo?Math.round(mo/12*1000)/1000:30};
     if(end)x.end=end;a.push(x)}
   return a;
@@ -159,7 +170,11 @@ function form(){
   if($('l_fix0')){
     var L=editIdx!==null?parts(props[editIdx]):[];
     for(var i=0;i<lpN;i++){var x=L[i]||{},m={};m['l_amt'+i]=x.loan;m['l_rate'+i]=x.rate;m['l_fs'+i]=x.fixStart;m['l_rf'+i]=x.refix;setv(m);
-      $('l_fix'+i).value=x.fixTerm||(x.refix?'custom':'12');if(!$('l_fs'+i).value&&x.loan)$('l_fs'+i).value=iso(new Date())}
+      $('l_fix'+i).value=x.fixTerm||(x.refix?'custom':'');
+      // A term that isn't one of the standard ones shows as Other, with its months.
+      if(/^\d+$/.test(x.fixTerm||'')&&FIXSTD.indexOf(x.fixTerm)<0){$('l_fix'+i).value='other';$('l_om'+i).value=x.fixTerm}
+      // An existing rental saved with a term and start date shows the date they work out to.
+      if(isHeld()&&x.fixTerm&&x.fixTerm!=='float'&&x.fixTerm!=='custom'){$('l_fix'+i).value='custom';$('l_rf'+i).value=refixOf(x)||''}if(!$('l_fs'+i).value&&x.loan)$('l_fs'+i).value=iso(new Date())}
     termSet(0,L[0]||{});fixAll();
   }
   if(wide())pairUp((ed?$('sheetbody'):$('p2')).querySelector('.card'));
@@ -231,7 +246,9 @@ function addProp(){
   isSample=false;newLoan='pi';lpReset();loanOpen=false;newType=null;if(editIdx!==null){var o=props[editIdx];['loan','rate','refix','fixTerm','fixStart','ltype','term','parts','comps','items','cats','start','target','target0','hold','tasks','done','plan','beds','land','spent','money','ten','hh','hhDocs','hhDate','pics','photo','vals','valueAt','rates','ins','power','oth','rents','loans','tgt','tgtT','fromProject','held','setup'].forEach(function(k){if(o[k]!==undefined&&p[k]===undefined)p[k]=o[k]});if(p.value!==o.value)noteVal(p);syncSpent(p);props[editIdx]=p;cur=editIdx;editIdx=null}else{if(num('f_value'))noteVal(p);if(p.loan)noteLoan(p);props.push(p);cur=props.length-1;resetCur()}render();go(1,true);if(wasEdit)ovClose('sheet');
 }
 // Re-render the form without losing what's been typed (e.g. when switching type or plan).
-function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}
+function keepForm(){var v={},lm=$('loanmore'),cty=$('f_sub')&&$('f_sub').dataset.county;loanOpen=!!(lm&&lm.open);(editIdx===null?$('p2'):$('sheetbody')).querySelectorAll('input[id],select[id]').forEach(function(e){if(e.value)v[e.id]=e.value});form();for(var k in v){var e=$(k);if(e)e.value=v[k]}
+  // An existing rental's switch starts on Fixed: carried to the term list, it stays only if a fixed-until date was entered.
+  for(var i=0;i<lpN;i++){var s=$('l_fix'+i);if(s&&!s.hidden&&s.value==='custom'&&!$('l_rf'+i).value)s.value=''}if(cty&&$('f_sub'))$('f_sub').dataset.county=cty;holdCalc();fixAll();syncFs();rateLink()}
 // Rates lookup: a link to the property's council rates search, under the rates (potential buys) or annual expenses
 // (rentals) field. The council comes from the picked address suggestion (data-county on the suburb field) or the suburb / city.
 function rateLink(){
@@ -245,7 +262,7 @@ function closeSheetNow(){editIdx=null;newType=null;taxOne=null;form()}
 $('sheetbg').addEventListener('click',closeSheet);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('sheet').hidden&&!acList.length)closeSheet()});
 ['p2','sheetbody'].forEach(function(id){
-$(id).addEventListener('change',function(e){var m=/^l_(fix|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2]);if(e.target.id==='f_date')syncFs();
+$(id).addEventListener('change',function(e){var m=/^l_(fix|om|fs|rf)(\d+)$/.exec(e.target.id);if(m)fixPreview(+m[2]);if(e.target.id==='f_date')syncFs();
   // Years entered with no months: months becomes 0 on leaving the field, so it's clear nothing's missing.
   if(e.target.id==='l_ty0'&&num('l_ty0')&&!$('l_tm0').value)$('l_tm0').value='0'});
 $(id).addEventListener('input',function(e){
@@ -262,6 +279,8 @@ $(id).addEventListener('input',function(e){
 $(id).addEventListener('click',function(e){
   var l=e.target.closest('[data-l]');
   if(l){var sg=l.parentNode;if(sg.dataset.p)lpT[+sg.dataset.p]=l.dataset.l;else newLoan=l.dataset.l;sg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===l)});holdCalc();return}
+  var fx=e.target.closest('[data-fx]');
+  if(fx){var k=fx.parentNode.dataset.fp;$('l_fix'+k).value=fx.dataset.fx;fixPreview(+k);return}
   // Split the loan / add or remove a loan part, keeping what's been typed in the others.
   var lp=e.target.closest('[data-lp]');
   if(lp){var d=lpRead();if(lp.dataset.lp==='add'){lpN++;lpT.push('pi');keepForm();var f=$('l_amt'+(lpN-1));if(f)f.focus()}else{var k=+lp.dataset.lp;d.splice(k,1);lpT.splice(k,1);lpN--;keepForm();lpWrite(d)}return}
