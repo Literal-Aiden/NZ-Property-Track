@@ -351,11 +351,10 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   .screen.page{padding-top:0}
   .pagebar{margin:0 -24px 16px;padding-left:24px;padding-right:24px}
   .fbar,body.typing .screen .fbar{bottom:-40px}
-  /* Properties two to a row, calculators three. */
+  /* Properties two to a row (calculators: see Desktop calculators below). */
   /* Home and Properties get a wider column (dashboard, table); other pages stay at the reading width. */
   #home,#p0{padding-left:calc(24px + max(0px,(100% - 1180px)/2));padding-right:calc(24px + max(0px,(100% - 1180px)/2))}
   #plist{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
-  .tgrid{grid-template-columns:repeat(3,1fr)}
   .card.prop:hover,.cfp:hover{border-color:var(--acc)}
   /* Panels and pickers as centred dialogs instead of sliding up from the bottom. */
   .sheet{justify-content:center;align-items:center;padding:24px}
@@ -412,12 +411,43 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   .pside .secnav button.on{background:var(--acc);color:var(--onacc)}
   .pside .secnav button.dot::after{top:50%;right:12px;margin-top:-4px}
 }
-/* Desktop calculators (drawTools in tools.js): inputs on the left, the result beside them, so it updates in view. */
+/* Desktop calculators (drawTools in tools.js). The list: tiles in groups (TGROUPS) under headings, three to a row.
+   An open calculator: the list of calculators down the left to switch between, then its name and description as the
+   page title, and the inputs and the result as two cards side by side, the result staying in view. */
 @media (min-width:900px){
-  #toolbody{padding-left:calc(24px + max(0px,(100% - 1080px)/2));padding-right:calc(24px + max(0px,(100% - 1080px)/2))}
-  .tcalc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+  #toolbody{padding-left:calc(24px + max(0px,(100% - 1180px)/2));padding-right:calc(24px + max(0px,(100% - 1180px)/2))}
+  .tgrid{grid-template-columns:1fr 1fr;gap:0 24px}
+  .tgset{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px;margin-bottom:26px;align-content:start}
+  .tgset:first-child{grid-column:1/-1}
+  .tgh{display:block;grid-column:1/-1;margin:0 4px -2px}
+  .tile{padding:18px;min-height:132px;gap:6px}
+  .tile .tico{width:40px;height:40px}
+  .tile b{font-size:16px}
+  .tile .sub{font-size:13px}
+  .tile:hover{box-shadow:0 2px 6px rgba(60,30,20,.06),0 8px 22px rgba(60,30,20,.07)}
+  .tbname,.tdesc{display:none}
+  .tpage{display:grid;grid-template-columns:210px minmax(0,1fr);gap:32px;align-items:start}
+  .trail{display:flex;flex-direction:column;gap:2px;position:sticky;top:76px}
+  .trail .grp{margin:14px 12px 6px;font-size:12px}
+  .trail .grp:first-child{margin-top:4px}
+  .trail button{display:flex;align-items:center;gap:10px;padding:9px 12px;border:0;border-radius:10px;background:none;color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+  .trail button .ic{width:18px;height:18px;color:var(--mute);flex:none}
+  .trail button:hover{background:var(--acc2);color:var(--acc)}
+  .trail button:hover .ic{color:var(--acc)}
+  .trail button.on{background:var(--acc);color:var(--onacc)}
+  .trail button.on .ic{color:var(--onacc)}
+  .thead{display:block;margin-bottom:16px}
+  .thead .sub{font-size:15px}
+  .tcalc.card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;padding:0;border:0;background:none;box-shadow:none}
+  .tcalc .tin,.tcalc .tout{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 1px 2px rgba(60,30,20,.05),0 4px 14px rgba(60,30,20,.05)}
+  .tcalc .tin>.tsw:first-child{margin-top:0}
   .tcalc .tout{position:sticky;top:76px;margin-top:0}
-  .tcalc .tout:empty{display:none}
+  .tout .tres:first-child{margin-top:0}
+  .tout .tres b{font-size:32px}
+  .tempty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 16px}
+  .tempty .tico{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--acc2);color:var(--acc);margin-bottom:12px}
+  .tempty b{display:block;font-size:16px}
+  .tempty .sub{margin-top:4px}
 }
 /* Desktop forms (pairUp in forms.js): label-and-field boxes two to a row; everything else spans the row. */
 @media (min-width:900px){

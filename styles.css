@@ -154,6 +154,11 @@ i.opt{font-style:normal;font-size:11px;color:var(--mute);background:var(--bg);bo
 .tres b{display:block;font-size:26px;line-height:1.1}
 .tres span{font-size:13px;color:var(--mute)}
 .tout .lines{margin-top:6px}
+/* Tools groups and the calculator list beside an open one are for wide screens (layout.css); on a phone the tiles flow
+   as one grid in TOOLS order, and an empty result is just a line under the fields. */
+.tgset{display:contents}
+.tgh,.trail,.thead,.tempty .tico,.tempty b{display:none}
+.tempty .sub{margin-top:14px}
 .prop .chev{font-style:normal;font-size:24px;color:var(--mute);flex:none}
 .card.cur{border-color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
 .stat.wide{grid-column:1/-1}

@@ -163,19 +163,26 @@ function tfield(f){
 // A top field: a switch of its options (o) above everything else, with a one-line hint for the chosen one (hint), so
 // the choice decides which fields show. Its value sits in a hidden input, read like any other field.
 function tswitch(f){return '<div class="seg tsw">'+f.o.map(function(o){return '<button data-qs="'+f.i+'" data-v="'+o[0]+'">'+esc(o[1])+'</button>'}).join('')+'</div><input type="hidden" id="q_'+f.i+'"><p class="sub tswh" id="h_'+f.i+'"></p>'}
+// The calculators by what they're for. On wide screens the Tools list shows these groups under headings, and an open
+// calculator has them down the left to switch between. On a phone the headings are hidden and the tiles keep TOOLS order
+// (CSS order), two to a row as before.
+var TGROUPS=[['Buying and selling',['deal','hold','sell']],['Rentals',['yield','even']],['Loans and equity',['mort','equity']]];
+function toolGroups(f){return TGROUPS.map(function(g){return f(g[0],g[1].map(toolById))}).join('')}
 function drawTools(){
   var t=toolCur&&toolById(toolCur);
   if(!t){
     $('toolbody').innerHTML='<h1 class="ptitle">Tools</h1><p class="sub" style="margin-bottom:14px">Calculators for deals, loans and rentals</p><div class="tgrid">'+
-      TOOLS.map(function(t){return '<button class="tile" data-tool="'+t.id+'"><span class="tico">'+ic(t.icon)+'</span><b>'+t.name+'</b><span class="sub">'+t.desc+'</span></button>'}).join('')+'</div>';
+      toolGroups(function(name,ts){return '<div class="tgset" style="--n:'+ts.length+'"><p class="grp tgh">'+name+'</p>'+ts.map(function(t){return '<button class="tile" data-tool="'+t.id+'" style="order:'+TOOLS.indexOf(t)+'"><span class="tico">'+ic(t.icon)+'</span><b>'+t.name+'</b><span class="sub">'+t.desc+'</span></button>'}).join('')+'</div>'})+'</div>';
     return;
   }
   var srcs=t.from?props.map(function(p,i){return t.from(p)?'<option value="'+i+'">'+esc(p.addr)+'</option>':''}).join(''):'';
-  $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b>'+t.name+'</b><button class="edit" data-x="tclear" style="margin-left:auto">Clear</button></div>'+
-    '<div class="card enter tcalc"><div class="tin"><p class="sub">'+t.desc+'</p>'+t.f.filter(function(f){return f.top}).map(tswitch).join('')+
+  $('toolbody').innerHTML='<div class="pagebar"><button class="pback" data-x="thome" aria-label="All tools">'+ic('back')+'</button><b class="tbname">'+t.name+'</b><button class="edit" data-x="tclear" style="margin-left:auto">Clear</button></div>'+
+    '<div class="tpage"><nav class="trail" aria-label="Calculators">'+toolGroups(function(name,ts){return '<p class="grp">'+name+'</p>'+ts.map(function(x){return '<button data-tool="'+x.id+'" class="'+(x===t?'on':'')+'">'+ic(x.icon)+x.name+'</button>'}).join('')})+'</nav>'+
+    '<div class="tmain"><div class="thead"><h1 class="ptitle">'+t.name+'</h1><p class="sub">'+t.desc+'</p></div>'+
+    '<div class="card enter tcalc"><div class="tin"><p class="sub tdesc">'+t.desc+'</p>'+t.f.filter(function(f){return f.top}).map(tswitch).join('')+
     (srcs?'<select id="q_from" style="margin-top:12px"><option value="">Fill in from a property…</option>'+srcs+'</select>':'')+
     (t.all&&props.some(function(p){return p.type!=='potential'})?'<button class="edit" data-x="tport" style="margin-top:12px">Use my portfolio</button>':'')+
-    '<div class="fgrid">'+t.f.filter(function(f){return !f.top}).map(tfield).join('')+'</div></div><div class="tout" id="q_out"></div></div>';
+    '<div class="fgrid">'+t.f.filter(function(f){return !f.top}).map(tfield).join('')+'</div></div><div class="tout" id="q_out"></div></div></div></div>';
   var mem=toolMem()[t.id]||{};
   t.f.forEach(function(f){var e=$('q_'+f.i),v=mem[f.i]!==undefined?mem[f.i]:(f.d||'');e.value=f.k==='m'&&v!==''?fmtMoney(v):v});
   tcalc();
@@ -187,7 +194,8 @@ function tcalc(){
     if(f.show){var d=f.show(v)?'':'none';$('w_'+f.i).style.display=d;if(f.grp)$('g_'+f.i).style.display=d}
     if(f.top){document.querySelectorAll('[data-qs="'+f.i+'"]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v[f.i])});$('h_'+f.i).textContent=(f.hint||{})[v[f.i]]||''}
   });
-  $('q_out').innerHTML=t.calc(v)||'<p class="sub" style="margin-top:14px">Fill in the fields above to see the result.</p>';
+  // Nothing to show yet: on a phone a line under the fields; on a wide screen the result card says what will go there.
+  $('q_out').innerHTML=t.calc(v)||'<div class="tempty"><span class="tico">'+ic(t.icon)+'</span><b>Your result shows here</b><p class="sub">Fill in the fields to see the result.</p></div>';
 }
 function tfill(vals){
   for(var k in vals){var e=$('q_'+k),x=vals[k];if(!e||x===undefined||x===null)continue;e.value=e.classList.contains('money')?(x?fmtMoney(Math.round(x*100)/100):''):x}
@@ -201,7 +209,8 @@ function dealToProp(){
   holdCalc();go(2);
 }
 $('toolbody').addEventListener('click',function(e){
-  var tile=e.target.closest('[data-tool]');if(tile){toolCur=tile.dataset.tool;drawTools();$('toolbody').scrollTop=0;ovOpen('tool');return}
+  // A tile opens a calculator; the list beside an open one switches to another in its place.
+  var tile=e.target.closest('[data-tool]');if(tile){var was=!!toolCur;toolCur=tile.dataset.tool;drawTools();$('toolbody').scrollTop=0;if(!was)ovOpen('tool');return}
   var qs=e.target.closest('[data-qs]');if(qs){$('q_'+qs.dataset.qs).value=qs.dataset.v;tcalc();return}
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='thome')ovClose('tool');
