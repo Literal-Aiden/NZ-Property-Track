@@ -141,7 +141,7 @@ function form(){
    '<label>Term in years'+OPT+'</label><input id="f_term" placeholder="30"'+NUM+'</details>'+
    '<p class="sub" id="holdout" style="margin-top:10px;color:var(--ink);font-weight:600"></p><p class="sub" id="loanout" style="margin-top:4px"></p>'+
    fsec(flip?'trend':'key',flip?'Selling':'Renting')+
-   (flip?'<div class="fgrid"><div><label>Sale price after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Selling costs</label><input id="f_sell" placeholder="Agent fees etc."'+RQ+N+'</div><div><label>Months until sold</label><input id="f_months"'+RQ+NUM+'</div></div>'
+   (flip?'<div class="fgrid"><div><label>Sale price after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Selling costs'+OPT+'</label><input id="f_sell" placeholder="Agent fees etc."'+N+'</div><div><label>Months until sold</label><input id="f_months"'+RQ+NUM+'</div></div>'
      :'<div class="fgrid"><div><label>Value after reno</label><input id="f_value"'+RQ+N+'</div><div><label>Weekly rent</label><input id="f_rent"'+RQ+N+'</div><div><label>Annual expenses</label><input id="f_exp"'+RQ+N+'</div><div><label>Months until tenanted</label><input id="f_months"'+RQ+NUM+'</div><div><label>Management fee %'+OPT+'</label><input id="f_mgmt" placeholder="Blank if none"'+NUM+'</div></div>')+
    (editIdx===null&&SHOW_COMPS?'<p class="sub" style="margin-top:10px">You can add comparable sales once it’s saved.</p>':''):'')+
    // Rentals may have been owned for decades, so their purchase details are optional (then the value is needed instead).

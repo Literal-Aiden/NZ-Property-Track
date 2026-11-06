@@ -26,9 +26,10 @@ function potView(p){
     ?stat('Asking / offer price',$$(p.price))+stat('Est. sale price',$$(p.value))+stat('Est. profit',$$(d.prof),d.prof<0?'neg':'pos')+stat('Return on costs',pct(d.roc),d.prof<0?'neg':'')
     :stat('Total cost in',$$(d.cost))+stat('Est. value after reno',$$(p.value))+stat('Equity after reno',$$(p.value-d.cost),p.value<d.cost?'neg':'pos')+stat('Gross / net yield on cost',d.cost?(d.ann/d.cost*100).toFixed(1)+'% / '+(d.net/d.cost*100).toFixed(1)+'%':'–')+stat('Weekly rent',$$(p.rent||0))+stat('Net annual income',$$(d.net),d.net<0?'neg':''))+'</div>';
   var lines=[['Purchase price',p.price],['Legal &amp; other purchase costs',(p.legal||0)+(p.extra||0)],['Renovation',p.reno||0],['Holding ('+(p.months||0)+' mo × '+$$(p.hold||0)+')',d.hold]];
-  if(flip)lines.push(['Selling costs',p.sell||0]);
-  h+='<div class="lines">'+lines.map(function(l){return '<div><span>'+l[0]+'</span><b>'+$$(l[1])+'</b></div>'}).join('')+'<div class="tot"><span>Total cost</span><b>'+$$(flip?d.all:d.cost)+'</b></div></div>';
-  h+='<p class="sub" style="margin-top:10px">'+(flip?'Estimates only. Profit is before tax: check current IRD guidance on tax for property bought to sell.':'Estimates only. Yield is on total cost in, not the asking price.'+(d.fee?' Net income allows for a '+p.mgmt+'% management fee ('+$$(d.fee)+' a year).':''))+'</p>'+convBlock()+'</div>';
+  // Selling costs are optional (the agent fees may not be known yet), so say so rather than showing $0.
+  if(flip)lines.push(['Selling costs',p.sell||null]);
+  h+='<div class="lines">'+lines.map(function(l){return '<div><span>'+l[0]+'</span><b>'+(l[1]===null?'Not added yet':$$(l[1]))+'</b></div>'}).join('')+'<div class="tot"><span>Total cost</span><b>'+$$(flip?d.all:d.cost)+'</b></div></div>';
+  h+='<p class="sub" style="margin-top:10px">'+(flip?(p.sell?'':'Profit doesn’t allow for selling costs yet, so it will be lower once agent fees are added (Tools has a Selling costs calculator). ')+'Estimates only. Profit is before tax: check current IRD guidance on tax for property bought to sell.':'Estimates only. Yield is on total cost in, not the asking price.'+(d.fee?' Net income allows for a '+p.mgmt+'% management fee ('+$$(d.fee)+' a year).':''))+'</p>'+convBlock()+'</div>';
   h+=offerCard(p);
   if(!SHOW_COMPS)return h;
   var c=p.comps||[];
