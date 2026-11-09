@@ -237,9 +237,24 @@ button.r{cursor:pointer}
 .tdots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
 .tdots i.on{background:var(--acc);width:18px;border-radius:4px}
 .tourbox .btns{margin-top:12px}
-@media (prefers-reduced-motion:reduce){.tourbox,.nav button.tlit::after,.nav #plusbtn.tlit .plus{animation:none}}
-/* Wide screens: the card sits in the bottom right corner (top right on the + slide), clear of the sidebar. */
-@media (min-width:900px){.sheet.tour{justify-content:flex-end;align-items:flex-end;padding:24px}.sheet.tour.top{justify-content:flex-start}.tourbox{max-height:calc(100vh - 48px)}.touring #plusbody{padding-bottom:16px}}
+@media (prefers-reduced-motion:reduce){.tourbox,.nav button.tlit::after,.nav #plusbtn.tlit,.nav #plusbtn.tlit .plus{animation:none}}
+/* Wide screens: the card stays put in the bottom right corner on every slide, one width and a height that fits the
+   longest slide, so it doesn't jump about. On the + slide the + menu sits above the dim (not dimmed with the page),
+   with a shadow to lift it, centred in the space between the sidebar and the card; it scrolls with the mouse wheel or
+   trackpad, but its rows can't be clicked during the tour. */
+@media (min-width:900px){
+  .sheet.tour,.sheet.tour.top{justify-content:flex-end;align-items:flex-end;padding:24px}
+  .tourbox{width:380px;min-height:356px;max-height:calc(100vh - 48px);display:flex;flex-direction:column}
+  .tourbox .tdots{margin-top:auto}
+  .touring #plus{z-index:2001;pointer-events:none;padding:24px 428px 24px 244px}
+  .touring #plus .sheetbox{width:min(560px,100%);box-shadow:0 16px 48px rgba(0,0,0,.35);border:1px solid var(--line);animation:none}
+  .touring #plusbody{padding-bottom:16px;pointer-events:auto;overscroll-behavior:contain}
+  .touring #plusbody *{pointer-events:none}
+  .nav #plusbtn.tlit{animation:tplus 1.6s ease-in-out infinite}
+  .nav button.tlit:not(#plusbtn)::after{inset:-4px;border-radius:14px}
+}
+/* Not enough room beside the card: the + menu goes above it instead. */
+@media (min-width:900px) and (max-width:1099px){.touring #plus{padding:24px 24px 404px 244px}}
 /* Dropdown picker (picker.js): a short panel at the bottom with the choices as buttons, in thumb reach. */
 .ddpick{z-index:2200}
 /* A light shade, so the form behind stays readable (the other panels use .45). */
