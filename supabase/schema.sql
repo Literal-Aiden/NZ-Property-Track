@@ -17,13 +17,14 @@ create table if not exists public.props (
 );
 create index if not exists props_user_updated on public.props (user_id, updated);
 
-create or replace function public.props_touch() returns trigger language plpgsql as $$
+create or replace function public.props_touch() returns trigger language plpgsql set search_path = '' as $$
 begin new.updated := now(); return new; end $$;
 drop trigger if exists props_touch on public.props;
 create trigger props_touch before insert or update on public.props for each row execute function public.props_touch();
 
 -- Row level security: each signed-in user can only see and change their own rows. This is enforced by the
--- database, so it holds even if someone uses the public key outside the app.
+-- database, so it holds even if someone uses the public key outside the app. (select auth.uid()) is checked once per
+-- query rather than once per row.
 alter table public.props enable row level security;
 -- Signed-in users can reach the table through the app's API (the rules below still limit them to their own rows);
 -- signed-out visitors can't reach it at all. Needed when new tables aren't exposed automatically.
@@ -33,10 +34,10 @@ drop policy if exists "own rows: read" on public.props;
 drop policy if exists "own rows: add" on public.props;
 drop policy if exists "own rows: change" on public.props;
 drop policy if exists "own rows: remove" on public.props;
-create policy "own rows: read" on public.props for select to authenticated using (user_id = auth.uid());
-create policy "own rows: add" on public.props for insert to authenticated with check (user_id = auth.uid());
-create policy "own rows: change" on public.props for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy "own rows: remove" on public.props for delete to authenticated using (user_id = auth.uid());
+create policy "own rows: read" on public.props for select to authenticated using (user_id = (select auth.uid()));
+create policy "own rows: add" on public.props for insert to authenticated with check (user_id = (select auth.uid()));
+create policy "own rows: change" on public.props for update to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+create policy "own rows: remove" on public.props for delete to authenticated using (user_id = (select auth.uid()));
 
 -- ── Files (receipts, progress photos, cover photos, Healthy Homes reports) ─
 -- A private bucket. Each file is stored at <user id>/<file id>, and a user can only reach their own folder.
@@ -72,6 +73,15 @@ grant execute on function public.delete_me() to authenticated;
 -- Free Supabase projects pause after a week without use. A scheduled GitHub workflow
 -- (.github/workflows/keepalive.yml) calls this every few days, which counts as use. It reads no data.
 -- Not needed once the project is on a paid plan.
-create or replace function public.ping() returns timestamptz language sql stable as $$ select now() $$;
+create or replace function public.ping() returns timestamptz language sql stable set search_path = '' as $$ select now() $$;
 revoke all on function public.ping() from public;
 grant execute on function public.ping() to anon, authenticated;
+
+-- ── Supabase's own helper ──────────────────────────────────────────────────
+-- Supabase adds an event trigger (ensure_rls → rls_auto_enable) that turns on row level security for any new table
+-- in public. It keeps working without this grant; this only stops it being called through the API.
+do $$ begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
+  end if;
+end $$;

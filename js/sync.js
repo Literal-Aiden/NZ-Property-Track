@@ -9,12 +9,15 @@
 // gone has been deleted here, and its row is marked deleted so other devices drop it too. If both devices change the
 // same property between syncs, the one that syncs last wins.
 // Receipt and photo files sync too (see files() below).
-var SB_URL='https://jpfnfwfzivlwlqrdlgxg.supabase.co',SB_KEY='sb_publishable_vAKTq6361F1xN13IYyGnUQ_JnQkeS4V',SYNC_CODE=true;
+var SB_URL='https://paybfirkbafkguoxjxfx.supabase.co',SB_KEY='sb_publishable_Us4iIb2rvLPBlaV6lxFw1g_QrKp3dnY',SYNC_CODE=true;
 var AKEY='nzpt.auth',SKEY='nzpt.sync';
 function jget(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
 function jset(k,v){try{if(v)localStorage.setItem(k,JSON.stringify(v));else localStorage.removeItem(k)}catch(e){}}
-var auth=jget(AKEY),sync=jget(SKEY)||{sent:{}},syncSt='',syncMsg='',syncT=null,syncBusy=false,syncAgain=false,refreshing=null;
-var authSent=null,authEmail='',authMsg='',authCode='',outArm=false,outT=null,authInfo='';
+var auth=jget(AKEY);
+// A session saved for a different Supabase project (the app moved to Sydney in Nov 2026) is no use here: sign in again.
+if(auth&&auth.url!==SB_URL){auth=null;jset(AKEY,null);var movedMsg=1}
+var sync=jget(SKEY)||{sent:{}},syncSt='',syncMsg='',syncT=null,syncBusy=false,syncAgain=false,refreshing=null;
+var authSent=null,authEmail='',authMsg=window.movedMsg?'Sync has moved to a new server in Sydney. Sign in again with the same email, and your properties will be sent up from this device.':'',authCode='',outArm=false,outT=null,authInfo='';
 
 // Supabase's API. Errors come back as {status, msg}; status 0 means it couldn't be reached.
 function sbFetch(path,o){
@@ -29,7 +32,7 @@ function sbFetch(path,o){
 }
 // The signed-in session. The user's id and email are read from the access token itself.
 function jwt(t){try{return JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))))}catch(e){return {}}}
-function setAuth(d){var j=jwt(d.access_token);auth={at:d.access_token,rt:d.refresh_token,exp:+d.expires_at||j.exp||0,uid:j.sub,email:j.email||(d.user&&d.user.email)};jset(AKEY,auth)}
+function setAuth(d){var j=jwt(d.access_token);auth={url:SB_URL,at:d.access_token,rt:d.refresh_token,exp:+d.expires_at||j.exp||0,uid:j.sub,email:j.email||(d.user&&d.user.email)};jset(AKEY,auth)}
 // A fresh access token (they last an hour). If the session has ended (signed out elsewhere, or the account removed),
 // this device is signed out; if Supabase can't be reached, it tries again next time.
 function fresh(){

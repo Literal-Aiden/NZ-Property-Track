@@ -43,7 +43,7 @@ This creates:
 <p style="color:#76665f;font-size:13px">If you didn't ask for this, you can ignore this email.</p>
 ```
 
-Set **Subject** to `Your Rent & Reno code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. The code is 8 digits as set up; the app accepts 6 or 8.
+Set **Subject** to `Your Rent & Reno code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. The app accepts a 6 or 8 digit code, whichever the project sends.
 
 ## 4. Send me the two keys
 

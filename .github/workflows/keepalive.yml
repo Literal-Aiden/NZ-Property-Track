@@ -17,8 +17,8 @@ jobs:
       - name: Ping the database
         run: |
           code=$(curl -s -o out.txt -w '%{http_code}' -X POST \
-            'https://jpfnfwfzivlwlqrdlgxg.supabase.co/rest/v1/rpc/ping' \
-            -H 'apikey: sb_publishable_vAKTq6361F1xN13IYyGnUQ_JnQkeS4V' \
+            'https://paybfirkbafkguoxjxfx.supabase.co/rest/v1/rpc/ping' \
+            -H 'apikey: sb_publishable_Us4iIb2rvLPBlaV6lxFw1g_QrKp3dnY' \
             -H 'Content-Type: application/json' -d '{}')
           echo "HTTP $code: $(cat out.txt)"
           test "$code" = 200
