@@ -43,7 +43,7 @@ This creates:
 <p style="color:#76665f;font-size:13px">If you didn't ask for this, you can ignore this email.</p>
 ```
 
-Set **Subject** to `Your Rent & Reno code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. The app accepts a 6 or 8 digit code, whichever the project sends.
+Set **Subject** to `Your Rent & Reno code`, then **Save changes**. If emails still arrive with the old text, make a small change (a space at the end) and save again. Set to 6 digits under **Authentication → Sign In / Providers → Email → Email OTP Length** (the app also accepts 8).
 
 ## 4. Send me the two keys
 

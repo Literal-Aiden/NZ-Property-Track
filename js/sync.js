@@ -276,7 +276,7 @@ function syncCard(){
   if(authSent){
     h+='<div class="sysent">'+ic('check')+'<p><b>Check your email.</b> We’ve sent '+(SYNC_CODE?'a sign-in code':'a sign-in link')+' to <b>'+esc(authSent)+'</b>.'+(SYNC_CODE?' Enter it below'+(IOS&&standalone?'':', or open the link in the email on this '+dev()+(standalone?'':' in this browser')):' Open it on this '+dev()+(standalone?'':' in this browser'))+'.</p></div>'+
       (IOS&&standalone?'<p class="sub" style="margin-top:6px">'+(SYNC_CODE?'Use the code: on iPhone the link opens in Safari, not this app.':'On iPhone the link opens in Safari, not this app, so sign in from Safari for now.')+'</p>':'')+
-      (SYNC_CODE?'<label for="sycode" style="display:block;margin-top:12px">Code from the email</label><input id="sycode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="12345678" value="'+esc(authCode)+'">':'');
+      (SYNC_CODE?'<label for="sycode" style="display:block;margin-top:12px">Code from the email</label><input id="sycode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" value="'+esc(authCode)+'">':'');
   }else h+='<label for="syemail" style="display:block;margin-top:12px">Email</label><input id="syemail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="'+esc(authEmail)+'">';
   if(authMsg)h+='<p class="sub neg" style="margin-top:6px">'+esc(authMsg)+'</p>';
   if(authInfo&&!authSent)h+='<p class="sub" style="margin-top:6px"><b>'+esc(authInfo)+'</b></p>';
