@@ -282,7 +282,7 @@ if(!tourSeen())openTour();else setTimeout(obMaybe,1000);
 // phone's own sheets: the iPhone home-screen app has no Back gesture, and tapping above a tall panel is a small target.
 // The panel follows the finger from its top (only when it's scrolled to the top, so scrolling it still works), and
 // closes past 90px or on a quick flick, the same way as tapping outside it; otherwise it springs back. Phones only.
-// Smoothness on iPhone: a panel whose content fits has touch-action none (.fits), so iOS doesn't run its own scrolling
+// Smoothness on iPhone: a panel whose content fits (.fits) isn't a scroll area and has touch-action none, so iOS doesn't run its own scrolling
 // alongside the drag (that made dragging the + menu lag); the panel moves as one layer, straight from each touch; the
 // dim fades with it; and iOS's bounce is off for the panels (overscroll-behavior on .sheetbox in styles.css).
 function sdFit(b){b.classList.toggle('fits',b.scrollHeight<=b.clientHeight+1)}
@@ -291,18 +291,18 @@ function sdFit(b){b.classList.toggle('fits',b.scrollHeight<=b.clientHeight+1)}
   boxes.forEach(function(b){mo.observe(b.parentNode,{attributes:true,attributeFilter:['hidden']});mo.observe(b,{childList:true,subtree:true})});
   window.addEventListener('resize',function(){boxes.forEach(sdFit)});
 })();
-var sdBox=null,sdBg=null,sdY=0,sdD=0,sdT=0,sdH=1;
+var sdBox=null,sdBg=null,sdY=0,sdD=0,sdT=0,sdH=1,sdFits=false;
 function sdReset(b,bg){b.style.transform='';b.style.transition='';b.style.willChange='';bg.style.opacity='';bg.style.transition='';bg.style.willChange=''}
 document.addEventListener('touchstart',function(e){
   var b=e.target.closest('.sheet:not(.tour)>.sheetbox');sdBox=null;
   if(!b||wide()||b.scrollTop>0||e.touches.length>1||e.target.closest('input,textarea,.sugg'))return;
-  sdBox=b;sdBg=b.parentNode.querySelector('.sheetbg');sdY=e.touches[0].clientY;sdD=0;sdT=Date.now();sdH=b.offsetHeight||1;
+  sdBox=b;sdBg=b.parentNode.querySelector('.sheetbg');sdY=e.touches[0].clientY;sdD=0;sdT=Date.now();sdH=b.offsetHeight||1;sdFits=b.classList.contains('fits');
   b.style.transition='none';b.style.willChange='transform';sdBg.style.transition='none';sdBg.style.willChange='opacity';
 },{passive:true});
 document.addEventListener('touchmove',function(e){
   if(!sdBox)return;var d=e.touches[0].clientY-sdY;
   // Moving up, or the panel has scrolled: it's a scroll, not a swipe.
-  if((d<0&&!sdD)||sdBox.scrollTop>0){sdReset(sdBox,sdBg);sdBox=null;return}
+  if((d<0&&!sdD)||(!sdFits&&sdBox.scrollTop>0)){sdReset(sdBox,sdBg);sdBox=null;return}
   if(e.cancelable)e.preventDefault();
   sdD=Math.max(0,d);sdBox.style.transform='translate3d(0,'+sdD+'px,0)';sdBg.style.opacity=Math.max(.3,1-sdD/sdH);
 },{passive:false});
