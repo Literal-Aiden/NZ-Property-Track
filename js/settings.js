@@ -25,8 +25,8 @@ function themeCard(){
   return '<div class="card">'+hd('sun','Appearance')+'<div class="seg" style="margin-top:12px">'+[['light','Light'],['dark','Dark'],['auto','Automatic']].map(function(o){
     return '<button data-th="'+o[0]+'" class="'+(o[0]===t?'on':'')+'">'+o[1]+'</button>'}).join('')+'</div>'+
     '<p class="sub" style="margin-top:8px">Automatic follows your '+dev()+'’s light or dark setting.</p>'+
-    '<p class="sub" style="margin:16px 0 8px;font-weight:600;color:var(--ink)">Colour</p><div class="accs">'+ACCENTS.map(function(o){
-      return '<button data-acc="'+o[0]+'" class="'+(o[0]===a?'on':'')+'" aria-pressed="'+(o[0]===a)+'"><i style="background:'+o[2]+'"></i>'+o[1]+'</button>'}).join('')+'</div></div>';
+    '<p class="sub" style="margin:16px 0 8px;font-weight:600;color:var(--ink)">Colour <span style="font-weight:400;color:var(--mute)">· '+(ACCENTS.filter(function(o){return o[0]===a})[0]||ACCENTS[0])[1]+'</span></p><div class="accs">'+ACCENTS.map(function(o){
+      return '<button data-acc="'+o[0]+'" class="'+(o[0]===a?'on':'')+'" aria-pressed="'+(o[0]===a)+'" aria-label="'+o[1]+'" title="'+o[1]+'"><i style="background:'+o[2]+'"></i><span class="accn">'+o[1]+'</span></button>'}).join('')+'</div></div>';
 }
 function setAccent(a){
   if(a)document.documentElement.dataset.accent=a;else delete document.documentElement.dataset.accent;

@@ -491,6 +491,9 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
 .accs i{width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
 .accs button.on{border-color:var(--acc);background:var(--acc2);font-weight:700}
 .accs button.on i{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--acc)}
+/* The names don't fit under five swatches on a phone ("Pōhutukawa" overflowed on iPhone), so there the chosen colour's
+   name is beside the Colour heading instead; computers show the names under the swatches too. */
+@media (max-width:899px){.accn{display:none}.accs button{padding:10px 2px}}
 /* Line charts (charts.js): value over time on a property's Overview, and the portfolio on Home. Thin 2px lines,
    recessive grid and labels, a legend with today's figures when there's more than one line, and a crosshair with a
    tooltip on hover or touch. */
