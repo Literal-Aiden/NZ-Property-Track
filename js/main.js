@@ -280,65 +280,22 @@ if(window.matchMedia){var wq=matchMedia('(min-width:900px)'),wr=function(){list(
 if(!tourSeen())openTour();else setTimeout(obMaybe,1000);
 // Slide-up panels (the + menu, the edit panel, getting set up, the dropdown picker) close with a swipe down, like the
 // phone's own sheets: the iPhone home-screen app has no Back gesture, and tapping above a tall panel is a small target.
-// Phones only. Two ways, depending on whether the panel's content fits on screen:
-// - It fits (the + menu, the picker, getting set up): the panel scrolls natively. The whole sheet becomes a scroll area
-//   (.sheet.native in styles.css) with empty space above the panel, opened scrolled to the bottom; dragging the panel
-//   down scrolls it, so iPhone moves it as smoothly as any scroll (moving it from script lagged on iPhone, however it
-//   was done). It snaps open or shut (scroll-snap); once shut it closes the same way as tapping outside it, and the dim
-//   fades with it. A tap on the space above closes it too.
-// - It doesn't fit (a long form): it scrolls as normal, and from the top it follows the finger (script, below), closing
-//   past 90px or on a quick flick; otherwise it springs back.
-function sdFit(b){
-  var sh=b.parentNode,bg=sh.querySelector('.sheetbg');
-  if(sh.hidden){sh.classList.remove('native');sh._up=false;bg.style.opacity='';return}
-  sh.classList.remove('native');
-  var f=!wide()&&b.scrollHeight<=b.clientHeight+1;
-  b.classList.toggle('fits',f);sh.classList.toggle('native',f);
-  if(f){sh.scrollTop=sh.scrollHeight;sh._up=true;bg.style.opacity=''}
-}
+// The panel follows the finger from its top (only when it's scrolled to the top, so scrolling it still works), and
+// closes past 90px or on a quick flick, the same way as tapping outside it; otherwise it springs back. Phones only.
+// Smoothness on iPhone: a panel whose content fits (.fits) isn't a scroll area and has touch-action none, so iOS doesn't run its own scrolling
+// alongside the drag (that made dragging the + menu lag); the panel moves as one layer, straight from each touch; the
+// dim fades with it; and iOS's bounce is off for the panels (overscroll-behavior on .sheetbox in styles.css).
+function sdFit(b){b.classList.toggle('fits',b.scrollHeight<=b.clientHeight+1)}
 (function(){
-  var boxes=[].slice.call(document.querySelectorAll('.sheet:not(.tour)>.sheetbox'));
-  var mo=new MutationObserver(function(recs){
-    var seen=[];recs.forEach(function(r){var b=boxes.filter(function(x){return x===r.target||x.parentNode===r.target||x.contains(r.target)})[0];if(b&&seen.indexOf(b)<0)seen.push(b)});
-    seen.forEach(sdFit);
-  });
-  boxes.forEach(function(b){
-    var sh=b.parentNode,bg=sh.querySelector('.sheetbg');
-    mo.observe(sh,{attributes:true,attributeFilter:['hidden']});mo.observe(b,{childList:true,subtree:true});
-    // Slides the panel the rest of the way down and closes it (the same way as tapping outside it), from wherever the
-    // finger left it. Turning off scrolling first stops iPhone's own glide, which was slow to finish.
-    var shut=function(){
-      sh._up=false;sh.style.overflowY='hidden';
-      b.style.transition='transform .18s ease-in';b.style.transform='translate3d(0,'+b.offsetHeight+'px,0)';
-      bg.style.transition='opacity .18s ease-in';bg.style.opacity='0';
-      setTimeout(function(){bg.click();sh.hidden=true;sh.style.overflowY='';b.style.transition='';b.style.transform='';bg.style.transition='';bg.style.opacity=''},180);
-    };
-    sh.addEventListener('scroll',function(){
-      if(!sh._up||sh.hidden||!sh.classList.contains('native'))return;
-      var max=sh.scrollHeight-sh.clientHeight,now=Date.now(),t=sh.scrollTop;
-      if(sh._lt&&now>sh._lt)sh._v=(sh._lp-t)/(now-sh._lt);sh._lp=t;sh._lt=now; // downward speed, px per ms
-      bg.style.opacity=max>0?Math.min(1,t/max):'';
-      // Glided shut after a touch: close. Scrolled shut without one (iPhone can, e.g. when the keyboard opens): back up.
-      if(t<=1){if(now-(sh._touch||0)<4000)shut();else sh.scrollTop=sh.scrollHeight}
-    },{passive:true});
-    // Finger lifted after pulling it down more than 90px, or flicking it down: close now, rather than waiting for the
-    // snap to finish (slow on iPhone). Otherwise it snaps back up.
-    sh.addEventListener('touchstart',function(){sh._v=0;sh._lt=0},{passive:true});
-    sh.addEventListener('touchend',function(){
-      if(!sh._up||!sh.classList.contains('native'))return;
-      var d=sh.scrollHeight-sh.clientHeight-sh.scrollTop,v=Date.now()-(sh._lt||0)<120?sh._v||0:0;
-      if(d>90||(d>20&&v>.4))shut();
-    },{passive:true});
-    sh.addEventListener('click',function(e){if(e.target===sh&&sh.classList.contains('native'))bg.click()});
-    ['touchstart','touchmove','touchend'].forEach(function(t){sh.addEventListener(t,function(){sh._touch=Date.now()},{passive:true})});
-  });
+  var boxes=[].slice.call(document.querySelectorAll('.sheet:not(.tour)>.sheetbox')),mo=new MutationObserver(function(){boxes.forEach(sdFit)});
+  boxes.forEach(function(b){mo.observe(b.parentNode,{attributes:true,attributeFilter:['hidden']});mo.observe(b,{childList:true,subtree:true})});
   window.addEventListener('resize',function(){boxes.forEach(sdFit)});
 })();
 var sdBox=null,sdBg=null,sdY=0,sdD=0,sdT=0,sdH=1,sdFits=false;
 function sdReset(b,bg){b.style.transform='';b.style.transition='';b.style.willChange='';bg.style.opacity='';bg.style.transition='';bg.style.willChange=''}
 document.addEventListener('touchstart',function(e){
   var b=e.target.closest('.sheet:not(.tour)>.sheetbox');sdBox=null;
-  if(!b||wide()||b.parentNode.classList.contains('native')||b.scrollTop>0||e.touches.length>1||e.target.closest('input,textarea,.sugg'))return;
+  if(!b||wide()||b.scrollTop>0||e.touches.length>1||e.target.closest('input,textarea,.sugg'))return;
   sdBox=b;sdBg=b.parentNode.querySelector('.sheetbg');sdY=e.touches[0].clientY;sdD=0;sdT=Date.now();sdH=b.offsetHeight||1;sdFits=b.classList.contains('fits');
   b.style.transition='none';b.style.willChange='transform';sdBg.style.transition='none';sdBg.style.willChange='opacity';
 },{passive:true});

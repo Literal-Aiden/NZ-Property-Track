@@ -119,17 +119,9 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 .sheet[hidden]{display:none}
 .sheetbg{position:absolute;inset:0;background:rgba(0,0,0,.45)}
 .sheetbox{position:relative;max-height:90vh;overflow-y:auto;overscroll-behavior-y:none;background:var(--bg);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
-/* Swipe down to close (main.js): on a phone a panel whose content fits (.fits) moves by native scrolling. The sheet is the
-   scroll area: empty space (::before) above the panel, snapping open or shut; the dim stays put behind (z-index -1). */
-@media (max-width:899px){
-  .sheet.native{display:block;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:none}
-  .sheet.native::-webkit-scrollbar{display:none}
-  .sheet.native::before{content:"";display:block;height:100%;scroll-snap-align:start}
-  .sheet.native>.sheetbg{position:fixed;z-index:-1}
-  /* overscroll-behavior back to auto: Chrome (Android) still counts the panel as a scroll box and, set to none, it kept
-     the finger's scroll from reaching the sheet, so it didn't move at all. */
-  .sheet.native>.sheetbox{scroll-snap-align:end;overflow-y:hidden;overscroll-behavior:auto}
-}
+/* A panel whose content fits (.fits, main.js) isn't a scroll area at all on phones: iPhone treats a scroll area specially,
+   and moving one with the finger (swipe to close) lagged; a plain box slides smoothly. */
+@media (max-width:899px){.sheetbox.fits{overflow-y:hidden}.sheetbox.fits,.sheetbox.fits *{touch-action:none}}
 .sheetbox::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 10px}
 .sheetbox .card{margin:0}
 #setbody .card+.card{margin-top:12px}
