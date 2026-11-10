@@ -133,11 +133,21 @@ button.r{cursor:pointer}
 .herocard{position:relative;z-index:2;margin-top:-20px}
 .big2{font-size:32px;font-weight:750;letter-spacing:-.02em;line-height:1.15;margin:4px 0 2px}
 .herocard .bar{margin:10px 0 6px}
-.secnav{position:sticky;top:0;z-index:5;display:flex;gap:0;padding:3px;margin:14px 0 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 12px var(--bg)}
+/* Section tabs stick just below the iPhone's status bar (safe area); once they're stuck, #p1.secstuck fills the strip above
+   them (main.js), so content doesn't scroll behind the clock. Elsewhere the safe area is 0, so nothing changes. */
+.secnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:0;padding:3px;margin:14px 0 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 12px var(--bg)}
+#p1.secstuck::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:6}
+/* The main tabs scroll under the iPhone's status bar too: the strip behind it stays filled (it's the empty top padding
+   before scrolling, and 0 high where there's no notch). */
+#home::before,#p0::before,#toolbody::before,#setbody::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:6}
 .secnav button{display:block;flex:1;border:0;background:none;border-radius:9px;padding:8px 2px;font:inherit;font-size:13px;color:var(--mute)}
 .secnav button.on{background:var(--acc);color:var(--onacc);font-weight:600;border:0}
 .secnav button.dot::after{top:5px;right:6px}
+/* Page header (Back, the page name, an action), stuck to the top. Pages opened on top (.screen.page) have no top
+   padding; the calculators sit in the Tools tab, which does (more on iPhone, for the notch), so their bar starts that
+   far up and is pinned that far up, or content scrolled through the gap above it. */
 .pagebar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;margin:0 -16px 12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg)}
+#toolbody>.pagebar{top:calc(-16px - env(safe-area-inset-top,0px));margin-top:calc(-16px - env(safe-area-inset-top,0px));padding-top:calc(10px + env(safe-area-inset-top,0px))}
 .pagebar b{font-size:17px}
 .pback{width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer}
 
@@ -371,6 +381,7 @@ button.chipline .chev{margin-left:auto;font-style:normal;font-size:20px;opacity:
   .screen{padding:calc(24px + env(safe-area-inset-top,0px)) calc(24px + max(0px,(100% - 860px)/2)) 40px}
   .screen.page{padding-top:0}
   .pagebar{margin:0 -24px 16px;padding-left:24px;padding-right:24px}
+  #toolbody>.pagebar{top:calc(-24px - env(safe-area-inset-top,0px));margin-top:calc(-24px - env(safe-area-inset-top,0px));padding-top:calc(34px + env(safe-area-inset-top,0px))}
   .fbar,body.typing .screen .fbar{bottom:-40px}
   /* Properties two to a row (calculators: see Desktop calculators below). */
   /* Home and Properties get a wider column (dashboard, table); other pages stay at the reading width. */

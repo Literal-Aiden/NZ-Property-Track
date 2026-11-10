@@ -310,3 +310,9 @@ document.addEventListener('touchend',function(){
   }else{b.style.transform='';bg.style.opacity='';setTimeout(function(){sdReset(b,bg)},200)}
 });
 document.addEventListener('touchcancel',function(){if(sdBox){sdReset(sdBox,sdBg);sdBox=null}});
+// On a property page, notes when its section tabs are stuck at the top, so the strip behind the iPhone's status bar is
+// filled in (#p1.secstuck in layout.css) and content doesn't scroll behind the clock.
+$('p1').addEventListener('scroll',function(){
+  var s=this.querySelector('.secnav');if(!s)return;
+  this.classList.toggle('secstuck',s.getBoundingClientRect().top<=parseFloat(getComputedStyle(s).top)+1&&this.scrollTop>0);
+},{passive:true});
