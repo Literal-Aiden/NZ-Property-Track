@@ -8,6 +8,10 @@ body{overflow:hidden}
 @keyframes fadein{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.screen.on{animation:none}}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);align-items:start;background:var(--card);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px))}
+/* On iPhone's home-screen app the page can stop short of the bottom edge, leaving a strip below the tab bar.
+   The page behind (html) and an extension under the bar both take the bar's colour, so the strip blends in. */
+html{background:var(--card)}
+.nav::after{content:"";position:absolute;left:0;right:0;top:100%;height:120px;background:inherit}
 body.typing .nav{display:none}
 .nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--mute);font:inherit;font-size:11px;padding:4px 0;cursor:pointer}
 .nav button .ic{width:22px;height:22px}
@@ -243,6 +247,7 @@ button.r{cursor:pointer}
    with a shadow to lift it, centred in the space between the sidebar and the card; it scrolls with the mouse wheel or
    trackpad, but its rows can't be clicked during the tour. */
 @media (min-width:900px){
+  .nav::after{display:none}
   .sheet.tour,.sheet.tour.top{justify-content:flex-end;align-items:flex-end;padding:24px}
   .tourbox{width:380px;min-height:356px;max-height:calc(100vh - 48px);display:flex;flex-direction:column}
   .tourbox .tdots{margin-top:auto}

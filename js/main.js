@@ -278,3 +278,27 @@ render();drawTools();show('home');
 if(window.matchMedia){var wq=matchMedia('(min-width:900px)'),wr=function(){list();drawHome()};if(wq.addEventListener)wq.addEventListener('change',wr);else if(wq.addListener)wq.addListener(wr)}
 // First start: the welcome tour, then (once it closes) getting set up. Otherwise getting set up, if it hasn't been shown.
 if(!tourSeen())openTour();else setTimeout(obMaybe,1000);
+// Slide-up panels (the + menu, the edit panel, getting set up, the dropdown picker) close with a swipe down, like the
+// phone's own sheets: the iPhone home-screen app has no Back gesture, and tapping above a tall panel is a small target.
+// The panel follows the finger from its top (only when it's scrolled to the top, so scrolling it still works), and
+// closes past 90px or on a quick flick, the same way as tapping outside it; otherwise it springs back. Phones only.
+var sdBox=null,sdY=0,sdD=0,sdT=0;
+document.addEventListener('touchstart',function(e){
+  var b=e.target.closest('.sheet:not(.tour)>.sheetbox');sdBox=null;
+  if(!b||wide()||b.scrollTop>0||e.touches.length>1||e.target.closest('input,textarea,.sugg'))return;
+  sdBox=b;sdY=e.touches[0].clientY;sdD=0;sdT=Date.now();b.style.transition='none';
+},{passive:true});
+document.addEventListener('touchmove',function(e){
+  if(!sdBox)return;var d=e.touches[0].clientY-sdY;
+  // Moving up, or the panel has scrolled: it's a scroll, not a swipe.
+  if((d<0&&!sdD)||sdBox.scrollTop>0){sdBox.style.transform='';sdBox.style.transition='';sdBox=null;return}
+  sdD=Math.max(0,d);sdBox.style.transform='translateY('+sdD+'px)';if(e.cancelable)e.preventDefault();
+},{passive:false});
+document.addEventListener('touchend',function(){
+  var b=sdBox;if(!b)return;sdBox=null;b.style.transition='transform .2s ease-out';
+  if(sdD>90||(sdD>30&&sdD/(Date.now()-sdT)>.5)){
+    b.style.transform='translateY(100%)';
+    setTimeout(function(){b.parentNode.querySelector('.sheetbg').click();b.style.transform='';b.style.transition=''},180);
+  }else{b.style.transform='';setTimeout(function(){b.style.transition=''},200)}
+});
+document.addEventListener('touchcancel',function(){if(sdBox){sdBox.style.transform='';sdBox.style.transition='';sdBox=null}});
