@@ -333,3 +333,13 @@ document.addEventListener('focusin',function(e){
   var end=function(){try{if(document.activeElement===t){var n=t.value.length;t.setSelectionRange(n,n)}}catch(x){}};
   setTimeout(end,0);setTimeout(end,80);
 });
+// iPhone home-screen app: the page can stop short of the screen's bottom edge (iOS reports a window shorter than the
+// screen), so the tab bar sat that far up, with its space for the home indicator added on top: lots of empty space
+// under it. The gap is measured and the bar moved down by it (--navgap in layout.css), to the real bottom edge.
+// Elsewhere the window is the full screen (or it's not an iPhone app), so the gap is 0 and nothing moves.
+function navGap(){
+  var g=0;
+  if(IOS&&standalone){var full=innerWidth<innerHeight?screen.height:screen.width;g=Math.max(0,Math.min(100,full-innerHeight))}
+  document.documentElement.style.setProperty('--navgap',g+'px');
+}
+navGap();window.addEventListener('resize',navGap);window.addEventListener('orientationchange',function(){setTimeout(navGap,300)});

@@ -51,7 +51,9 @@ var testArm=null,testT=null;
 function testCard(){
   function btn(x,label,cls){return '<button class="go'+(cls||'')+'" data-x="'+x+'">'+(testArm===x?'Tap again to confirm':label)+'</button>'}
   return '<div class="card">'+hd('alert','Testing')+'<p class="sub" style="margin-top:4px">Temporary, for trying the app out. Both replace everything on this device, including receipts and photos.</p>'+
-    '<div class="btns">'+btn('tsample','Load example properties')+btn('tclear','Clear all data',' ghost')+'</div></div>';
+    '<div class="btns">'+btn('tsample','Load example properties')+btn('tclear','Clear all data',' ghost')+'</div>'+
+    // Screen measurements, to check the tab bar sits right on iPhone (window vs screen height, safe areas, the gap moved down).
+    '<p class="sub" style="margin-top:12px;font-size:12px">'+screenInfo()+'</p></div>';
 }
 function testRun(x){
   if(testArm!==x){testArm=x;clearTimeout(testT);testT=setTimeout(function(){testArm=null;drawSettings()},4000);drawSettings();return}
@@ -140,3 +142,8 @@ $('setbody').addEventListener('click',function(e){
   if(b.dataset.x==='inst'&&installEvt){installEvt.prompt();installEvt=null;banner();drawSettings()}
 });
 $('setbody').addEventListener('change',function(e){if(e.target.classList.contains('bkin')&&e.target.files[0])readBackup(e.target.files[0])});
+function screenInfo(){
+  var p=document.createElement('div');p.style.cssText='position:fixed;visibility:hidden;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)';document.body.appendChild(p);
+  var cs=getComputedStyle(p),t=parseFloat(cs.paddingTop),b=parseFloat(cs.paddingBottom);p.remove();
+  return 'Screen '+screen.width+'×'+screen.height+' · window '+innerWidth+'×'+innerHeight+' · safe top '+t+', bottom '+b+' · gap '+(getComputedStyle(document.documentElement).getPropertyValue('--navgap').trim()||'0px')+(standalone?' · app':' · browser');
+}

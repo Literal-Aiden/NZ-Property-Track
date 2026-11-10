@@ -7,7 +7,7 @@ body{overflow:hidden}
 .screen.page{padding-top:0}
 @keyframes fadein{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.screen.on{animation:none}}
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);align-items:start;background:var(--card);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px))}
+.nav{position:fixed;left:0;right:0;bottom:calc(0px - var(--navgap,0px));z-index:20;display:grid;grid-template-columns:repeat(5,1fr);align-items:start;background:var(--card);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px))}
 /* On iPhone's home-screen app the page can stop short of the bottom edge, leaving a strip below the tab bar.
    The page behind (html) and an extension under the bar both take the bar's colour, so the strip blends in. */
 html{background:var(--card)}
