@@ -12,7 +12,7 @@ function tres(big,label,lines,note){
     '<div class="lines">'+lines.filter(Boolean).map(function(l){return '<div><span>'+l[0]+'</span><b class="'+(l[2]||'')+'">'+l[1]+'</b></div>'}).join('')+'</div>'+
     (note?'<p class="sub" style="margin-top:10px">'+note+'</p>':'');
 }
-var LOANT=[['pi','Principal & interest'],['io','Interest-only']];
+var LOANT=[['pi','P&I','Principal and interest'],['io','Interest-only']];
 function hasLoan(v){return v.loan>0}
 function isTier(v){return v.ctype==='tier'}
 var GST=0.15;   // NZ standard GST rate; fixed here at the owner's request rather than a field
@@ -41,7 +41,7 @@ var TOOLS=[
   from:function(p){var L=parts(p);return L.length&&{loan:p.loan,rate:p.rate,term:L[0].term||30,type:L[0].ltype||'pi'}},
   f:[{i:'loan',l:'Loan amount',k:'m'},{i:'rate',l:'Interest rate %',k:'n'},
      {i:'term',l:'Term in years',k:'n',d:'30'},{i:'freq',l:'Pay',k:'s',d:'12',o:[['12','Monthly'],['26','Fortnightly'],['52','Weekly']]},
-     {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT,wide:1}],
+     {i:'type',l:'Loan type',k:'s',sw:1,d:'pi',o:LOANT,wide:1}],
   calc:function(v){
     if(!v.loan||!v.rate)return '';
     var ppy=+v.freq,io=v.type==='io',term=v.term||30,per=repayP(v.loan,v.rate,term,ppy,io),alt=repayP(v.loan,v.rate,term,ppy,!io),word={12:'month',26:'fortnight',52:'week'}[ppy];
@@ -63,7 +63,7 @@ var TOOLS=[
      {i:'exp',l:'Annual expenses',k:'m',opt:1,ph:'Rates, insurance, maintenance',show:function(v){return v.inc!=='none'}},
      {i:'pm',l:'Management fee %',k:'n',opt:1,ph:'Blank if none',show:function(v){return v.inc!=='none'}},
      {i:'loan',l:'Loan amount',k:'m',grp:'Mortgage',show:function(v){return v.inc==='all'}},{i:'rate',l:'Interest rate %',k:'n',show:function(v){return v.inc==='all'}},
-     {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT,show:function(v){return v.inc==='all'}},{i:'term',l:'Remaining term in years',k:'n',d:'30',show:function(v){return v.inc==='all'}},
+     {i:'type',l:'Loan type',k:'s',sw:1,d:'pi',o:LOANT,show:function(v){return v.inc==='all'}},{i:'term',l:'Remaining term in years',k:'n',d:'30',show:function(v){return v.inc==='all'}},
      {i:'dep',l:'Cash you put in',k:'m',opt:1,wide:1,ph:'Deposit plus purchase costs',show:function(v){return v.inc==='all'}}],
   calc:function(v){
     if(!v.price||!v.rent)return '';
@@ -90,7 +90,7 @@ var TOOLS=[
   f:[{i:'rates',l:'Rates per year',k:'m'},{i:'ins',l:'Insurance per year',k:'m'},
      {i:'power',l:'Power / month',k:'m',opt:1},{i:'oth',l:'Other / month',k:'m',opt:1,ph:'e.g. water, lawns'},
      {i:'loan',l:'Loan amount',k:'m',opt:1},{i:'rate',l:'Interest rate %',k:'n',show:hasLoan},
-     {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT,show:hasLoan},{i:'term',l:'Term in years',k:'n',d:'30',show:hasLoan},
+     {i:'type',l:'Loan type',k:'s',sw:1,d:'pi',o:LOANT,show:hasLoan},{i:'term',l:'Term in years',k:'n',d:'30',show:hasLoan},
      {i:'months',l:'Months held',k:'n',opt:1,wide:1}],
   calc:function(v){
     var x={rates:v.rates,ins:v.ins,power:v.power,oth:v.oth,loan:v.loan,rate:v.rate,ltype:v.type,term:v.term},m=holdOf(x),r=repay(x);if(!m)return '';
@@ -109,7 +109,7 @@ var TOOLS=[
       pm:p.type==='rental'&&p.mgmt||'',cur:p.type==='rental'||pt&&p.intent==='rent'?p.rent||0:0};
   },
   f:[{i:'loan',l:'Loan amount',k:'m'},{i:'rate',l:'Interest rate %',k:'n'},
-     {i:'type',l:'Loan type',k:'s',d:'pi',o:LOANT},{i:'term',l:'Term in years',k:'n',d:'30'},
+     {i:'type',l:'Loan type',k:'s',sw:1,d:'pi',o:LOANT},{i:'term',l:'Term in years',k:'n',d:'30'},
      {i:'rates',l:'Rates per year',k:'m',opt:1},{i:'ins',l:'Insurance per year',k:'m',opt:1},
      {i:'maint',l:'Maintenance / year',k:'m',opt:1},{i:'oth',l:'Other / year',k:'m',opt:1},
      {i:'pm',l:'Management fee %',k:'n',opt:1},{i:'vac',l:'Vacant weeks / year',k:'n',opt:1},
@@ -156,9 +156,12 @@ function toolById(id){return TOOLS.filter(function(t){return t.id===id})[0]}
 // A field with grp starts a small group heading (shown and hidden with it). A top field is a switch at the top of the
 // calculator instead (see tswitch()), not in the grid.
 function tfield(f){
-  var id='q_'+f.i,inp=f.k==='s'?'<select id="'+id+'">'+f.o.map(function(o){return '<option value="'+o[0]+'">'+esc(o[1])+'</option>'}).join('')+'</select>'
+  // A choice field (k 's') is a dropdown, or with sw a row of buttons like the property forms' switches (loan type), its
+  // value in a hidden input so it's read, remembered, filled in and cleared like the dropdowns.
+  var id='q_'+f.i,inp=f.k==='s'&&f.sw?'<div class="seg tsw tfsw">'+f.o.map(function(o){return '<button data-qs="'+f.i+'" data-v="'+o[0]+'"'+(o[2]?' aria-label="'+o[2]+'" title="'+o[2]+'"':'')+'>'+esc(o[1])+'</button>'}).join('')+'</div><input type="hidden" id="'+id+'">'
+    :f.k==='s'?'<select id="'+id+'">'+f.o.map(function(o){return '<option value="'+o[0]+'">'+esc(o[1])+'</option>'}).join('')+'</select>'
     :'<input id="'+id+'"'+(f.ph?' placeholder="'+esc(f.ph)+'"':'')+(f.k==='m'?MONEY:NUM);
-  return (f.grp?'<p class="grp wide tgrp" id="g_'+f.i+'">'+f.grp+'</p>':'')+'<div id="w_'+f.i+'"'+(f.wide?' class="wide"':'')+'><label>'+f.l+(f.opt?OPT:'')+'</label>'+inp+'</div>';
+  return (f.grp?'<p class="grp wide tgrp" id="g_'+f.i+'">'+f.grp+'</p>':'')+'<div id="w_'+f.i+'"'+(f.wide||f.sw?' class="wide"':'')+'><label>'+f.l+(f.opt?OPT:'')+'</label>'+inp+'</div>';
 }
 // A top field: a switch of its options (o) above everything else, with a one-line hint for the chosen one (hint), so
 // the choice decides which fields show. Its value sits in a hidden input, read like any other field.
@@ -192,7 +195,8 @@ function tcalc(){
   var t=toolById(toolCur),raw={},v=tread(t,raw);toolSave(t.id,raw);
   t.f.forEach(function(f){
     if(f.show){var d=f.show(v)?'':'none';$('w_'+f.i).style.display=d;if(f.grp)$('g_'+f.i).style.display=d}
-    if(f.top){document.querySelectorAll('[data-qs="'+f.i+'"]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v[f.i])});$('h_'+f.i).textContent=(f.hint||{})[v[f.i]]||''}
+    if(f.top||f.sw)document.querySelectorAll('[data-qs="'+f.i+'"]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v[f.i])});
+    if(f.top)$('h_'+f.i).textContent=(f.hint||{})[v[f.i]]||'';
   });
   // Nothing to show yet: on a phone a line under the fields; on a wide screen the result card says what will go there.
   $('q_out').innerHTML=t.calc(v)||'<div class="tempty"><span class="tico">'+ic(t.icon)+'</span><b>Your result shows here</b><p class="sub">Fill in the fields to see the result.</p></div>';
