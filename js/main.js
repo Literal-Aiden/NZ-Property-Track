@@ -282,10 +282,16 @@ if(!tourSeen())openTour();else setTimeout(obMaybe,1000);
 // phone's own sheets: the iPhone home-screen app has no Back gesture, and tapping above a tall panel is a small target.
 // The panel follows the finger from its top (only when it's scrolled to the top, so scrolling it still works), and
 // closes past 90px or on a quick flick, the same way as tapping outside it; otherwise it springs back. Phones only.
-// To keep it smooth on iPhone: the panel is moved as one layer (will-change), once per screen refresh, the dim fades
-// with it, and iOS's own bounce is off for the panels (overscroll-behavior on .sheetbox in styles.css) so it doesn't fight the drag.
-var sdBox=null,sdBg=null,sdY=0,sdD=0,sdT=0,sdF=0,sdH=1;
-function sdSet(){sdF=0;if(!sdBox)return;sdBox.style.transform='translate3d(0,'+sdD+'px,0)';sdBg.style.opacity=Math.max(.3,1-sdD/sdH)}
+// Smoothness on iPhone: a panel whose content fits has touch-action none (.fits), so iOS doesn't run its own scrolling
+// alongside the drag (that made dragging the + menu lag); the panel moves as one layer, straight from each touch; the
+// dim fades with it; and iOS's bounce is off for the panels (overscroll-behavior on .sheetbox in styles.css).
+function sdFit(b){b.classList.toggle('fits',b.scrollHeight<=b.clientHeight+1)}
+(function(){
+  var boxes=[].slice.call(document.querySelectorAll('.sheet:not(.tour)>.sheetbox')),mo=new MutationObserver(function(){boxes.forEach(sdFit)});
+  boxes.forEach(function(b){mo.observe(b.parentNode,{attributes:true,attributeFilter:['hidden']});mo.observe(b,{childList:true,subtree:true})});
+  window.addEventListener('resize',function(){boxes.forEach(sdFit)});
+})();
+var sdBox=null,sdBg=null,sdY=0,sdD=0,sdT=0,sdH=1;
 function sdReset(b,bg){b.style.transform='';b.style.transition='';b.style.willChange='';bg.style.opacity='';bg.style.transition='';bg.style.willChange=''}
 document.addEventListener('touchstart',function(e){
   var b=e.target.closest('.sheet:not(.tour)>.sheetbox');sdBox=null;
@@ -297,10 +303,11 @@ document.addEventListener('touchmove',function(e){
   if(!sdBox)return;var d=e.touches[0].clientY-sdY;
   // Moving up, or the panel has scrolled: it's a scroll, not a swipe.
   if((d<0&&!sdD)||sdBox.scrollTop>0){sdReset(sdBox,sdBg);sdBox=null;return}
-  sdD=Math.max(0,d);if(e.cancelable)e.preventDefault();if(!sdF)sdF=requestAnimationFrame(sdSet);
+  if(e.cancelable)e.preventDefault();
+  sdD=Math.max(0,d);sdBox.style.transform='translate3d(0,'+sdD+'px,0)';sdBg.style.opacity=Math.max(.3,1-sdD/sdH);
 },{passive:false});
 document.addEventListener('touchend',function(){
-  var b=sdBox,bg=sdBg;if(!b)return;sdBox=null;if(sdF){cancelAnimationFrame(sdF);sdF=0}
+  var b=sdBox,bg=sdBg;if(!b)return;sdBox=null;
   b.style.transition='transform .2s ease-out';bg.style.transition='opacity .2s ease-out';
   if(sdD>90||(sdD>30&&sdD/(Date.now()-sdT)>.5)){
     b.style.transform='translate3d(0,100%,0)';bg.style.opacity='0';
