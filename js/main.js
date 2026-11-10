@@ -305,11 +305,29 @@ function sdFit(b){
   boxes.forEach(function(b){
     var sh=b.parentNode,bg=sh.querySelector('.sheetbg');
     mo.observe(sh,{attributes:true,attributeFilter:['hidden']});mo.observe(b,{childList:true,subtree:true});
+    // Slides the panel the rest of the way down and closes it (the same way as tapping outside it), from wherever the
+    // finger left it. Turning off scrolling first stops iPhone's own glide, which was slow to finish.
+    var shut=function(){
+      sh._up=false;sh.style.overflowY='hidden';
+      b.style.transition='transform .18s ease-in';b.style.transform='translate3d(0,'+b.offsetHeight+'px,0)';
+      bg.style.transition='opacity .18s ease-in';bg.style.opacity='0';
+      setTimeout(function(){bg.click();sh.hidden=true;sh.style.overflowY='';b.style.transition='';b.style.transform='';bg.style.transition='';bg.style.opacity=''},180);
+    };
     sh.addEventListener('scroll',function(){
       if(!sh._up||sh.hidden||!sh.classList.contains('native'))return;
-      var max=sh.scrollHeight-sh.clientHeight;bg.style.opacity=max>0?Math.min(1,sh.scrollTop/max):'';
-      // Shut: close it, but only after a touch (iPhone can scroll it by itself, e.g. when the keyboard opens).
-      if(sh.scrollTop<=1){if(Date.now()-(sh._touch||0)<1500){sh._up=false;bg.click();sh.hidden=true;bg.style.opacity=''}else sh.scrollTop=sh.scrollHeight}
+      var max=sh.scrollHeight-sh.clientHeight,now=Date.now(),t=sh.scrollTop;
+      if(sh._lt&&now>sh._lt)sh._v=(sh._lp-t)/(now-sh._lt);sh._lp=t;sh._lt=now; // downward speed, px per ms
+      bg.style.opacity=max>0?Math.min(1,t/max):'';
+      // Glided shut after a touch: close. Scrolled shut without one (iPhone can, e.g. when the keyboard opens): back up.
+      if(t<=1){if(now-(sh._touch||0)<4000)shut();else sh.scrollTop=sh.scrollHeight}
+    },{passive:true});
+    // Finger lifted after pulling it down more than 90px, or flicking it down: close now, rather than waiting for the
+    // snap to finish (slow on iPhone). Otherwise it snaps back up.
+    sh.addEventListener('touchstart',function(){sh._v=0;sh._lt=0},{passive:true});
+    sh.addEventListener('touchend',function(){
+      if(!sh._up||!sh.classList.contains('native'))return;
+      var d=sh.scrollHeight-sh.clientHeight-sh.scrollTop,v=Date.now()-(sh._lt||0)<120?sh._v||0:0;
+      if(d>90||(d>20&&v>.4))shut();
     },{passive:true});
     sh.addEventListener('click',function(e){if(e.target===sh&&sh.classList.contains('native'))bg.click()});
     ['touchstart','touchmove','touchend'].forEach(function(t){sh.addEventListener(t,function(){sh._touch=Date.now()},{passive:true})});

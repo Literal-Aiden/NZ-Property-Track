@@ -126,7 +126,9 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
   .sheet.native::-webkit-scrollbar{display:none}
   .sheet.native::before{content:"";display:block;height:100%;scroll-snap-align:start}
   .sheet.native>.sheetbg{position:fixed;z-index:-1}
-  .sheet.native>.sheetbox{scroll-snap-align:end;overflow-y:hidden}
+  /* overscroll-behavior back to auto: Chrome (Android) still counts the panel as a scroll box and, set to none, it kept
+     the finger's scroll from reaching the sheet, so it didn't move at all. */
+  .sheet.native>.sheetbox{scroll-snap-align:end;overflow-y:hidden;overscroll-behavior:auto}
 }
 .sheetbox::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 10px}
 .sheetbox .card{margin:0}
