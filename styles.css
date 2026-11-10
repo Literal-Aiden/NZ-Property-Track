@@ -1,6 +1,6 @@
 /* Pōhutukawa red on sand. --acc: buttons, links, selected states. --good: equity, profit, progress. --warn: over budget, overdue.
    --ty-project, --ty-rental, --ty-potential: telling property types apart (Properties list and table). */
-:root{--bg:#faf6f0;--card:#fff;--ink:#2a2220;--mute:#76665f;--line:#eadfd3;--acc:#c2412d;--acc2:#fbe8e3;--good:#2f855a;--warn:#a0620e;--onacc:#fff;--ty-project:#b5542f;--ty-rental:#3d7a5a;--ty-potential:#5a6688;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--sab:env(safe-area-inset-bottom,0px);--bg:#faf6f0;--card:#fff;--ink:#2a2220;--mute:#76665f;--line:#eadfd3;--acc:#c2412d;--acc2:#fbe8e3;--good:#2f855a;--warn:#a0620e;--onacc:#fff;--ty-project:#b5542f;--ty-rental:#3d7a5a;--ty-potential:#5a6688;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:var(--sab)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1715;--card:#2a2320;--ink:#f3ece8;--mute:#b3a39b;--line:#3d332e;--acc:#f0806b;--acc2:#3d2622;--good:#5fbf8a;--warn:#e0a84a;--onacc:#1c1715;--ty-project:#e8916b;--ty-rental:#7fc09b;--ty-potential:#9eabcb;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#1c1715;--card:#2a2320;--ink:#f3ece8;--mute:#b3a39b;--line:#3d332e;--acc:#f0806b;--acc2:#3d2622;--good:#5fbf8a;--warn:#e0a84a;--onacc:#1c1715;--ty-project:#e8916b;--ty-rental:#7fc09b;--ty-potential:#9eabcb;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -118,7 +118,7 @@ label.rcadd{width:72px;height:72px;margin:0;display:flex;align-items:center;just
 .sheet{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;justify-content:flex-end}
 .sheet[hidden]{display:none}
 .sheetbg{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-.sheetbox{position:relative;max-height:90vh;overflow-y:auto;overscroll-behavior-y:none;background:var(--bg);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
+.sheetbox{position:relative;max-height:90vh;overflow-y:auto;overscroll-behavior-y:none;background:var(--bg);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + var(--sab));animation:up .2s ease-out}
 /* A panel whose content fits (.fits, main.js) isn't a scroll area at all on phones: iPhone treats a scroll area specially,
    and moving one with the finger (swipe to close) lagged; a plain box slides smoothly. */
 @media (max-width:899px){.sheetbox.fits{overflow-y:hidden}.sheetbox.fits,.sheetbox.fits *{touch-action:none}}
@@ -167,7 +167,7 @@ i.opt{font-style:normal;font-size:11px;color:var(--mute);background:var(--bg);bo
 .prop .chev{font-style:normal;font-size:24px;color:var(--mute);flex:none}
 .card.cur{border-color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
 .stat.wide{grid-column:1/-1}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2500;max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:14px;animation:fadeup .2s ease-out}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(16px + var(--sab));z-index:2500;max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:14px;animation:fadeup .2s ease-out}
 .toast[hidden]{display:none}
 .toast{touch-action:none;cursor:grab}
 .toast span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

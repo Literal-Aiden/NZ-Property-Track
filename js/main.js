@@ -333,13 +333,21 @@ document.addEventListener('focusin',function(e){
   var end=function(){try{if(document.activeElement===t){var n=t.value.length;t.setSelectionRange(n,n)}}catch(x){}};
   setTimeout(end,0);setTimeout(end,80);
 });
-// iPhone home-screen app: the page can stop short of the screen's bottom edge (iOS reports a window shorter than the
-// screen), so the tab bar sat that far up, with its space for the home indicator added on top: lots of empty space
-// under it. The gap is measured and the bar moved down by it (--navgap in layout.css), to the real bottom edge.
-// Elsewhere the window is the full screen (or it's not an iPhone app), so the gap is 0 and nothing moves.
+// iPhone home-screen app: iOS can give the app a window shorter than the screen (on an iPhone 15 Pro, 793 of 852:
+// the status bar's height is cut off the bottom), yet still report the home indicator's 34px of safe area. The space
+// below the window isn't the app's to draw in (iOS fills it with the manifest's background colour), so the tab bar
+// sat at the window's bottom with that 34px added on top: lots of empty space. When the window already stops above
+// the home indicator, the safe area at the bottom (--sab, used for all bottom spacing) is reduced by the gap, and the
+// bar takes the background colour (html.iosgap), so it runs on into iOS's strip below. Elsewhere nothing changes.
 function navGap(){
-  var g=0;
-  if(IOS&&standalone){var full=innerWidth<innerHeight?screen.height:screen.width;g=Math.max(0,Math.min(100,full-innerHeight))}
-  document.documentElement.style.setProperty('--navgap',g+'px');
+  var r=document.documentElement,g=0;r.style.removeProperty('--sab');r.classList.remove('iosgap');
+  if(IOS&&standalone){var full=innerWidth<innerHeight?screen.height:screen.width;g=Math.max(0,full-innerHeight)}
+  if(!g)return;
+  var p=document.createElement('div');p.style.cssText='position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom,0px)';
+  document.body.appendChild(p);var sb=parseFloat(getComputedStyle(p).paddingBottom)||0;p.remove();
+  r.style.setProperty('--sab',Math.max(0,sb-g)+'px');r.classList.add('iosgap');
 }
-navGap();window.addEventListener('resize',navGap);window.addEventListener('orientationchange',function(){setTimeout(navGap,300)});
+navGap();
+window.addEventListener('resize',navGap);window.addEventListener('orientationchange',function(){setTimeout(navGap,300)});
+window.addEventListener('pageshow',navGap);document.addEventListener('visibilitychange',function(){if(!document.hidden)navGap()});
+setTimeout(navGap,500);setTimeout(navGap,1500); // the window can settle to its final size a moment after the app opens

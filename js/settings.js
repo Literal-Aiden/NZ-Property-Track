@@ -145,5 +145,5 @@ $('setbody').addEventListener('change',function(e){if(e.target.classList.contain
 function screenInfo(){
   var p=document.createElement('div');p.style.cssText='position:fixed;visibility:hidden;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)';document.body.appendChild(p);
   var cs=getComputedStyle(p),t=parseFloat(cs.paddingTop),b=parseFloat(cs.paddingBottom);p.remove();
-  return 'Screen '+screen.width+'×'+screen.height+' · window '+innerWidth+'×'+innerHeight+' · safe top '+t+', bottom '+b+' · gap '+(getComputedStyle(document.documentElement).getPropertyValue('--navgap').trim()||'0px')+(standalone?' · app':' · browser');
+  return 'Screen '+screen.width+'×'+screen.height+' · window '+innerWidth+'×'+innerHeight+' · safe top '+t+', bottom '+b+' · gap '+Math.max(0,(innerWidth<innerHeight?screen.height:screen.width)-innerHeight)+' · bottom space used '+(document.documentElement.style.getPropertyValue('--sab')||b+'px')+(standalone?' · app':' · browser');
 }
