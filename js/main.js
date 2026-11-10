@@ -323,3 +323,13 @@ $('p1').addEventListener('scroll',function(){
   var s=this.querySelector('.secnav');if(!s)return;
   this.classList.toggle('secstuck',s.getBoundingClientRect().top<=parseFloat(getComputedStyle(s).top)+1&&this.scrollTop>0);
 },{passive:true});
+// iPhone: a tap near the top edge of a field put the cursor before the text, while a tap in the middle put it at the
+// end. So a tap into a field that isn't being typed in yet always puts the cursor at the end. Once it is, taps place the
+// cursor as normal, and a mouse click is left alone. (Set again a moment later, as iOS can place the cursor after focus.)
+var tapField=0;
+document.addEventListener('touchstart',function(e){var t=e.target;if(t.matches&&t.matches('input,textarea')&&t!==document.activeElement)tapField=Date.now()},{passive:true});
+document.addEventListener('focusin',function(e){
+  var t=e.target;if(Date.now()-tapField>1000||!(t.tagName==='TEXTAREA'||/^(text|search|email|tel|url)$/.test(t.type)))return;tapField=0;
+  var end=function(){try{if(document.activeElement===t){var n=t.value.length;t.setSelectionRange(n,n)}}catch(x){}};
+  setTimeout(end,0);setTimeout(end,80);
+});
