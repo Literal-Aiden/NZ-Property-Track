@@ -201,3 +201,10 @@ input.bad,select.bad{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
 :root[data-accent="pounamu"][data-theme="dark"]{--acc:#5ec4b8;--acc2:#1a3431}
 :root[data-accent="twilight"][data-theme="dark"]{--acc:#c39be0;--acc2:#33263d}
 :root[data-accent="ironsand"][data-theme="dark"]{--acc:#e2ddd8;--acc2:#3a3532;--hero1:#6e6663;--hero2:#45403d}
+/* Date fields on iPhone: Safari gives them a fixed minimum width (and centres the date), so in two-column rows they
+   ran past the right edge. Only for iOS (-webkit-touch-callout), so other browsers keep their calendar button. */
+.fgrid>*,.fld{min-width:0}
+@supports (-webkit-touch-callout:none){
+  input[type=date]{-webkit-appearance:none;appearance:none;box-sizing:border-box;min-width:0;max-width:100%;min-height:44px;text-align:left}
+  input[type=date]::-webkit-date-and-time-value{text-align:left}
+}

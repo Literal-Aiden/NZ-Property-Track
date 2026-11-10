@@ -286,12 +286,12 @@ if(!tourSeen())openTour();else setTimeout(obMaybe,1000);
 // with it, and iOS's own bounce is off for the panels (overscroll-behavior on .sheetbox in styles.css) so it doesn't fight the drag.
 var sdBox=null,sdBg=null,sdY=0,sdD=0,sdT=0,sdF=0,sdH=1;
 function sdSet(){sdF=0;if(!sdBox)return;sdBox.style.transform='translate3d(0,'+sdD+'px,0)';sdBg.style.opacity=Math.max(.3,1-sdD/sdH)}
-function sdReset(b,bg){b.style.transform='';b.style.transition='';b.style.willChange='';bg.style.opacity='';bg.style.transition=''}
+function sdReset(b,bg){b.style.transform='';b.style.transition='';b.style.willChange='';bg.style.opacity='';bg.style.transition='';bg.style.willChange=''}
 document.addEventListener('touchstart',function(e){
   var b=e.target.closest('.sheet:not(.tour)>.sheetbox');sdBox=null;
   if(!b||wide()||b.scrollTop>0||e.touches.length>1||e.target.closest('input,textarea,.sugg'))return;
   sdBox=b;sdBg=b.parentNode.querySelector('.sheetbg');sdY=e.touches[0].clientY;sdD=0;sdT=Date.now();sdH=b.offsetHeight||1;
-  b.style.transition='none';b.style.willChange='transform';sdBg.style.transition='none';
+  b.style.transition='none';b.style.willChange='transform';sdBg.style.transition='none';sdBg.style.willChange='opacity';
 },{passive:true});
 document.addEventListener('touchmove',function(e){
   if(!sdBox)return;var d=e.touches[0].clientY-sdY;
@@ -304,7 +304,9 @@ document.addEventListener('touchend',function(){
   b.style.transition='transform .2s ease-out';bg.style.transition='opacity .2s ease-out';
   if(sdD>90||(sdD>30&&sdD/(Date.now()-sdT)>.5)){
     b.style.transform='translate3d(0,100%,0)';bg.style.opacity='0';
-    setTimeout(function(){bg.click();sdReset(b,bg)},190);
+    // Hide it straight away: the close goes through the browser's history (ovClose), which on iPhone can take a moment,
+    // and resetting the slide before then showed the panel again for a split second.
+    setTimeout(function(){var sh=b.parentNode;bg.click();sh.hidden=true;sdReset(b,bg)},190);
   }else{b.style.transform='';bg.style.opacity='';setTimeout(function(){sdReset(b,bg)},200)}
 });
 document.addEventListener('touchcancel',function(){if(sdBox){sdReset(sdBox,sdBg);sdBox=null}});
