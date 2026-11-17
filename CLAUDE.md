@@ -239,6 +239,6 @@ A bottom tab bar, like most phone apps: **Home · Properties · + · Tools · Se
 
 ## Ideas not yet built
 
-- Before launch: Supabase Pro (free projects pause after a week without use; until then `.github/workflows/keepalive.yml` calls the database's `ping()` every 3 days, delete it after upgrading), remove the Testing card
+- Before launch: Supabase Pro (free projects pause after a week without use; until then `.github/workflows/keepalive.yml` calls the database's `ping()` and touches sign-in and storage daily (every 3 days wasn't enough), delete it after upgrading), remove the Testing card
 - Current bank rates shown as a reference
 - Re-fix reminders as real notifications (e.g. if this becomes a native app); the calendar links are built but hidden

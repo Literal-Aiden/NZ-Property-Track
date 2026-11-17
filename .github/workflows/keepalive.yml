@@ -1,5 +1,6 @@
-# Keeps the free Supabase project from pausing (it pauses after a week without use) by calling the
-# database's ping() function (supabase/schema.sql) every 3 days. It reads no data.
+# Keeps the free Supabase project from pausing (it pauses after a week without use). Every 3 days with a single
+# ping() wasn't enough (Supabase still warned it would pause, Nov 2026), so this runs daily and touches the
+# database, sign-in service and file storage. It reads no data: ping() (supabase/schema.sql) only returns the time.
 # The publishable key is the same one already in js/sync.js, so it's fine to have here.
 # If a run fails, GitHub emails the repo owner. Not needed once Supabase is on a paid plan: delete this file then.
 # Run it by hand from the repo's Actions tab → Keep Supabase awake → Run workflow.
@@ -7,18 +8,27 @@ name: Keep Supabase awake
 
 on:
   schedule:
-    - cron: '17 20 */3 * *' # 20:17 UTC every 3 days (morning in NZ)
+    - cron: '17 20 * * *' # 20:17 UTC every day (morning in NZ)
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    env:
+      SB: https://paybfirkbafkguoxjxfx.supabase.co
+      KEY: sb_publishable_Us4iIb2rvLPBlaV6lxFw1g_QrKp3dnY
     steps:
-      - name: Ping the database
+      - name: Ping the database, sign-in service and storage
         run: |
-          code=$(curl -s -o out.txt -w '%{http_code}' -X POST \
-            'https://paybfirkbafkguoxjxfx.supabase.co/rest/v1/rpc/ping' \
-            -H 'apikey: sb_publishable_Us4iIb2rvLPBlaV6lxFw1g_QrKp3dnY' \
-            -H 'Content-Type: application/json' -d '{}')
-          echo "HTTP $code: $(cat out.txt)"
-          test "$code" = 200
+          fail=0
+          for i in 1 2 3; do
+            code=$(curl -s -o out.txt -w '%{http_code}' -X POST "$SB/rest/v1/rpc/ping" \
+              -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{}')
+            echo "Database ping $i: HTTP $code $(cat out.txt)"
+            [ "$code" = 200 ] || fail=1
+            sleep 5
+          done
+          echo "Sign-in service: HTTP $(curl -s -o /dev/null -w '%{http_code}' "$SB/auth/v1/health" -H "apikey: $KEY")"
+          echo "Sign-in settings: HTTP $(curl -s -o /dev/null -w '%{http_code}' "$SB/auth/v1/settings" -H "apikey: $KEY")"
+          echo "Storage: HTTP $(curl -s -o /dev/null -w '%{http_code}' "$SB/storage/v1/bucket" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")"
+          exit $fail
