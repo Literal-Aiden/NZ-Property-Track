@@ -43,28 +43,35 @@ function setTheme(t){
 }
 function drawSettings(){
   $('setbody').innerHTML='<h1 class="ptitle" style="margin-bottom:14px">Settings</h1>'+syncCard()+backupCard()+taxCard()+themeCard()+installCard()+
-    '<div class="card">'+hd('list','Welcome tour')+'<p class="sub" style="margin-top:4px">A quick look at what the app does and where things are.</p><button class="go ghost" data-x="tour">Show the tour</button></div>'+testCard();
+    '<div class="card">'+hd('list','Welcome tour')+'<p class="sub" style="margin-top:4px">A quick look at what the app does and where things are.</p><button class="go ghost" data-x="tour">Show the tour</button></div>'+sugCard();
 }
-// TEMPORARY, for testers: wipe this device's properties, or swap them for the example ones. Both need a second tap.
-// Remove this card (and its handlers below) before a real launch.
-var testArm=null,testT=null;
-function testCard(){
-  function btn(x,label,cls){return '<button class="go'+(cls||'')+'" data-x="'+x+'">'+(testArm===x?'Tap again to confirm':label)+'</button>'}
-  return '<div class="card">'+hd('alert','Testing')+'<p class="sub" style="margin-top:4px">Temporary, for trying the app out. Both replace everything on this device, including receipts and photos.</p>'+
-    '<div class="btns">'+btn('tsample','Load example properties')+btn('tclear','Clear all data',' ghost')+'</div>'+
-    // Screen measurements, to check the tab bar sits right on iPhone (window vs screen height, safe areas, the gap moved down).
-    '<p class="sub" style="margin-top:12px;font-size:12px">'+screenInfo()+'</p></div>';
+// Suggestions: a note to the app's maker, saved to the suggestions table in Supabase (supabase/schema.sql). Anyone can
+// send one, signed in or not; nobody can read them back through the app (only in the Supabase dashboard). Signed in,
+// the row carries the account's id, so it's known who sent it; signed out, there's an optional name. The device line
+// (phone or computer, browser, app or browser tab, window size, theme) helps make sense of layout problems.
+var sugTx='',sugNm='',sugSt='';
+function sugCard(){
+  var h='<div class="card" id="sug">'+hd('msg','Suggestions')+'<p class="sub" style="margin-top:4px">Something not working, confusing, or missing? Say what you’d change. Every suggestion is read.</p>';
+  if(sugSt==='sent')return h+'<p class="sub" style="margin-top:10px"><b>Thanks, your suggestion was sent.</b></p><button class="go ghost" data-x="sugmore">Send another</button></div>';
+  return h+'<textarea id="sugtx" rows="4" maxlength="4000" placeholder="Your suggestion" aria-label="Your suggestion" style="margin-top:10px">'+esc(sugTx)+'</textarea>'+
+    (auth?'':'<input id="sugnm" maxlength="100" placeholder="Your name (optional)" aria-label="Your name (optional)" value="'+esc(sugNm)+'" style="margin-top:8px">')+
+    '<p class="sub neg" id="sugmsg" style="margin-top:6px" aria-live="polite">'+(sugSt==='err'?'Couldn’t send it'+(navigator.onLine===false?': you’re offline':'')+'. Your text is kept, so try again in a moment.':sugSt==='empty'?'Type your suggestion first.':'')+'</p>'+
+    '<button class="go" data-x="sug"'+(sugSt==='busy'?' disabled':'')+'>'+(sugSt==='busy'?'Sending…':'Send suggestion')+'</button>'+
+    '<p class="sub" style="margin-top:8px;font-size:12px">Sent with '+(auth?'your account and ':'')+'the type of '+dev()+' and browser, to help fix problems.</p></div>';
 }
-function testRun(x){
-  if(testArm!==x){testArm=x;clearTimeout(testT);testT=setTimeout(function(){testArm=null;drawSettings()},4000);drawSettings();return}
-  testArm=null;clearTimeout(testT);
-  rcTx('readwrite',function(s){s.clear()}).catch(function(){}).then(function(){
-    for(var k in RCU)URL.revokeObjectURL(RCU[k]);RCU={};
-    cur=0;resetCur();propFilter='all';
-    if(x==='tsample'){try{localStorage.removeItem(KEY)}catch(e){}props=JSON.parse(JSON.stringify(SAMPLE));isSample=true}
-    else{props=[];save()}
-    render();navTab('home');
-  });
+function sugDevice(){
+  var ua=navigator.userAgent,os=IOS?'iPhone/iPad':/android/i.test(ua)?'Android':/windows/i.test(ua)?'Windows':/mac/i.test(ua)?'Mac':'Other',
+    br=/edg\//i.test(ua)?'Edge':/crios|chrome/i.test(ua)?'Chrome':/fxios|firefox/i.test(ua)?'Firefox':/safari/i.test(ua)?'Safari':'Other';
+  return os+' · '+br+' · '+(standalone?'app':'browser')+' · '+innerWidth+'×'+innerHeight+' · '+(document.documentElement.dataset.theme||'auto');
+}
+function sendSug(){
+  var t=sugTx.trim();if(!t){sugSt='empty';drawSettings();var x=$('sugtx');if(x)x.focus();return}
+  if(sugSt==='busy')return;sugSt='busy';drawSettings();
+  var row={body:t,device:sugDevice()};if(!auth&&sugNm.trim())row.name=sugNm.trim().slice(0,100);
+  (auth?fresh().catch(function(){}):Promise.resolve()).then(function(){
+    if(auth)row.user_id=auth.uid;
+    return sbFetch('/rest/v1/suggestions',{m:'POST',b:row,h:{Prefer:'return=minimal'}});
+  }).then(function(){sugSt='sent';sugTx='';sugNm='';drawSettings()},function(){sugSt='err';drawSettings()});
 }
 function b2d(b){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=no;r.readAsDataURL(b)})}
 function d2b(u){var m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u||''),s=atob(m[3]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]})}
@@ -135,15 +142,16 @@ $('setbody').addEventListener('click',function(e){
   var b=e.target.closest('[data-x]');if(!b)return;
   if(b.dataset.x==='bkdl')exportBackup();
   if(b.dataset.x==='bksh')shareBackup();
-  if(b.dataset.x==='tsample'||b.dataset.x==='tclear')testRun(b.dataset.x);
+  if(b.dataset.x==='sug')sendSug();
+  if(b.dataset.x==='sugmore'){sugSt='';drawSettings()}
   if(b.dataset.x==='bkok')restore();
   if(b.dataset.x==='tour')openTour();
   if(b.dataset.x==='bkno'){bkPend=null;drawSettings()}
   if(b.dataset.x==='inst'&&installEvt){installEvt.prompt();installEvt=null;banner();drawSettings()}
 });
 $('setbody').addEventListener('change',function(e){if(e.target.classList.contains('bkin')&&e.target.files[0])readBackup(e.target.files[0])});
-function screenInfo(){
-  var p=document.createElement('div');p.style.cssText='position:fixed;visibility:hidden;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)';document.body.appendChild(p);
-  var cs=getComputedStyle(p),t=parseFloat(cs.paddingTop),b=parseFloat(cs.paddingBottom);p.remove();
-  return 'Screen '+screen.width+'×'+screen.height+' · window '+innerWidth+'×'+innerHeight+' · safe top '+t+', bottom '+b+' · gap '+Math.max(0,(innerWidth<innerHeight?screen.height:screen.width)-innerHeight)+' · bottom space used '+(document.documentElement.style.getPropertyValue('--sab')||b+'px')+(standalone?' · app':' · browser');
-}
+// The suggestion text is kept as it's typed, so a redraw of Settings (e.g. a theme change) doesn't lose it.
+$('setbody').addEventListener('input',function(e){
+  if(e.target.id==='sugnm')sugNm=e.target.value;
+  if(e.target.id==='sugtx'){sugTx=e.target.value;if(sugSt==='err'||sugSt==='empty'){sugSt='';var m=$('sugmsg');if(m)m.textContent=''}}
+});

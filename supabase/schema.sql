@@ -85,3 +85,23 @@ do $$ begin
     revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
   end if;
 end $$;
+
+-- ── Suggestions ────────────────────────────────────────────────────────────
+-- From the Suggestions card in Settings. Anyone can send one, signed in or not, but nobody can read them through the
+-- API: they're read in the Supabase dashboard (Table Editor → suggestions). Signed in, user_id is the sender's account
+-- (it must be their own; signed out it must be empty), and deleting the account deletes their suggestions. `device` is
+-- a short line like "iPhone/iPad · Safari · app · 393×852 · auto".
+create table if not exists public.suggestions (
+  id bigint generated always as identity primary key,
+  created timestamptz not null default now(),
+  user_id uuid default auth.uid() references auth.users (id) on delete cascade,
+  name text check (char_length(name) <= 100),
+  body text not null check (char_length(body) between 1 and 4000),
+  device text check (char_length(device) <= 400)
+);
+alter table public.suggestions enable row level security;
+revoke all on public.suggestions from anon, authenticated;
+grant insert (name, body, device, user_id) on public.suggestions to anon, authenticated;
+drop policy if exists "anyone: send" on public.suggestions;
+create policy "anyone: send" on public.suggestions for insert to anon, authenticated
+  with check (user_id is not distinct from (select auth.uid()));
